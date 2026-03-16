@@ -6,6 +6,7 @@
 #include "adventure/Inventory.h"
 #include "debug/DebugConsole.h"
 #include "adventure/Dialogue.h"
+#include "raymath.h"
 
 static bool ParseOptionalTalkColorAndDuration(
         lua_State* L,
@@ -1237,6 +1238,34 @@ static int Lua_setEffectOpacity(lua_State* L)
     return 1;
 }
 
+static int Lua_setEffectTint(lua_State* L)
+{
+    const char* effectId = luaL_checkstring(L, 1);
+    const int r = static_cast<int>(luaL_checkinteger(L, 2));
+    const int g = static_cast<int>(luaL_checkinteger(L, 3));
+    const int b = static_cast<int>(luaL_checkinteger(L, 4));
+    const int a = static_cast<int>(luaL_optinteger(L, 5, 255));
+
+    if (gameState == nullptr || effectId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    Color tint{};
+    tint.r = static_cast<unsigned char>(Clamp(r, 0, 255));
+    tint.g = static_cast<unsigned char>(Clamp(g, 0, 255));
+    tint.b = static_cast<unsigned char>(Clamp(b, 0, 255));
+    tint.a = static_cast<unsigned char>(Clamp(a, 0, 255));
+
+    const bool ok = AdventureScriptSetEffectTint(
+            *gameState,
+            std::string(effectId),
+            tint);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 void RegisterLuaAPI(lua_State* L)
 {
     lua_register(L, "setFlag", Lua_setFlag);
@@ -1304,6 +1333,7 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "setEffectVisible", Lua_setEffectVisible);
     lua_register(L, "effectVisible", Lua_effectVisible);
     lua_register(L, "setEffectOpacity", Lua_setEffectOpacity);
+    lua_register(L, "setEffectTint", Lua_setEffectTint);
 
     lua_register(L, "print", Lua_consolePrint);
     lua_register(L, "log", Lua_log);

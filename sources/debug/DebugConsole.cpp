@@ -183,6 +183,7 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
         DebugConsoleAddLine(state, "  /scenes", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /hotspots", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /props", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /effects", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /exits", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /spawns", LIGHTGRAY);
         return true;
@@ -521,6 +522,69 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
                     ")";
 
             if (!prop.visible) {
+                line += " hidden";
+            }
+
+            DebugConsoleAddLine(state, line, LIGHTGRAY);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/effects") {
+        if (!state.adventure.currentScene.loaded) {
+            DebugConsoleAddLine(state, "no scene loaded", RED);
+            return true;
+        }
+
+        DebugConsoleAddLine(state, "effects:", SKYBLUE);
+
+        const int count = std::min(
+                static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+                static_cast<int>(state.adventure.effectSprites.size()));
+
+        if (count <= 0) {
+            DebugConsoleAddLine(state, "  <none>", LIGHTGRAY);
+            return true;
+        }
+
+        for (int i = 0; i < count; ++i) {
+            const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+            const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+
+            std::string depthModeText = "depthSorted";
+            switch (sceneEffect.depthMode) {
+                case ScenePropDepthMode::Back:
+                    depthModeText = "back";
+                    break;
+                case ScenePropDepthMode::DepthSorted:
+                    depthModeText = "depthSorted";
+                    break;
+                case ScenePropDepthMode::Front:
+                    depthModeText = "front";
+                    break;
+            }
+
+            std::string blendModeText = "normal";
+            switch (sceneEffect.blendMode) {
+                case SceneEffectBlendMode::Normal:
+                    blendModeText = "normal";
+                    break;
+                case SceneEffectBlendMode::Add:
+                    blendModeText = "add";
+                    break;
+                case SceneEffectBlendMode::Multiply:
+                    blendModeText = "multiply";
+                    break;
+            }
+
+            std::string line =
+                    "  " + sceneEffect.id +
+                    " depth=" + depthModeText +
+                    " blend=" + blendModeText +
+                    " opacity=" + std::to_string(effect.opacity);
+
+            if (!effect.visible) {
                 line += " hidden";
             }
 

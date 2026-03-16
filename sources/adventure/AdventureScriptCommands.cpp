@@ -764,3 +764,22 @@ bool AdventureScriptSetEffectOpacity(GameState& state, const std::string& effect
     state.adventure.effectSprites[effectIndex].opacity = Clamp(opacity, 0.0f, 1.0f);
     return true;
 }
+
+bool AdventureScriptSetEffectTint(GameState& state,
+                                  const std::string& effectId,
+                                  Color tint)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectIndex = FindEffectSpriteIndexById(state, effectId);
+    if (effectIndex < 0 ||
+        effectIndex >= static_cast<int>(state.adventure.effectSprites.size())) {
+        return false;
+    }
+
+    state.adventure.effectSprites[effectIndex].tint = tint;
+    return true;
+}
+

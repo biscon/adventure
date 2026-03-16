@@ -13,7 +13,6 @@
 #include "adventure/Dialogue.h"
 #include "debug/DebugConsole.h"
 
-
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
@@ -48,6 +47,13 @@ namespace
         float animationTimeMs = 0.0f;
     };
 
+    struct SavedEffectSpriteState {
+        std::string id;
+        bool visible = true;
+        float opacity = 1.0f;
+        Color tint = WHITE;
+    };
+
     struct SaveRestoreData {
         std::string sceneId;
         std::string controlledActorId;
@@ -60,6 +66,7 @@ namespace
         std::vector<SavedInventoryData> inventories;
         std::vector<SavedActorState> actors;
         std::vector<SavedPropState> props;
+        std::vector<SavedEffectSpriteState> effectSprites;
     };
 
     static std::string NormalizePath(const fs::path& p)
@@ -174,6 +181,26 @@ namespace
         return v;
     }
 
+    static json SerializeColor(Color c)
+    {
+        json j;
+        j["r"] = c.r;
+        j["g"] = c.g;
+        j["b"] = c.b;
+        j["a"] = c.a;
+        return j;
+    }
+
+    static Color DeserializeColor(const json& j)
+    {
+        Color c = WHITE;
+        c.r = static_cast<unsigned char>(j.value("r", 255));
+        c.g = static_cast<unsigned char>(j.value("g", 255));
+        c.b = static_cast<unsigned char>(j.value("b", 255));
+        c.a = static_cast<unsigned char>(j.value("a", 255));
+        return c;
+    }
+
     static void SerializeScriptState(const GameState& state, json& outRoot)
     {
         json scriptState;
@@ -248,6 +275,27 @@ namespace
             j["currentAnimation"] = prop.currentAnimation;
             j["animationTimeMs"] = prop.animationTimeMs;
             outRoot["props"].push_back(j);
+        }
+    }
+
+    static void SerializeEffectSprites(const GameState& state, json& outRoot)
+    {
+        outRoot["effectSprites"] = json::array();
+
+        const int count = std::min(
+                static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+                static_cast<int>(state.adventure.effectSprites.size()));
+
+        for (int i = 0; i < count; ++i) {
+            const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+            const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+
+            json j;
+            j["id"] = sceneEffect.id;
+            j["visible"] = effect.visible;
+            j["opacity"] = effect.opacity;
+            j["tint"] = SerializeColor(effect.tint);
+            outRoot["effectSprites"].push_back(j);
         }
     }
 
@@ -353,6 +401,20 @@ namespace
             }
         }
 
+        if (root.contains("effectSprites") && root["effectSprites"].is_array()) {
+            for (const json& j : root["effectSprites"]) {
+                SavedEffectSpriteState effect;
+                effect.id = j.value("id", "");
+                effect.visible = j.value("visible", true);
+                effect.opacity = j.value("opacity", 1.0f);
+                effect.tint = j.contains("tint") ? DeserializeColor(j["tint"]) : WHITE;
+
+                if (!effect.id.empty()) {
+                    outData.effectSprites.push_back(effect);
+                }
+            }
+        }
+
         return true;
     }
 
@@ -448,6 +510,16 @@ namespace
         return -1;
     }
 
+    static int FindSceneEffectSpriteIndexById(const GameState& state, const std::string& effectId)
+    {
+        for (int i = 0; i < static_cast<int>(state.adventure.currentScene.effectSprites.size()); ++i) {
+            if (state.adventure.currentScene.effectSprites[i].id == effectId) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     static void RestoreProps(GameState& state, const SaveRestoreData& data)
     {
         for (const SavedPropState& saved : data.props) {
@@ -477,6 +549,22 @@ namespace
         }
     }
 
+    static void RestoreEffectSprites(GameState& state, const SaveRestoreData& data)
+    {
+        for (const SavedEffectSpriteState& saved : data.effectSprites) {
+            const int effectIndex = FindSceneEffectSpriteIndexById(state, saved.id);
+            if (effectIndex < 0 ||
+                effectIndex >= static_cast<int>(state.adventure.effectSprites.size())) {
+                continue;
+            }
+
+            EffectSpriteInstance& effect = state.adventure.effectSprites[effectIndex];
+            effect.visible = saved.visible;
+            effect.opacity = saved.opacity;
+            effect.tint = saved.tint;
+        }
+    }
+
     static bool ApplySaveRestoreData(GameState& state, const SaveRestoreData& data)
     {
         if (!LoadSceneById(state, data.sceneId.c_str(), SceneLoadMode::FromSave)) {
@@ -488,6 +576,7 @@ namespace
         RestoreInventories(state, data);
         RestoreActors(state, data);
         RestoreProps(state, data);
+        RestoreEffectSprites(state, data);
         RestoreControlledActor(state, data);
 
         state.adventure.controlsEnabled = data.controlsEnabled;
@@ -530,6 +619,7 @@ bool SaveGameToSlot(GameState& state, int slotIndex)
     SerializeInventories(state, root);
     SerializeActors(state, root);
     SerializeProps(state, root);
+    SerializeEffectSprites(state, root);
 
     const fs::path savePath = GetSaveSlotPath(slotIndex);
     std::ofstream out(savePath);
