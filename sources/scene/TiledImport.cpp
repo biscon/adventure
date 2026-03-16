@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <optional>
+#include <cctype>
 
 #include "utils/json.hpp"
 #include "resources/TextureAsset.h"
@@ -119,6 +120,110 @@ static bool ParseScenePropDepthMode(const std::string& s, ScenePropDepthMode& ou
         outMode = ScenePropDepthMode::Front;
         return true;
     }
+    return false;
+}
+
+static bool ParseSceneEffectBlendMode(const std::string& s, SceneEffectBlendMode& outMode)
+{
+    if (s.empty() || s == "normal") {
+        outMode = SceneEffectBlendMode::Normal;
+        return true;
+    }
+    if (s == "add") {
+        outMode = SceneEffectBlendMode::Add;
+        return true;
+    }
+    if (s == "multiply") {
+        outMode = SceneEffectBlendMode::Multiply;
+        return true;
+    }
+    return false;
+}
+
+static bool TryGetEffectDepthModeFromGroupName(const std::string& groupName, ScenePropDepthMode& outMode)
+{
+    if (groupName == "effects_back") {
+        outMode = ScenePropDepthMode::Back;
+        return true;
+    }
+    if (groupName == "effects_sorted") {
+        outMode = ScenePropDepthMode::DepthSorted;
+        return true;
+    }
+    if (groupName == "effects_front") {
+        outMode = ScenePropDepthMode::Front;
+        return true;
+    }
+    return false;
+}
+
+static int HexNibbleToInt(char c)
+{
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    }
+    if (c >= 'A' && c <= 'F') {
+        return 10 + (c - 'A');
+    }
+    return -1;
+}
+
+static bool ParseHexByte(const std::string& s, size_t index, unsigned char& outValue)
+{
+    if (index + 1 >= s.size()) {
+        return false;
+    }
+
+    const int hi = HexNibbleToInt(s[index]);
+    const int lo = HexNibbleToInt(s[index + 1]);
+    if (hi < 0 || lo < 0) {
+        return false;
+    }
+
+    outValue = static_cast<unsigned char>((hi << 4) | lo);
+    return true;
+}
+
+static bool ParseTiledTintColor(const std::string& s, Color& outColor)
+{
+    if (s.empty()) {
+        outColor = WHITE;
+        return true;
+    }
+
+    if (s.size() == 7 && s[0] == '#') {
+        unsigned char r = 255;
+        unsigned char g = 255;
+        unsigned char b = 255;
+        if (!ParseHexByte(s, 1, r) ||
+            !ParseHexByte(s, 3, g) ||
+            !ParseHexByte(s, 5, b)) {
+            return false;
+        }
+
+        outColor = Color{r, g, b, 255};
+        return true;
+    }
+
+    if (s.size() == 9 && s[0] == '#') {
+        unsigned char a = 255;
+        unsigned char r = 255;
+        unsigned char g = 255;
+        unsigned char b = 255;
+        if (!ParseHexByte(s, 1, a) ||
+            !ParseHexByte(s, 3, r) ||
+            !ParseHexByte(s, 5, g) ||
+            !ParseHexByte(s, 7, b)) {
+            return false;
+        }
+
+        outColor = Color{r, g, b, a};
+        return true;
+    }
+
     return false;
 }
 
@@ -254,6 +359,67 @@ static void ProcessLayerRecursive(
         } else {
             scene.foregroundLayers.push_back(img);
         }
+        return;
+    }
+
+    ScenePropDepthMode effectDepthMode = ScenePropDepthMode::DepthSorted;
+    if (type == "imagelayer" && TryGetEffectDepthModeFromGroupName(currentGroup, effectDepthMode)) {
+        SceneEffectSpriteData effect;
+        effect.id = name;
+        if (effect.id.empty()) {
+            TraceLog(LOG_ERROR, "Effect image layer missing name in group %s", currentGroup.c_str());
+            return;
+        }
+
+        const std::string imageRel = layer.value("image", "");
+        if (imageRel.empty()) {
+            TraceLog(LOG_ERROR, "Effect image layer missing image: %s", effect.id.c_str());
+            return;
+        }
+
+        effect.visible = layer.value("visible", true);
+        effect.opacity = GetFloatOrDefault(layer, "opacity", 1.0f);
+        effect.depthMode = effectDepthMode;
+
+        const std::string modeStr = layer.value("mode", "");
+        if (!ParseSceneEffectBlendMode(modeStr, effect.blendMode)) {
+            TraceLog(LOG_WARNING,
+                     "Unsupported effect blend mode '%s' on effect '%s', falling back to normal",
+                     modeStr.c_str(),
+                     effect.id.c_str());
+            effect.blendMode = SceneEffectBlendMode::Normal;
+        }
+
+        const std::string tintStr = layer.value("tintcolor", "");
+        if (!ParseTiledTintColor(tintStr, effect.tint)) {
+            TraceLog(LOG_WARNING,
+                     "Invalid tintcolor '%s' on effect '%s', falling back to white",
+                     tintStr.c_str(),
+                     effect.id.c_str());
+            effect.tint = WHITE;
+        }
+
+        const fs::path imagePath = (tiledDir / imageRel).lexically_normal();
+        effect.imagePath = NormalizePath(imagePath);
+        effect.textureHandle = LoadTextureAsset(resources, effect.imagePath.c_str());
+        if (effect.textureHandle < 0) {
+            TraceLog(LOG_ERROR,
+                     "Failed loading effect image for '%s': %s",
+                     effect.id.c_str(),
+                     effect.imagePath.c_str());
+            return;
+        }
+
+        effect.sourceSize.x = GetFloatOrDefault(layer, "imagewidth", 0.0f);
+        effect.sourceSize.y = GetFloatOrDefault(layer, "imageheight", 0.0f);
+
+        effect.worldPos.x = totalOffsetX * static_cast<float>(scene.baseAssetScale);
+        effect.worldPos.y = totalOffsetY * static_cast<float>(scene.baseAssetScale);
+
+        effect.worldSize.x = effect.sourceSize.x * static_cast<float>(scene.baseAssetScale);
+        effect.worldSize.y = effect.sourceSize.y * static_cast<float>(scene.baseAssetScale);
+
+        scene.effectSprites.push_back(effect);
         return;
     }
 
@@ -546,6 +712,7 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
 {
     scene.backgroundLayers.clear();
     scene.foregroundLayers.clear();
+    scene.effectSprites.clear();
     scene.navMesh = {};
     scene.spawns.clear();
     scene.hotspots.clear();
@@ -587,17 +754,17 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
     }
 
     TraceLog(LOG_INFO,
-             "Imported Tiled scene: %s (bg=%d fg=%d navPolys=%d spawns=%d hotspots=%d exits=%d props=%d actors=%d)",
+             "Imported Tiled scene: %s (bg=%d fg=%d effects=%d navPolys=%d spawns=%d hotspots=%d exits=%d props=%d actors=%d)",
              scene.tiledFilePath.c_str(),
              static_cast<int>(scene.backgroundLayers.size()),
              static_cast<int>(scene.foregroundLayers.size()),
+             static_cast<int>(scene.effectSprites.size()),
              static_cast<int>(scene.navMesh.sourcePolygons.size()),
              static_cast<int>(scene.spawns.size()),
              static_cast<int>(scene.hotspots.size()),
              static_cast<int>(scene.exits.size()),
              static_cast<int>(scene.props.size()),
              static_cast<int>(scene.actorPlacements.size()));
-
 
     return true;
 }

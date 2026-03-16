@@ -116,6 +116,17 @@ struct PropInstance {
     PropMoveInterpolation moveInterpolation = PropMoveInterpolation::Linear;
 };
 
+using EffectSpriteHandle = int;
+
+struct EffectSpriteInstance {
+    EffectSpriteHandle handle = -1;
+    int sceneEffectSpriteIndex = -1;
+
+    bool visible = true;
+    float opacity = 1.0f;
+    Color tint = WHITE;
+};
+
 struct CameraData {
     Vector2 position{};
     float viewportWidth = 1920.0f;
@@ -193,6 +204,9 @@ struct AdventureData {
 
     std::vector<PropInstance> props;
     int nextPropHandle = 1;
+
+    std::vector<EffectSpriteInstance> effectSprites;
+    int nextEffectSpriteHandle = 1;
 
     std::vector<ItemDefinitionData> itemDefinitions;
     std::vector<ActorInventoryData> actorInventories;

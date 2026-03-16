@@ -93,6 +93,7 @@ void UnloadCurrentScene(GameState& state)
 {
     state.adventure.currentScene = {};
     state.adventure.props.clear();
+    state.adventure.effectSprites.clear();
     state.adventure.camera = {};
     state.adventure.pendingInteraction = {};
     state.adventure.debugTrianglePath.clear();
@@ -223,6 +224,22 @@ bool LoadSceneById(GameState& state, const char* sceneId, SceneLoadMode loadMode
         prop.moveInterpolation = PropMoveInterpolation::Linear;
 
         state.adventure.props.push_back(prop);
+    }
+
+    state.adventure.effectSprites.clear();
+    state.adventure.effectSprites.reserve(state.adventure.currentScene.effectSprites.size());
+
+    for (int i = 0; i < static_cast<int>(state.adventure.currentScene.effectSprites.size()); ++i) {
+        const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+
+        EffectSpriteInstance effect;
+        effect.handle = state.adventure.nextEffectSpriteHandle++;
+        effect.sceneEffectSpriteIndex = i;
+        effect.visible = sceneEffect.visible;
+        effect.opacity = sceneEffect.opacity;
+        effect.tint = sceneEffect.tint;
+
+        state.adventure.effectSprites.push_back(effect);
     }
 
     state.adventure.actors.clear();

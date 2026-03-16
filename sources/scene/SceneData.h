@@ -77,6 +77,30 @@ enum class ScenePropDepthMode {
     Front
 };
 
+enum class SceneEffectBlendMode {
+    Normal,
+    Add,
+    Multiply
+};
+
+struct SceneEffectSpriteData {
+    std::string id;
+    std::string imagePath;
+
+    TextureHandle textureHandle = -1;
+
+    Vector2 worldPos{};
+    Vector2 sourceSize{};
+    Vector2 worldSize{};
+
+    bool visible = true;
+    float opacity = 1.0f;
+    Color tint = WHITE;
+
+    ScenePropDepthMode depthMode = ScenePropDepthMode::DepthSorted;
+    SceneEffectBlendMode blendMode = SceneEffectBlendMode::Normal;
+};
+
 struct ScenePropData {
     std::string id;
 
@@ -128,6 +152,7 @@ struct SceneData {
 
     std::vector<SceneImageLayer> backgroundLayers;
     std::vector<SceneImageLayer> foregroundLayers;
+    std::vector<SceneEffectSpriteData> effectSprites;
 
     NavMeshData navMesh;
 

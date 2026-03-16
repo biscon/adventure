@@ -9,6 +9,32 @@
 #include "scene/SceneHelpers.h"
 #include "adventure/AdventureActorHelpers.h"
 
+static unsigned char MultiplyU8(unsigned char a, unsigned char b)
+{
+    const int value = static_cast<int>(a) * static_cast<int>(b);
+    return static_cast<unsigned char>((value + 127) / 255);
+}
+
+static Color BuildEffectSpriteDrawColor(const EffectSpriteInstance& effect)
+{
+    Color c = effect.tint;
+    c.a = MultiplyU8(c.a, static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity))));
+    return c;
+}
+
+static int GetRaylibBlendMode(SceneEffectBlendMode mode)
+{
+    switch (mode) {
+        case SceneEffectBlendMode::Add:
+            return BLEND_ADDITIVE;
+        case SceneEffectBlendMode::Multiply:
+            return BLEND_MULTIPLIED;
+        case SceneEffectBlendMode::Normal:
+        default:
+            return BLEND_ALPHA_PREMULTIPLY;
+    }
+}
+
 static void DrawSceneImageLayer(const GameState& state, const SceneImageLayer& layer)
 {
     if (!layer.visible || layer.textureHandle < 0) {
@@ -38,6 +64,41 @@ static void DrawSceneImageLayer(const GameState& state, const SceneImageLayer& l
     const Color tint = Color{255, 255, 255, alpha};
 
     DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, tint);
+}
+
+static void DrawSceneEffectSprite(
+        const GameState& state,
+        const SceneEffectSpriteData& sceneEffect,
+        const EffectSpriteInstance& effect)
+{
+    if (!effect.visible || sceneEffect.textureHandle < 0) {
+        return;
+    }
+
+    const TextureResource* texRes = FindTextureResource(state.resources, sceneEffect.textureHandle);
+    if (texRes == nullptr || !texRes->loaded) {
+        return;
+    }
+
+    const Vector2 cam = state.adventure.camera.position;
+
+    Rectangle src{};
+    src.x = 0.0f;
+    src.y = 0.0f;
+    src.width = sceneEffect.sourceSize.x;
+    src.height = sceneEffect.sourceSize.y;
+
+    Rectangle dst{};
+    dst.x = sceneEffect.worldPos.x - cam.x;
+    dst.y = sceneEffect.worldPos.y - cam.y;
+    dst.width = sceneEffect.worldSize.x;
+    dst.height = sceneEffect.worldSize.y;
+
+    EndBlendMode();
+    BeginBlendMode(GetRaylibBlendMode(sceneEffect.blendMode));
+    DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, BuildEffectSpriteDrawColor(effect));
+    EndBlendMode();
+    BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
 }
 
 static void DrawActor(const GameState& state, const ActorInstance& actor)
@@ -152,7 +213,6 @@ static void DrawSpriteProp(
                              : 1.0f;
     const float finalScale = asset->baseDrawScale * depthScale;
 
-
     const Vector2 cam = state.adventure.camera.position;
     const Vector2 screenFeet{
             prop.feetPos.x - cam.x,
@@ -227,13 +287,11 @@ static void DrawImageProp(
                              : 1.0f;
     const float finalScale = static_cast<float>(state.adventure.currentScene.baseAssetScale) * depthScale;
 
-
     const Vector2 cam = state.adventure.camera.position;
     const Vector2 screenFeet{
             prop.feetPos.x - cam.x,
             prop.feetPos.y - cam.y
     };
-
 
     Rectangle src{};
     src.x = 0.0f;
@@ -304,6 +362,28 @@ static void DrawBackProps(const GameState& state)
     }
 }
 
+static void DrawBackEffectSprites(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+            static_cast<int>(state.adventure.effectSprites.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+        const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::Back) {
+            continue;
+        }
+
+        DrawSceneEffectSprite(state, sceneEffect, effect);
+    }
+}
+
 static void DrawFrontProps(const GameState& state)
 {
     const int propCount = std::min(
@@ -326,6 +406,28 @@ static void DrawFrontProps(const GameState& state)
     }
 }
 
+static void DrawFrontEffectSprites(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+            static_cast<int>(state.adventure.effectSprites.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+        const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::Front) {
+            continue;
+        }
+
+        DrawSceneEffectSprite(state, sceneEffect, effect);
+    }
+}
+
 void RenderAdventureScene(const GameState& state)
 {
     if (!state.adventure.currentScene.loaded) {
@@ -339,12 +441,20 @@ void RenderAdventureScene(const GameState& state)
     }
 
     DrawBackProps(state);
+    DrawBackEffectSprites(state);
+
+    enum class WorldDrawItemType {
+        Actor,
+        Prop,
+        EffectSprite
+    };
 
     struct WorldDrawItem {
         float sortY = 0.0f;
-        bool isActor = false;
+        WorldDrawItemType type = WorldDrawItemType::Actor;
         int actorIndex = -1;
         int propIndex = -1;
+        int effectIndex = -1;
     };
 
     std::vector<WorldDrawItem> drawItems;
@@ -357,7 +467,7 @@ void RenderAdventureScene(const GameState& state)
 
         WorldDrawItem item;
         item.sortY = actor.feetPos.y;
-        item.isActor = true;
+        item.type = WorldDrawItemType::Actor;
         item.actorIndex = i;
         drawItems.push_back(item);
     }
@@ -379,8 +489,30 @@ void RenderAdventureScene(const GameState& state)
 
         WorldDrawItem item;
         item.sortY = prop.feetPos.y;
-        item.isActor = false;
+        item.type = WorldDrawItemType::Prop;
         item.propIndex = i;
+        drawItems.push_back(item);
+    }
+
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+            static_cast<int>(state.adventure.effectSprites.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+        const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::DepthSorted) {
+            continue;
+        }
+
+        WorldDrawItem item;
+        item.sortY = sceneEffect.worldPos.y + sceneEffect.worldSize.y;
+        item.type = WorldDrawItemType::EffectSprite;
+        item.effectIndex = i;
         drawItems.push_back(item);
     }
 
@@ -390,36 +522,63 @@ void RenderAdventureScene(const GameState& state)
                       return a.sortY < b.sortY;
                   }
 
-                  if (a.isActor != b.isActor) {
-                      return !a.isActor;
+                  if (a.type != b.type) {
+                      return static_cast<int>(a.type) < static_cast<int>(b.type);
                   }
 
-                  if (a.isActor) {
-                      return a.actorIndex < b.actorIndex;
-                  }
+                  switch (a.type) {
+                      case WorldDrawItemType::Actor:
+                          return a.actorIndex < b.actorIndex;
 
-                  return a.propIndex < b.propIndex;
+                      case WorldDrawItemType::Prop:
+                          return a.propIndex < b.propIndex;
+
+                      case WorldDrawItemType::EffectSprite:
+                          return a.effectIndex < b.effectIndex;
+
+                      default:
+                          return false;
+                  }
               });
 
     for (const WorldDrawItem& item : drawItems) {
-        if (item.isActor) {
-            if (item.actorIndex >= 0 &&
-                item.actorIndex < static_cast<int>(state.adventure.actors.size())) {
-                DrawActor(state, state.adventure.actors[item.actorIndex]);
-            }
-        } else {
-            if (item.propIndex >= 0 &&
-                item.propIndex < static_cast<int>(state.adventure.currentScene.props.size()) &&
-                item.propIndex < static_cast<int>(state.adventure.props.size())) {
-                DrawProp(
-                        state,
-                        state.adventure.currentScene.props[item.propIndex],
-                        state.adventure.props[item.propIndex]);
-            }
+        switch (item.type) {
+            case WorldDrawItemType::Actor:
+                if (item.actorIndex >= 0 &&
+                    item.actorIndex < static_cast<int>(state.adventure.actors.size())) {
+                    DrawActor(state, state.adventure.actors[item.actorIndex]);
+                }
+                break;
+
+            case WorldDrawItemType::Prop:
+                if (item.propIndex >= 0 &&
+                    item.propIndex < static_cast<int>(state.adventure.currentScene.props.size()) &&
+                    item.propIndex < static_cast<int>(state.adventure.props.size())) {
+                    DrawProp(
+                            state,
+                            state.adventure.currentScene.props[item.propIndex],
+                            state.adventure.props[item.propIndex]);
+                }
+                break;
+
+            case WorldDrawItemType::EffectSprite:
+                if (item.effectIndex >= 0 &&
+                    item.effectIndex < static_cast<int>(state.adventure.currentScene.effectSprites.size()) &&
+                    item.effectIndex < static_cast<int>(state.adventure.effectSprites.size())) {
+                    DrawSceneEffectSprite(
+                            state,
+                            state.adventure.currentScene.effectSprites[item.effectIndex],
+                            state.adventure.effectSprites[item.effectIndex]);
+                }
+                break;
+
+            default:
+                break;
         }
     }
 
     DrawFrontProps(state);
+    DrawFrontEffectSprites(state);
 
     for (const SceneImageLayer& layer : state.adventure.currentScene.foregroundLayers) {
         DrawSceneImageLayer(state, layer);

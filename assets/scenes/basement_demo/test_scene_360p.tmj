@@ -678,8 +678,90 @@
          "visible":true,
          "x":0,
          "y":0
+        },
+    
+        {
+         "id":17,
+         "layers":[
+                {
+                 "id":19,
+                 "image":"furnace_glow_effect_sprite.png",
+                 "imageheight":256,
+                 "imagewidth":256,
+                 "mode":"add",
+                 "name":"furnace_glow",
+                 "offsetx":190.5,
+                 "offsety":89.5,
+                 "opacity":0.59,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"effects_back",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":20,
+         "layers":[
+                {
+                 "id":24,
+                 "image":"scene_shadow.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "mode":"multiply",
+                 "name":"scene_shadow",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                },
+            
+                {
+                 "id":23,
+                 "image":"light_bulb.png",
+                 "imageheight":92,
+                 "imagewidth":96,
+                 "mode":"add",
+                 "name":"light_bulb",
+                 "offsetx":201,
+                 "offsety":26.5,
+                 "opacity":0.29,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                },
+            
+                {
+                 "id":21,
+                 "image":"light_bulb_halo.png",
+                 "imageheight":23,
+                 "imagewidth":24,
+                 "mode":"add",
+                 "name":"light_bulb_halo",
+                 "offsetx":237.166666666667,
+                 "offsety":58.3333333333333,
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"effects_front",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":17,
+ "nextlayerid":25,
  "nextobjectid":39,
  "orientation":"orthogonal",
  "renderorder":"right-down",

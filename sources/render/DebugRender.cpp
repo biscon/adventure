@@ -230,6 +230,20 @@ static void DrawScenePolygon(const GameState& state, const ScenePolygon& poly, C
     }
 }
 
+static Color GetEffectDebugColor(ScenePropDepthMode depthMode)
+{
+    switch (depthMode) {
+        case ScenePropDepthMode::Back:
+            return SKYBLUE;
+        case ScenePropDepthMode::DepthSorted:
+            return GREEN;
+        case ScenePropDepthMode::Front:
+            return PINK;
+        default:
+            return SKYBLUE;
+    }
+}
+
 static void DrawSceneObjectDebug(const GameState& state)
 {
     const SceneData& scene = state.adventure.currentScene;
@@ -275,6 +289,40 @@ static void DrawSceneObjectDebug(const GameState& state)
 
         DrawCircleV(p, 4.0f, MAGENTA);
         DrawText(sceneProp.id.c_str(), static_cast<int>(p.x + 8.0f), static_cast<int>(p.y - 8.0f), 16, MAGENTA);
+    }
+
+    const int effectCount = std::min(
+            static_cast<int>(scene.effectSprites.size()),
+            static_cast<int>(state.adventure.effectSprites.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectSpriteData& sceneEffect = scene.effectSprites[i];
+        const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+        if (!effect.visible) {
+            continue;
+        }
+
+        const Color color = GetEffectDebugColor(sceneEffect.depthMode);
+
+        Rectangle rect{};
+        rect.x = sceneEffect.worldPos.x - state.adventure.camera.position.x;
+        rect.y = sceneEffect.worldPos.y - state.adventure.camera.position.y;
+        rect.width = sceneEffect.worldSize.x;
+        rect.height = sceneEffect.worldSize.y;
+
+        DrawRectangleLinesEx(rect, 2.0f, color);
+
+        const Vector2 anchor{
+                rect.x + rect.width * 0.5f,
+                rect.y + rect.height
+        };
+        DrawCircleV(anchor, 4.0f, color);
+
+        DrawText(sceneEffect.id.c_str(),
+                 static_cast<int>(anchor.x + 8.0f),
+                 static_cast<int>(anchor.y - 8.0f),
+                 16,
+                 color);
     }
 }
 
