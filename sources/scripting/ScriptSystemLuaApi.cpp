@@ -1175,6 +1175,68 @@ static int Lua_dialogue(lua_State* L)
     return lua_yieldk(L, 0, 0, Lua_DialogueContinuation);
 }
 
+static int Lua_setEffectVisible(lua_State* L)
+{
+    const char* effectId = luaL_checkstring(L, 1);
+    const bool visible = lua_toboolean(L, 2) != 0;
+
+    if (gameState == nullptr || effectId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetEffectVisible(
+            *gameState,
+            std::string(effectId),
+            visible);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_effectVisible(lua_State* L)
+{
+    const char* effectId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || effectId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    bool visible = false;
+    const bool ok = AdventureScriptIsEffectVisible(
+            *gameState,
+            std::string(effectId),
+            visible);
+
+    if (!ok) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    lua_pushboolean(L, visible ? 1 : 0);
+    return 1;
+}
+
+static int Lua_setEffectOpacity(lua_State* L)
+{
+    const char* effectId = luaL_checkstring(L, 1);
+    const float opacity = static_cast<float>(luaL_checknumber(L, 2));
+
+    if (gameState == nullptr || effectId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetEffectOpacity(
+            *gameState,
+            std::string(effectId),
+            opacity);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 void RegisterLuaAPI(lua_State* L)
 {
     lua_register(L, "setFlag", Lua_setFlag);
@@ -1238,6 +1300,10 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "startScript", Lua_startScript);
     lua_register(L, "stopScript", Lua_stopScript);
     lua_register(L, "stopAllScripts", Lua_stopAllScripts);
+
+    lua_register(L, "setEffectVisible", Lua_setEffectVisible);
+    lua_register(L, "effectVisible", Lua_effectVisible);
+    lua_register(L, "setEffectOpacity", Lua_setEffectOpacity);
 
     lua_register(L, "print", Lua_consolePrint);
     lua_register(L, "log", Lua_log);

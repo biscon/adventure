@@ -2,6 +2,7 @@
 #include "adventure/AdventureScriptInternal.h"
 #include "adventure/AdventureActorHelpers.h"
 #include "raylib.h"
+#include "raymath.h"
 
 bool AdventureScriptSay(GameState& state, const std::string& text, int durationMs)
 {
@@ -701,5 +702,65 @@ bool AdventureScriptStartWalkActorToExit(GameState& state, const std::string& ac
 bool AdventureScriptSetControlsEnabled(GameState& state, bool enabled)
 {
     state.adventure.controlsEnabled = enabled;
+    return true;
+}
+
+static int FindEffectSpriteIndexById(const GameState& state, const std::string& effectId)
+{
+    const int count = std::min(
+            static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+            static_cast<int>(state.adventure.effectSprites.size()));
+
+    for (int i = 0; i < count; ++i) {
+        if (state.adventure.currentScene.effectSprites[i].id == effectId) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+bool AdventureScriptSetEffectVisible(GameState& state, const std::string& effectId, bool visible)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectIndex = FindEffectSpriteIndexById(state, effectId);
+    if (effectIndex < 0 || effectIndex >= static_cast<int>(state.adventure.effectSprites.size())) {
+        return false;
+    }
+
+    state.adventure.effectSprites[effectIndex].visible = visible;
+    return true;
+}
+
+bool AdventureScriptIsEffectVisible(const GameState& state, const std::string& effectId, bool& outVisible)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectIndex = FindEffectSpriteIndexById(state, effectId);
+    if (effectIndex < 0 || effectIndex >= static_cast<int>(state.adventure.effectSprites.size())) {
+        return false;
+    }
+
+    outVisible = state.adventure.effectSprites[effectIndex].visible;
+    return true;
+}
+
+bool AdventureScriptSetEffectOpacity(GameState& state, const std::string& effectId, float opacity)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectIndex = FindEffectSpriteIndexById(state, effectId);
+    if (effectIndex < 0 || effectIndex >= static_cast<int>(state.adventure.effectSprites.size())) {
+        return false;
+    }
+
+    state.adventure.effectSprites[effectIndex].opacity = Clamp(opacity, 0.0f, 1.0f);
     return true;
 }

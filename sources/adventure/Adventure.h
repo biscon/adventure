@@ -63,4 +63,7 @@ bool AdventureScriptStartWalkActorTo(GameState& state, const std::string& actorI
 bool AdventureScriptStartWalkActorToHotspot(GameState& state, const std::string& actorId, const std::string& hotspotId);
 bool AdventureScriptStartWalkActorToExit(GameState& state, const std::string& actorId, const std::string& exitId);
 bool AdventureScriptSetControlsEnabled(GameState& state, bool enabled);
+bool AdventureScriptSetEffectVisible(GameState& state, const std::string& effectId, bool visible);
+bool AdventureScriptIsEffectVisible(const GameState& state, const std::string& effectId, bool& outVisible);
+bool AdventureScriptSetEffectOpacity(GameState& state, const std::string& effectId, float opacity);
 
