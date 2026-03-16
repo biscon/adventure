@@ -12,6 +12,7 @@
 #include "resources/Resources.h"
 #include "scripting/ScriptSystem.h"
 #include "adventure/DialogueChoiceAsset.h"
+#include "save/SaveGame.h"
 
 static bool IsMouseInInternalView()
 {
@@ -67,6 +68,15 @@ int main()
 
     while (!WindowShouldClose())
     {
+        if(IsKeyReleased(KEY_S)) {
+            TraceLog(LOG_INFO, "Saving game...");
+            SaveGameToSlot(state, 1);
+        }
+        if(IsKeyReleased(KEY_L)) {
+            TraceLog(LOG_INFO, "Loading game...");
+            LoadGameFromSlot(state, 1);
+        }
+
         UpdateInput(state.input);
         if(state.mode == GameMode::Quit) break;
 
