@@ -230,9 +230,13 @@ static void DrawScenePolygon(const GameState& state, const ScenePolygon& poly, C
     }
 }
 
-static Color GetEffectDebugColor(ScenePropDepthMode depthMode)
+static Color GetEffectDebugColor(const SceneEffectSpriteData& sceneEffect)
 {
-    switch (depthMode) {
+    if (sceneEffect.renderAsOverlay) {
+        return YELLOW;
+    }
+
+    switch (sceneEffect.depthMode) {
         case ScenePropDepthMode::Back:
             return SKYBLUE;
         case ScenePropDepthMode::DepthSorted:
@@ -302,7 +306,7 @@ static void DrawSceneObjectDebug(const GameState& state)
             continue;
         }
 
-        const Color color = GetEffectDebugColor(sceneEffect.depthMode);
+        const Color color = GetEffectDebugColor(sceneEffect);
 
         Rectangle rect{};
         rect.x = sceneEffect.worldPos.x - state.adventure.camera.position.x;

@@ -99,6 +99,7 @@ struct SceneEffectSpriteData {
 
     ScenePropDepthMode depthMode = ScenePropDepthMode::DepthSorted;
     SceneEffectBlendMode blendMode = SceneEffectBlendMode::Normal;
+    bool renderAsOverlay = false;
 };
 
 struct ScenePropData {

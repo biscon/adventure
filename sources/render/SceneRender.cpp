@@ -424,6 +424,32 @@ static void DrawFrontEffectSprites(const GameState& state)
             continue;
         }
 
+        if (sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
+        DrawSceneEffectSprite(state, sceneEffect, effect);
+    }
+}
+
+static void DrawOverlayEffectSprites(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+            static_cast<int>(state.adventure.effectSprites.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+        const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (!sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
         DrawSceneEffectSprite(state, sceneEffect, effect);
     }
 }
@@ -583,6 +609,8 @@ void RenderAdventureScene(const GameState& state)
     for (const SceneImageLayer& layer : state.adventure.currentScene.foregroundLayers) {
         DrawSceneImageLayer(state, layer);
     }
+
+    DrawOverlayEffectSprites(state);
 
     EndBlendMode();
 }

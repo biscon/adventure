@@ -27,7 +27,19 @@
     
         {
          "id":5,
-         "layers":[],
+         "layers":[
+                {
+                 "id":26,
+                 "image":"basement_furnace_room_front_360p.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "name":"front1",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
          "name":"foreground",
          "opacity":1,
          "type":"group",
@@ -710,20 +722,6 @@
          "id":20,
          "layers":[
                 {
-                 "id":24,
-                 "image":"scene_shadow.png",
-                 "imageheight":360,
-                 "imagewidth":640,
-                 "mode":"multiply",
-                 "name":"scene_shadow",
-                 "opacity":1,
-                 "type":"imagelayer",
-                 "visible":true,
-                 "x":0,
-                 "y":0
-                },
-            
-                {
                  "id":23,
                  "image":"light_bulb.png",
                  "imageheight":92,
@@ -760,8 +758,32 @@
          "visible":true,
          "x":0,
          "y":0
+        },
+    
+        {
+         "id":25,
+         "layers":[
+                {
+                 "id":24,
+                 "image":"scene_shadow.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "mode":"multiply",
+                 "name":"scene_shadow",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"effects_overlay",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":25,
+ "nextlayerid":27,
  "nextobjectid":39,
  "orientation":"orthogonal",
  "renderorder":"right-down",

@@ -140,8 +140,12 @@ static bool ParseSceneEffectBlendMode(const std::string& s, SceneEffectBlendMode
     return false;
 }
 
-static bool TryGetEffectDepthModeFromGroupName(const std::string& groupName, ScenePropDepthMode& outMode)
+static bool TryGetEffectGroupInfoFromGroupName(const std::string& groupName,
+                                               ScenePropDepthMode& outMode,
+                                               bool& outRenderAsOverlay)
 {
+    outRenderAsOverlay = false;
+
     if (groupName == "effects_back") {
         outMode = ScenePropDepthMode::Back;
         return true;
@@ -152,6 +156,12 @@ static bool TryGetEffectDepthModeFromGroupName(const std::string& groupName, Sce
     }
     if (groupName == "effects_front") {
         outMode = ScenePropDepthMode::Front;
+        outRenderAsOverlay = false;
+        return true;
+    }
+    if (groupName == "effects_overlay") {
+        outMode = ScenePropDepthMode::Front;
+        outRenderAsOverlay = true;
         return true;
     }
     return false;
@@ -363,7 +373,9 @@ static void ProcessLayerRecursive(
     }
 
     ScenePropDepthMode effectDepthMode = ScenePropDepthMode::DepthSorted;
-    if (type == "imagelayer" && TryGetEffectDepthModeFromGroupName(currentGroup, effectDepthMode)) {
+    bool effectRenderAsOverlay = false;
+    if (type == "imagelayer" &&
+        TryGetEffectGroupInfoFromGroupName(currentGroup, effectDepthMode, effectRenderAsOverlay)) {
         SceneEffectSpriteData effect;
         effect.id = name;
         if (effect.id.empty()) {
@@ -380,6 +392,7 @@ static void ProcessLayerRecursive(
         effect.visible = layer.value("visible", true);
         effect.opacity = GetFloatOrDefault(layer, "opacity", 1.0f);
         effect.depthMode = effectDepthMode;
+        effect.renderAsOverlay = effectRenderAsOverlay;
 
         const std::string modeStr = layer.value("mode", "");
         if (!ParseSceneEffectBlendMode(modeStr, effect.blendMode)) {
