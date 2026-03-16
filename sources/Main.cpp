@@ -68,11 +68,11 @@ int main()
 
     while (!WindowShouldClose())
     {
-        if(IsKeyReleased(KEY_S)) {
+        if(IsKeyReleased(KEY_F11)) {
             TraceLog(LOG_INFO, "Saving game...");
             SaveGameToSlot(state, 1);
         }
-        if(IsKeyReleased(KEY_L)) {
+        if(IsKeyReleased(KEY_F12)) {
             TraceLog(LOG_INFO, "Loading game...");
             LoadGameFromSlot(state, 1);
         }

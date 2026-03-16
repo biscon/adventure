@@ -9,6 +9,7 @@
 #include "settings/Settings.h"
 #include "input/Input.h"
 #include "adventure/Adventure.h"
+#include "save/SaveGame.h"
 
 static GameState* game;
 
@@ -16,6 +17,7 @@ const Color MENU_BG_COLOR = Color{25, 25, 25, 255};
 
 // Forward declaration
 struct Menu;
+static std::shared_ptr<Menu> createMainMenu();
 
 using MenuBuilder = std::function<std::shared_ptr<Menu>()>;
 
@@ -43,14 +45,6 @@ struct Menu {
 
 static void startNewGame() {
     AdventureQueueLoadScene(*game, "basement_demo");
-}
-
-static void loadGame() {
-
-}
-
-static void saveGame() {
-
 }
 
 //static std::stack<std::shared_ptr<Menu>> menuStack;
@@ -253,11 +247,82 @@ static std::shared_ptr<Menu> createSettingsMenu() {
     return settingsMenu;
 }
 
+static std::shared_ptr<Menu> createSaveMenu() {
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Save Game";
+    menu->hint = "Select a slot to overwrite.";
+
+    for (int slot = 1; slot <= 3; ++slot) {
+        MenuItem item;
+        item.text = "Slot " + std::to_string(slot) + " - " + GetSaveSlotSummary(slot);
+        item.isSubmenu = false;
+        item.enabled = game->adventure.currentScene.loaded;
+        item.action = [slot] {
+            if (SaveGameToSlot(*game, slot)) {
+                TraceLog(LOG_INFO, "Saved game to slot %d", slot);
+                if (!menuStack.empty()) {
+                    menuStack.pop();
+                }
+            } else {
+                TraceLog(LOG_ERROR, "Failed saving game to slot %d", slot);
+            }
+        };
+        menu->items.push_back(item);
+    }
+
+    MenuItem back;
+    back.text = "Back";
+    back.isSubmenu = false;
+    back.action = [] {
+        if (!menuStack.empty()) menuStack.pop();
+    };
+    menu->items.push_back(back);
+
+    return menu;
+}
+
+static std::shared_ptr<Menu> createLoadMenu() {
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Load Game";
+    menu->hint = "Select a save slot to load.";
+
+    for (int slot = 1; slot <= 3; ++slot) {
+        MenuItem item;
+        item.text = "Slot " + std::to_string(slot) + " - " + GetSaveSlotSummary(slot);
+        item.isSubmenu = false;
+        item.enabled = DoesSaveSlotExist(slot);
+        item.action = [slot] {
+            if (LoadGameFromSlot(*game, slot)) {
+                TraceLog(LOG_INFO, "Loaded game from slot %d", slot);
+                while (!menuStack.empty()) {
+                    menuStack.pop();
+                }
+                menuStack.push(&createMainMenu);
+            } else {
+                TraceLog(LOG_ERROR, "Failed loading game from slot %d", slot);
+            }
+        };
+        menu->items.push_back(item);
+    }
+
+    MenuItem back;
+    back.text = "Back";
+    back.isSubmenu = false;
+    back.action = [] {
+        if (!menuStack.empty()) menuStack.pop();
+    };
+    menu->items.push_back(back);
+
+    return menu;
+}
+
 static std::shared_ptr<Menu> createMainMenu() {
     auto menu = std::make_shared<Menu>();
     menu->title = "Main Menu";
 
-    if (true) {
+    const bool hasGameLoaded = game->adventure.currentScene.loaded;
+
+    if (!hasGameLoaded) {
         MenuItem item;
         item.text = "Start New Game";
         item.isSubmenu = false;
@@ -268,32 +333,30 @@ static std::shared_ptr<Menu> createMainMenu() {
         resume.text = "Resume";
         resume.isSubmenu = false;
         resume.action = [] {
+            game->mode = GameMode::Game;
             TraceLog(LOG_DEBUG, "Resume selected");
         };
         menu->items.push_back(resume);
 
         MenuItem save;
         save.text = "Save Game";
-        save.isSubmenu = false;
-        save.action = saveGame;
+        save.isSubmenu = true;
+        save.submenuBuilder = createSaveMenu;
         menu->items.push_back(save);
     }
 
     MenuItem load;
     load.text = "Load Game";
-    load.isSubmenu = false;
-    load.action = loadGame;
+    load.isSubmenu = true;
+    load.submenuBuilder = createLoadMenu;
     menu->items.push_back(load);
 
-
-    // Main Menu Settings item
     MenuItem settings;
     settings.text = "Settings";
     settings.isSubmenu = true;
     settings.submenuBuilder = createSettingsMenu;
     menu->items.push_back(settings);
 
-    // Main Menu Quit item
     MenuItem quit;
     quit.text = "Quit";
     quit.isSubmenu = false;

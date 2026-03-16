@@ -1,8 +1,8 @@
 function Scene_onEnter()
     --startScript("Looper")
-    --walkToHotspot("window")
-    log("testing log")
-    logf("testing logf")
+    log("Scene_onEnter fired")
+    setFlag("entered_scene_once", true)
+    giveItem("sausage")
 end
 
 function Looper()

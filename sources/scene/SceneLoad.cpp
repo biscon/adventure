@@ -106,7 +106,7 @@ void UnloadCurrentScene(GameState& state)
     UnloadSceneResources(state.resources);
 }
 
-bool LoadSceneById(GameState& state, const char* sceneId)
+bool LoadSceneById(GameState& state, const char* sceneId, SceneLoadMode loadMode)
 {
     if (state.adventure.currentScene.loaded) {
         ScriptSystemCallHook(state, "Scene_onExit");
@@ -130,6 +130,7 @@ bool LoadSceneById(GameState& state, const char* sceneId)
 
     SceneData scene;
     scene.sceneId = root.value("sceneId", std::string(sceneId));
+    scene.saveName = root.value("saveName", scene.sceneId);
     scene.sceneFilePath = sceneFileNorm;
     scene.baseAssetScale = root.value("baseAssetScale", 1);
     scene.worldWidth = root.value("worldWidth", 1920.0f);
@@ -322,7 +323,13 @@ bool LoadSceneById(GameState& state, const char* sceneId)
         return false;
     }
 
-    ScriptSystemCallHook(state, "Scene_onEnter");
+    if (loadMode == SceneLoadMode::FromSave) {
+        TraceLog(LOG_INFO, "Skipping Scene_onEnter for save restore: %s", scene.sceneId.c_str());
+    }
+
+    if (loadMode == SceneLoadMode::Normal) {
+        ScriptSystemCallHook(state, "Scene_onEnter");
+    }
 
     TraceLog(LOG_INFO, "Loaded scene: %s", scene.sceneId.c_str());
     TraceLog(LOG_INFO,

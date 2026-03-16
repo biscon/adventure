@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
+#include <ctime>
+#include <cstdio>
 
 #include "utils/json.hpp"
 #include "scene/SceneLoad.h"
@@ -10,6 +12,7 @@
 #include "adventure/Inventory.h"
 #include "adventure/Dialogue.h"
 #include "debug/DebugConsole.h"
+
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -72,6 +75,55 @@ namespace
     static fs::path GetSaveSlotPath(int slotIndex)
     {
         return GetSaveDirPath() / ("slot" + std::to_string(slotIndex) + ".json");
+    }
+
+    static std::string BuildCurrentSaveTimestamp()
+    {
+        const std::time_t now = std::time(nullptr);
+        std::tm localTm{};
+
+#if defined(_WIN32)
+        localtime_s(&localTm, &now);
+#else
+        localTm = *std::localtime(&now);
+#endif
+
+        char buf[32];
+        std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M", &localTm);
+        return std::string(buf);
+    }
+
+    static std::string FormatSaveSummary(const std::string& saveName, const std::string& savedAt)
+    {
+        if (saveName.empty() && savedAt.empty()) {
+            return "Corrupt";
+        }
+
+        if (saveName.empty()) {
+            return savedAt;
+        }
+
+        if (savedAt.empty()) {
+            return saveName;
+        }
+
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        int hour = 0;
+        int minute = 0;
+
+        if (std::sscanf(savedAt.c_str(), "%d-%d-%d %d:%d", &year, &month, &day, &hour, &minute) == 5) {
+            char buf[64];
+            std::snprintf(buf, sizeof(buf),
+                          "%s %02d:%02d (%04d-%02d-%02d)",
+                          saveName.c_str(),
+                          hour, minute,
+                          year, month, day);
+            return std::string(buf);
+        }
+
+        return saveName + " " + savedAt;
     }
 
     static bool EnsureSaveDirExists()
@@ -427,7 +479,7 @@ namespace
 
     static bool ApplySaveRestoreData(GameState& state, const SaveRestoreData& data)
     {
-        if (!LoadSceneById(state, data.sceneId.c_str())) {
+        if (!LoadSceneById(state, data.sceneId.c_str(), SceneLoadMode::FromSave)) {
             TraceLog(LOG_ERROR, "Failed to load save scene: %s", data.sceneId.c_str());
             return false;
         }
@@ -465,6 +517,10 @@ bool SaveGameToSlot(GameState& state, int slotIndex)
     json root;
     root["version"] = SAVE_VERSION;
     root["sceneId"] = state.adventure.currentScene.sceneId;
+    root["saveName"] = !state.adventure.currentScene.saveName.empty()
+                       ? state.adventure.currentScene.saveName
+                       : state.adventure.currentScene.sceneId;
+    root["savedAt"] = BuildCurrentSaveTimestamp();
     root["controlsEnabled"] = state.adventure.controlsEnabled;
 
     const ActorInstance* controlledActor = GetControlledActor(state);
@@ -534,10 +590,8 @@ std::string GetSaveSlotSummary(int slotIndex)
         in >> root;
     }
 
-    const std::string sceneId = root.value("sceneId", "");
-    if (sceneId.empty()) {
-        return "Corrupt";
-    }
+    const std::string saveName = root.value("saveName", root.value("sceneId", ""));
+    const std::string savedAt = root.value("savedAt", "");
 
-    return sceneId;
+    return FormatSaveSummary(saveName, savedAt);
 }

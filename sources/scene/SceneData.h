@@ -111,6 +111,7 @@ struct SceneScaleConfig {
 
 struct SceneData {
     std::string sceneId;
+    std::string saveName;
     std::string sceneFilePath;
     std::string tiledFilePath;
     std::string playerActorAssetPath;
