@@ -7,14 +7,11 @@
 
 #include "adventure/Adventure.h"
 #include "resources/Resources.h"
-#include "resources/TextureAsset.h"
-#include "resources/AsepriteAsset.h"
 #include "scripting/ScriptSystem.h"
 
 #include "input/Input.h"
 #include "raylib.h"
 #include <filesystem>
-#include "settings/Settings.h"
 #include "adventure/AdventureActorHelpers.h"
 #include "save/SaveGame.h"
 
