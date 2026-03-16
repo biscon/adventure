@@ -16,6 +16,7 @@
 #include <filesystem>
 #include "settings/Settings.h"
 #include "adventure/AdventureActorHelpers.h"
+#include "save/SaveGame.h"
 
 static constexpr int CONSOLE_PADDING = 16;
 static constexpr int CONSOLE_INPUT_HEIGHT = 40;
@@ -138,6 +139,28 @@ static std::vector<std::string> SplitConsoleWords(const std::string& text)
     return out;
 }
 
+static bool TryParseConsoleSlotIndex(const std::string& text, int& outSlotIndex)
+{
+    outSlotIndex = -1;
+
+    if (text.empty()) {
+        return false;
+    }
+
+    char* endPtr = nullptr;
+    const long value = std::strtol(text.c_str(), &endPtr, 10);
+    if (endPtr == text.c_str() || *endPtr != '\0') {
+        return false;
+    }
+
+    if (value < 1 || value > 999) {
+        return false;
+    }
+
+    outSlotIndex = static_cast<int>(value);
+    return true;
+}
+
 static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line)
 {
     const std::vector<std::string> args = SplitConsoleWords(line);
@@ -153,6 +176,9 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
         DebugConsoleAddLine(state, "  /clear", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /goto <sceneId> [spawnId]", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /reload", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /save <slot>", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /load <slot>", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /saves", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /resources", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /flags", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /items", LIGHTGRAY);
@@ -195,6 +221,82 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
 
         AdventureQueueLoadScene(state, state.adventure.currentScene.sceneId.c_str(), nullptr);
         DebugConsoleAddLine(state, "queued reload: " + state.adventure.currentScene.sceneId, SKYBLUE);
+        return true;
+    }
+
+    if (cmd == "/save") {
+        if (args.size() < 2) {
+            DebugConsoleAddLine(state, "usage: /save <slot>", RED);
+            return true;
+        }
+
+        int slotIndex = -1;
+        if (!TryParseConsoleSlotIndex(args[1], slotIndex)) {
+            DebugConsoleAddLine(state, "invalid slot index", RED);
+            return true;
+        }
+
+        if (SaveGameToSlot(state, slotIndex)) {
+            DebugConsoleAddLine(
+                    state,
+                    "saved slot " + std::to_string(slotIndex) + ": " + GetSaveSlotSummary(slotIndex),
+                    SKYBLUE);
+        } else {
+            DebugConsoleAddLine(
+                    state,
+                    "failed saving slot " + std::to_string(slotIndex),
+                    RED);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/load") {
+        if (args.size() < 2) {
+            DebugConsoleAddLine(state, "usage: /load <slot>", RED);
+            return true;
+        }
+
+        int slotIndex = -1;
+        if (!TryParseConsoleSlotIndex(args[1], slotIndex)) {
+            DebugConsoleAddLine(state, "invalid slot index", RED);
+            return true;
+        }
+
+        if (!DoesSaveSlotExist(slotIndex)) {
+            DebugConsoleAddLine(
+                    state,
+                    "save slot " + std::to_string(slotIndex) + " is empty",
+                    RED);
+            return true;
+        }
+
+        if (LoadGameFromSlot(state, slotIndex)) {
+            DebugConsoleAddLine(
+                    state,
+                    "loaded slot " + std::to_string(slotIndex) + ": " + GetSaveSlotSummary(slotIndex),
+                    SKYBLUE);
+        } else {
+            DebugConsoleAddLine(
+                    state,
+                    "failed loading slot " + std::to_string(slotIndex),
+                    RED);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/saves") {
+        DebugConsoleAddLine(state, "save slots:", SKYBLUE);
+
+        for (int slot = 1; slot <= 8; ++slot) {
+            const std::string summary = GetSaveSlotSummary(slot);
+            DebugConsoleAddLine(
+                    state,
+                    "  [" + std::to_string(slot) + "] " + summary,
+                    LIGHTGRAY);
+        }
+
         return true;
     }
 
