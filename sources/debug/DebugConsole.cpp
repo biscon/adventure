@@ -12,6 +12,7 @@
 #include "input/Input.h"
 #include "raylib.h"
 #include <filesystem>
+#include <cstring>
 #include "adventure/AdventureActorHelpers.h"
 #include "save/SaveGame.h"
 
@@ -55,6 +56,39 @@ static void InsertConsoleText(DebugConsoleData& console, const std::string& text
     console.caretIndex += static_cast<int>(text.size());
 }
 
+static std::string SanitizeClipboardTextForConsole(const char* text)
+{
+    if (text == nullptr) {
+        return {};
+    }
+
+    std::string out;
+    out.reserve(std::strlen(text));
+
+    bool previousWasSpace = false;
+
+    for (const unsigned char* p = reinterpret_cast<const unsigned char*>(text); *p != 0; ++p) {
+        const unsigned char ch = *p;
+
+        if (ch == '\r' || ch == '\n' || ch == '\t') {
+            if (!previousWasSpace) {
+                out.push_back(' ');
+                previousWasSpace = true;
+            }
+            continue;
+        }
+
+        if (ch < 32 || ch == 127) {
+            continue;
+        }
+
+        out.push_back(static_cast<char>(ch));
+        previousWasSpace = (ch == ' ');
+    }
+
+    return out;
+}
+
 static void BackspaceConsoleText(DebugConsoleData& console)
 {
     ClampCaret(console);
@@ -77,6 +111,19 @@ static void DeleteConsoleText(DebugConsoleData& console)
     }
 
     console.input.erase(static_cast<size_t>(console.caretIndex), 1);
+}
+
+static void PasteClipboardIntoConsole(DebugConsoleData& console)
+{
+    const char* clipboardText = GetClipboardText();
+    const std::string sanitized = SanitizeClipboardTextForConsole(clipboardText);
+
+    if (sanitized.empty()) {
+        return;
+    }
+
+    InsertConsoleText(console, sanitized);
+    ResetCaretBlink(console);
 }
 
 static void ClampConsoleState(DebugConsoleData& console)
@@ -780,6 +827,19 @@ void UpdateDebugConsole(GameState& state, float dt)
                 ResetCaretBlink(console);
                 ConsumeEvent(ev);
                 break;
+
+            case KEY_V:
+            {
+                const bool ctrlDown =
+                        IsKeyDown(KEY_LEFT_CONTROL) ||
+                        IsKeyDown(KEY_RIGHT_CONTROL);
+
+                if (ctrlDown) {
+                    PasteClipboardIntoConsole(console);
+                    ConsumeEvent(ev);
+                }
+                break;
+            }
 
             case KEY_LEFT:
                 if (console.caretIndex > 0) {
