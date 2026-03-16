@@ -113,6 +113,18 @@ static void DeleteConsoleText(DebugConsoleData& console)
     console.input.erase(static_cast<size_t>(console.caretIndex), 1);
 }
 
+static void MoveConsoleCaretHome(DebugConsoleData& console)
+{
+    console.caretIndex = 0;
+    ResetCaretBlink(console);
+}
+
+static void MoveConsoleCaretEnd(DebugConsoleData& console)
+{
+    console.caretIndex = static_cast<int>(console.input.size());
+    ResetCaretBlink(console);
+}
+
 static void PasteClipboardIntoConsole(DebugConsoleData& console)
 {
     const char* clipboardText = GetClipboardText();
@@ -828,6 +840,16 @@ void UpdateDebugConsole(GameState& state, float dt)
                 ConsumeEvent(ev);
                 break;
 
+            case KEY_HOME:
+                MoveConsoleCaretHome(console);
+                ConsumeEvent(ev);
+                break;
+
+            case KEY_END:
+                MoveConsoleCaretEnd(console);
+                ConsumeEvent(ev);
+                break;
+
             case KEY_V:
             {
                 const bool ctrlDown =
@@ -836,6 +858,21 @@ void UpdateDebugConsole(GameState& state, float dt)
 
                 if (ctrlDown) {
                     PasteClipboardIntoConsole(console);
+                    ConsumeEvent(ev);
+                }
+                break;
+            }
+
+            case KEY_L:
+            {
+                const bool ctrlDown =
+                        IsKeyDown(KEY_LEFT_CONTROL) ||
+                        IsKeyDown(KEY_RIGHT_CONTROL);
+
+                if (ctrlDown) {
+                    console.lines.clear();
+                    console.scrollOffset = 0;
+                    ResetCaretBlink(console);
                     ConsumeEvent(ev);
                 }
                 break;
@@ -1029,8 +1066,12 @@ void RenderDebugConsole(const GameState& state)
                 WHITE);
     }
 
+    //const std::string helpText =
+    //        "` console  |  Enter submit  |  Up/Down history  |  Left/Right move  |  Del delete  |  PgUp/PgDn scroll";
+
     const std::string helpText =
-            "` console  |  Enter submit  |  Up/Down history  |  Left/Right move  |  Del delete  |  PgUp/PgDn scroll";
+            "` console  |  Enter submit  |  Up/Down history  |  Left/Right move  |  Home/End caret  |  Ctrl+V paste  |  Ctrl+L clear  |  Del delete  |  PgUp/PgDn scroll";
+
     DrawTextEx(
             font,
             helpText.c_str(),

@@ -37,6 +37,7 @@ struct DebugData {
     bool showScaleInfo = false;
     bool showTrianglePath = false;
     bool showSceneObjects = false;
+    bool showEffects = false;
     bool showScripts = false;
     DebugConsoleData console{};
 };

@@ -653,6 +653,56 @@
                  "width":0,
                  "x":239,
                  "y":305
+                },
+            
+                {
+                 "height":0,
+                 "id":39,
+                 "name":"furnace_fire",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"animation",
+                         "type":"string",
+                         "value":"idle"
+                        },
+                    
+                        {
+                         "name":"asset",
+                         "type":"string",
+                         "value":"..\/..\/props\/furnace_fire.prop.json"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"depthScaling",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"flipX",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"visualType",
+                         "type":"string",
+                         "value":"sprite"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":285,
+                 "y":189
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -696,15 +746,41 @@
          "id":17,
          "layers":[
                 {
-                 "id":19,
-                 "image":"furnace_glow_effect_sprite.png",
-                 "imageheight":256,
-                 "imagewidth":256,
+                 "id":28,
+                 "image":"furnace_glow_a.png",
+                 "imageheight":360,
+                 "imagewidth":640,
                  "mode":"add",
-                 "name":"furnace_glow",
-                 "offsetx":190.5,
-                 "offsety":89.5,
-                 "opacity":0.59,
+                 "name":"furnace_glow_a",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                },
+            
+                {
+                 "id":29,
+                 "image":"furnace_glow_b.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "mode":"add",
+                 "name":"furnace_glow_b",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                },
+            
+                {
+                 "id":30,
+                 "image":"furnace_glow_core.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "mode":"add",
+                 "name":"furnace_glow_core",
+                 "opacity":0.75,
                  "type":"imagelayer",
                  "visible":true,
                  "x":0,
@@ -775,6 +851,20 @@
                  "visible":true,
                  "x":0,
                  "y":0
+                },
+            
+                {
+                 "id":27,
+                 "image":"basement_shadow_light_off.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "mode":"multiply",
+                 "name":"no_light_shadow",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
                 }],
          "name":"effects_overlay",
          "opacity":1,
@@ -783,8 +873,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":27,
- "nextobjectid":39,
+ "nextlayerid":32,
+ "nextobjectid":40,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

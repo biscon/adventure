@@ -58,6 +58,10 @@ static void HandleDebugInput(GameState& state)
                 state.debug.showScripts = !state.debug.showScripts;
                 ConsumeEvent(ev);
                 break;
+            case KEY_F10:
+                state.debug.showEffects = !state.debug.showEffects;
+                ConsumeEvent(ev);
+                break;
             default:
                 break;
         }

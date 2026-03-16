@@ -16,7 +16,7 @@
         "nearY": 980,
         "farY": 400,
         "nearScale": 1.0,
-        "farScale": 0.67
+        "farScale": 0.57
     },
 
     "playerActorAsset": "../../actors/main_actor/main_actor.actor.json"

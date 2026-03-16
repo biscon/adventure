@@ -230,24 +230,6 @@ static void DrawScenePolygon(const GameState& state, const ScenePolygon& poly, C
     }
 }
 
-static Color GetEffectDebugColor(const SceneEffectSpriteData& sceneEffect)
-{
-    if (sceneEffect.renderAsOverlay) {
-        return YELLOW;
-    }
-
-    switch (sceneEffect.depthMode) {
-        case ScenePropDepthMode::Back:
-            return SKYBLUE;
-        case ScenePropDepthMode::DepthSorted:
-            return GREEN;
-        case ScenePropDepthMode::Front:
-            return PINK;
-        default:
-            return SKYBLUE;
-    }
-}
-
 static void DrawSceneObjectDebug(const GameState& state)
 {
     const SceneData& scene = state.adventure.currentScene;
@@ -294,6 +276,29 @@ static void DrawSceneObjectDebug(const GameState& state)
         DrawCircleV(p, 4.0f, MAGENTA);
         DrawText(sceneProp.id.c_str(), static_cast<int>(p.x + 8.0f), static_cast<int>(p.y - 8.0f), 16, MAGENTA);
     }
+}
+
+static Color GetEffectDebugColor(const SceneEffectSpriteData& sceneEffect)
+{
+    if (sceneEffect.renderAsOverlay) {
+        return YELLOW;
+    }
+
+    switch (sceneEffect.depthMode) {
+        case ScenePropDepthMode::Back:
+            return SKYBLUE;
+        case ScenePropDepthMode::DepthSorted:
+            return GREEN;
+        case ScenePropDepthMode::Front:
+            return PINK;
+        default:
+            return SKYBLUE;
+    }
+}
+
+static void DrawEffectDebug(const GameState& state)
+{
+    const SceneData& scene = state.adventure.currentScene;
 
     const int effectCount = std::min(
             static_cast<int>(scene.effectSprites.size()),
@@ -385,6 +390,10 @@ void RenderAdventureDebug(const GameState& state) {
 
     if (state.debug.showSceneObjects) {
         DrawSceneObjectDebug(state);
+    }
+
+    if (state.debug.showEffects) {
+        DrawEffectDebug(state);
     }
 
     if (state.debug.showFeetPoints) {
