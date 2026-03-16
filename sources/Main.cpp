@@ -93,6 +93,7 @@ int main()
 
         ProcessGameModeInput(state);
         UpdateDebugConsole(state, dt);
+        MenuUpdate(dt);
 
         if(state.mode == GameMode::Menu) MenuHandleInput(state);
 
@@ -115,6 +116,7 @@ int main()
 
         if(state.mode == GameMode::Menu) MenuRenderUi(state);
 
+        MenuRenderOverlay();
         RenderDebugConsole(state);
 
         EndTextureMode();

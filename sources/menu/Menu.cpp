@@ -15,6 +15,18 @@ static GameState* game;
 
 const Color MENU_BG_COLOR = Color{25, 25, 25, 255};
 
+static constexpr int SAVE_SLOT_COUNT = 8;
+
+static std::string menuToastText;
+static float menuToastTimer = 0.0f;
+static float menuToastDuration = 0.0f;
+
+static void ShowMenuToast(const std::string& text, float durationSeconds = 1.5f) {
+    menuToastText = text;
+    menuToastDuration = durationSeconds;
+    menuToastTimer = durationSeconds;
+}
+
 // Forward declaration
 struct Menu;
 static std::shared_ptr<Menu> createMainMenu();
@@ -252,7 +264,7 @@ static std::shared_ptr<Menu> createSaveMenu() {
     menu->title = "Save Game";
     menu->hint = "Select a slot to overwrite.";
 
-    for (int slot = 1; slot <= 3; ++slot) {
+    for (int slot = 1; slot <= SAVE_SLOT_COUNT; ++slot) {
         MenuItem item;
         item.text = "Slot " + std::to_string(slot) + " - " + GetSaveSlotSummary(slot);
         item.isSubmenu = false;
@@ -260,11 +272,17 @@ static std::shared_ptr<Menu> createSaveMenu() {
         item.action = [slot] {
             if (SaveGameToSlot(*game, slot)) {
                 TraceLog(LOG_INFO, "Saved game to slot %d", slot);
-                if (!menuStack.empty()) {
+                ShowMenuToast("Game Saved");
+
+                while (!menuStack.empty()) {
                     menuStack.pop();
                 }
+                menuStack.push(&createMainMenu);
+
+                game->mode = GameMode::Game;
             } else {
                 TraceLog(LOG_ERROR, "Failed saving game to slot %d", slot);
+                ShowMenuToast("Save Failed");
             }
         };
         menu->items.push_back(item);
@@ -286,7 +304,7 @@ static std::shared_ptr<Menu> createLoadMenu() {
     menu->title = "Load Game";
     menu->hint = "Select a save slot to load.";
 
-    for (int slot = 1; slot <= 3; ++slot) {
+    for (int slot = 1; slot <= SAVE_SLOT_COUNT; ++slot) {
         MenuItem item;
         item.text = "Slot " + std::to_string(slot) + " - " + GetSaveSlotSummary(slot);
         item.isSubmenu = false;
@@ -294,12 +312,14 @@ static std::shared_ptr<Menu> createLoadMenu() {
         item.action = [slot] {
             if (LoadGameFromSlot(*game, slot)) {
                 TraceLog(LOG_INFO, "Loaded game from slot %d", slot);
+                ShowMenuToast("Game Loaded");
                 while (!menuStack.empty()) {
                     menuStack.pop();
                 }
                 menuStack.push(&createMainMenu);
             } else {
                 TraceLog(LOG_ERROR, "Failed loading game from slot %d", slot);
+                ShowMenuToast("Load Failed");
             }
         };
         menu->items.push_back(item);
@@ -375,19 +395,38 @@ void MenuInit(GameState* gameState) {
     menuStack.push(&createMainMenu);
 }
 
-//static MenuItem* activeSlider = nullptr;
+void MenuUpdate(float dt) {
+    if (menuToastTimer > 0.0f) {
+        menuToastTimer -= dt;
+        if (menuToastTimer < 0.0f) {
+            menuToastTimer = 0.0f;
+            menuToastText.clear();
+        }
+    }
+}
 
 void MenuRenderUi(GameState& state) {
     ClearBackground(MENU_BG_COLOR);
     if (menuStack.empty()) return;
 
-    //auto& menu = *menuStack.top();
     std::shared_ptr<Menu> menu = menuStack.top()(); // call the builder
     float menuX = INTERNAL_WIDTH / 2.0f;
     float menuY = INTERNAL_HEIGHT / 2.0f;
     float spacing = 40.0f;
-    float itemWidth = 400;
-    float itemHeight = 36;
+    float itemHeight = 36.0f;
+
+    float itemWidth = 0.0f;
+    for (const MenuItem& item : menu->items) {
+        const int textWidth = MeasureText(item.text.c_str(), 20);
+        if (static_cast<float>(textWidth) > itemWidth) {
+            itemWidth = static_cast<float>(textWidth);
+        }
+    }
+
+    itemWidth += 80.0f; // left/right padding
+    if (itemWidth < 400.0f) {
+        itemWidth = 400.0f;
+    }
 
     if(!menu->title.empty()) {
         DrawText(menu->title.c_str(), menuX - (MeasureText(menu->title.c_str(), 40) / 2), 10, 40, WHITE);
@@ -475,6 +514,42 @@ void MenuRenderUi(GameState& state) {
             }
         }
     }
+}
+
+void MenuRenderOverlay() {
+    if (menuToastTimer <= 0.0f || menuToastText.empty()) {
+        return;
+    }
+
+    float alpha = 1.0f;
+    if (menuToastDuration > 0.0f && menuToastTimer < 0.35f) {
+        alpha = menuToastTimer / 0.35f;
+        if (alpha < 0.0f) alpha = 0.0f;
+        if (alpha > 1.0f) alpha = 1.0f;
+    }
+
+    const int fontSize = 24;
+    const int paddingX = 18;
+    const int paddingY = 12;
+
+    const int textWidth = MeasureText(menuToastText.c_str(), fontSize);
+    const float boxWidth = static_cast<float>(textWidth + paddingX * 2);
+    const float boxHeight = static_cast<float>(fontSize + paddingY * 2);
+
+    const float x = static_cast<float>(INTERNAL_WIDTH) - boxWidth - 24.0f;
+    const float y = 24.0f;
+
+    const Color bg = Color{20, 20, 24, static_cast<unsigned char>(220.0f * alpha)};
+    const Color border = Color{180, 180, 200, static_cast<unsigned char>(255.0f * alpha)};
+    const Color textColor = Color{255, 255, 255, static_cast<unsigned char>(255.0f * alpha)};
+
+    DrawRectangleRounded(Rectangle{x, y, boxWidth, boxHeight}, 0.15f, 6, bg);
+    DrawRectangleRoundedLinesEx(Rectangle{x, y, boxWidth, boxHeight}, 0.15f, 6, 2.0f, border);
+    DrawText(menuToastText.c_str(),
+             static_cast<int>(x + paddingX),
+             static_cast<int>(y + paddingY),
+             fontSize,
+             textColor);
 }
 
 void MenuHandleInput(GameState& state) {
