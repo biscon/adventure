@@ -3,7 +3,7 @@
     "displayName": "Main Actor",
     "spriteAsset": "main_actor.actor.json",
     "talkColor": "ORANGE",
-    "walkSpeed": 300.0,
+    "walkSpeed": 400.0,
     "fastMoveMultiplier": 2.0,
     "idleDelayMs": 200.0,
     "controllable": true,

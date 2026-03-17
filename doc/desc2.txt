@@ -1,0 +1,404 @@
+We are building a custom 2D point-and-click adventure engine in C++ using raylib.
+
+--------------------------------------------------------------------------------
+OVERALL PROJECT / CODING STYLE
+--------------------------------------------------------------------------------
+- Personal engine, not a general-purpose AGS replacement
+- Procedural / data-oriented design preferred over heavy OOP
+- Central GameState struct pattern
+- Data lives in plain structs in *Data.h files
+- Prefer integer handles over raw pointers where practical
+- Avoid polymorphism unless forced by framework/library boundaries
+- Refactor when files get too large, but keep changes localized and patch-style
+- Preserve structure unless explicitly changing it
+- Iterative workflow: small changes, no giant speculative rewrites
+
+--------------------------------------------------------------------------------
+RENDERING / RESOLUTION
+--------------------------------------------------------------------------------
+- Internal resolution is fixed at 1920x1080
+- Scene renders to a render texture, then scaled to window/screen
+- Assets are often lower-res pixel art with authored scale
+- Point filtering for all assets
+- Bilinear filtering only on final fullscreen upscale
+- PNG textures use premultiplied alpha
+
+Main render passes:
+- RenderAdventureScene(state)
+- RenderAdventureUi(state)
+- RenderAdventureDebug(state)
+
+--------------------------------------------------------------------------------
+TOP-LEVEL ARCHITECTURE
+--------------------------------------------------------------------------------
+GameState contains:
+- settings
+- input
+- mode
+- resources
+- adventure
+- debug
+- script
+
+Main subsystems:
+- Adventure gameplay layer
+- Scene system (JSON + Tiled)
+- Resource system
+- Actor system
+- Prop system
+- Effects / lighting system
+- Lua scripting system
+- Inventory system + UI
+- Dialogue system
+- Debug overlays
+- Debug console
+- Save/load system
+- Menu system
+
+--------------------------------------------------------------------------------
+DIRECTORY STRUCTURE (HIGHLIGHTS)
+--------------------------------------------------------------------------------
+adventure/
+scene/
+render/
+scripting/
+debug/
+resources/
+save/
+input/
+menu/
+data/
+
+--------------------------------------------------------------------------------
+SCENE / CONTENT PIPELINE
+--------------------------------------------------------------------------------
+- Scenes are data-driven via JSON (nlohmann::json)
+- Tiled (.tmj) is the primary authored scene source
+- Scene JSON references:
+  - tiled file
+  - Lua script
+  - saveName (for save slots)
+
+Tiled content includes:
+- background image layers
+- foreground image layers
+- navigation polygons
+- blockers
+- hotspots
+- exits
+- spawn points
+- props
+- actors
+- (now also effects / lighting authored in Tiled)
+
+--------------------------------------------------------------------------------
+SCENE LOADING FLOW
+--------------------------------------------------------------------------------
+- Load scene.json
+- Import Tiled .tmj into SceneData
+- Build navmesh
+- Initialize props
+- Ensure/load actor definitions
+- Create runtime actors
+- Init scripting system
+- Execute scene Lua file
+- Call Scene_onEnter() (unless loading from save)
+
+SceneLoadMode:
+- Normal
+- FromSave (skips Scene_onEnter)
+
+--------------------------------------------------------------------------------
+RESOURCE SYSTEM
+--------------------------------------------------------------------------------
+- Integer handles (no raw pointers)
+- Cached loading by normalized path
+- Resource scopes:
+  - Global
+  - Scene
+
+Unload:
+- UnloadSceneResources()
+- UnloadAllResources()
+
+--------------------------------------------------------------------------------
+SPRITE / ASSET PIPELINE
+--------------------------------------------------------------------------------
+- Aseprite JSON + sidecar for animations
+- Plain textures for static images
+- Supports:
+  - looping
+  - one-shot
+  - clips
+  - directions
+
+--------------------------------------------------------------------------------
+ACTOR SYSTEM
+--------------------------------------------------------------------------------
+- Runtime actors: state.adventure.actors
+- Controlled actor index tracked
+- Actor definitions separate from runtime
+
+Supports:
+- movement
+- facing
+- animation
+- visibility
+- control switching
+- per-actor inventories
+
+Interaction:
+- separate interaction rect (scaled)
+- full rect used for speech anchoring
+
+--------------------------------------------------------------------------------
+MOVEMENT / PATHFINDING
+--------------------------------------------------------------------------------
+- Navmesh system using:
+  - Clipper2
+  - earcut triangulation
+  - A* over triangles
+  - funnel algorithm
+
+--------------------------------------------------------------------------------
+PROPS
+--------------------------------------------------------------------------------
+- Authored in Tiled
+- Support:
+  - sprite/image
+  - animation
+  - visibility
+  - flipX
+  - tweened movement
+  - depth sorting
+
+--------------------------------------------------------------------------------
+EFFECTS / LIGHTING SYSTEM (NEW)
+--------------------------------------------------------------------------------
+Scene now supports effect layers:
+
+- effects_back
+- effects_mid
+- effects_front
+- effects_overlay (renders last)
+
+Effects are:
+- texture-based sprites
+- blend modes:
+  - normal
+  - additive
+  - multiply
+
+Runtime control via Lua:
+- setEffectVisible(id, bool)
+- getEffectVisible(id)
+- setEffectOpacity(id, value)
+
+Used for:
+- lighting
+- shadows
+- glow maps
+- halos
+
+Typical setup:
+- multiply layer for darkness/shadows
+- additive layers for light sources
+- layered additive maps for richer light
+- animated opacity for flicker
+
+Lighting behavior:
+- furnace uses layered additive maps + flicker scripts
+- bulb uses on/off states + burst flicker
+- system is fully script-driven (no baked light system)
+
+--------------------------------------------------------------------------------
+ADVENTURE LAYER
+--------------------------------------------------------------------------------
+Main files:
+- Adventure.cpp
+- AdventureUpdate.cpp
+- AdventureActionSystem.cpp
+
+Handles:
+- input → actions
+- script hooks
+- fallback behaviors
+
+--------------------------------------------------------------------------------
+INTERACTION MODEL
+--------------------------------------------------------------------------------
+- Left click = use / interact
+- Right click = look / examine
+- Hover shows display names
+
+Targets:
+- hotspots
+- exits
+- actors
+- props (via scripts)
+
+--------------------------------------------------------------------------------
+SPEECH SYSTEM
+--------------------------------------------------------------------------------
+- Single active speech channel
+- Anchors to:
+  - actor
+  - prop
+  - world position
+
+Features:
+- wrapping
+- clamping
+- colored text
+- skippable speech
+
+Lua:
+- say(...)
+- sayActor(...)
+- sayProp(...)
+- sayAt(...)
+
+--------------------------------------------------------------------------------
+DIALOGUE SYSTEM
+--------------------------------------------------------------------------------
+- Script-driven
+- Choice sets loaded from JSON
+- Lua controls branching
+
+API:
+- dialogue("id")
+- dialogue("id", hiddenOptions)
+
+Modal:
+- blocks world + inventory input
+
+--------------------------------------------------------------------------------
+LUA SCRIPTING SYSTEM
+--------------------------------------------------------------------------------
+- Fully Lua-based (Wren removed)
+- One script per scene
+- Coroutine-based waits
+
+Wait types:
+- Delay
+- WalkComplete
+- SpeechComplete
+- DialogueChoice
+
+Background scripts supported:
+- startScript(name)
+- stopScript(name)
+
+--------------------------------------------------------------------------------
+INVENTORY SYSTEM
+--------------------------------------------------------------------------------
+- Item definitions in JSON
+- Per-actor inventories
+- Held item system
+- UI supports:
+  - paging
+  - hover
+  - examine
+  - drag/use
+
+--------------------------------------------------------------------------------
+SAVE / LOAD SYSTEM
+--------------------------------------------------------------------------------
+- JSON save per slot
+- Stores:
+  - scene
+  - flags/ints/strings
+  - inventories
+  - actors
+  - props
+  - effects state (visibility/opacities)
+
+Does NOT store:
+- running scripts
+- coroutine state
+- active dialogue/speech
+
+On load:
+- scene loads in FromSave mode
+- scripts reinitialized
+- runtime restored
+
+--------------------------------------------------------------------------------
+DEBUG CONSOLE
+--------------------------------------------------------------------------------
+- In-game Lua console
+- Slash commands:
+  - /goto
+  - /save
+  - /load
+  - /flags
+  - etc.
+
+Supports:
+- history
+- scrollback
+- clipboard paste (NEW)
+- raw Lua execution
+
+--------------------------------------------------------------------------------
+DEBUG OVERLAYS
+--------------------------------------------------------------------------------
+Includes:
+- navmesh
+- blockers
+- paths
+- actors
+- objects
+- effects (toggle via F10)
+
+--------------------------------------------------------------------------------
+INPUT SYSTEM
+--------------------------------------------------------------------------------
+Custom abstraction over raylib:
+- MouseClick
+- KeyPressed
+- KeyReleased
+- TextInput
+
+Supports:
+- event filtering
+- handled flags
+- clipboard paste
+- Ctrl+C / Ctrl+V
+
+--------------------------------------------------------------------------------
+MAIN LOOP
+--------------------------------------------------------------------------------
+- UpdateInput
+- Handle input
+- Update console/menu
+- Process scene loads
+- AdventureUpdate
+- Render scene/ui/debug
+- Render menu + console
+
+--------------------------------------------------------------------------------
+CURRENT STATUS
+--------------------------------------------------------------------------------
+Engine is fully functional and includes:
+
+- scene loading (JSON + Tiled)
+- navmesh/pathfinding
+- actors + movement
+- props + animation
+- hotspots/exits
+- Lua scripting with coroutines
+- inventory system + UI
+- dialogue system
+- debug console + overlays
+- save/load system
+- layered lighting/effects system
+
+Lighting system is now:
+- data-driven (Tiled-authored)
+- script-controlled
+- layered (add/multiply)
+- capable of flicker, glow, and dynamic scene mood
+
+Next planned subsystem:
+- AUDIO SYSTEM

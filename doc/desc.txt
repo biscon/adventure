@@ -1,0 +1,644 @@
+We are building a custom 2D point-and-click adventure engine in C++ with raylib.
+
+Overall project / coding style
+- Personal engine, not a general-purpose AGS replacement
+- Prefer procedural / data-oriented style over heavy OOP
+- Central GameState struct pattern
+- Data lives in plain structs in *Data.h files
+- Prefer integer handles over raw pointers where practical
+- Avoid polymorphism unless forced by framework/library boundaries
+- Refactor when files get too large, but keep changes localized and patch-style
+- Preserve structure unless explicitly changing it
+- User likes choom-ish tone, but code should stay clean and practical
+- User wants iterative work, not giant speculative rewrites
+
+Rendering / resolution
+- Internal resolution is fixed at 1920x1080
+- Game renders to a render texture, then scales to actual window/screen size
+- Assets are often lower-res pixel art, scaled by authored/base scale
+- Point filtering is used for asset rendering
+- Bilinear is only used on the final fullscreen upscale render target
+- PNG textures use premultiplied alpha
+- Main render split is:
+  - RenderAdventureScene(state)
+  - RenderAdventureUi(state)
+  - RenderAdventureDebug(state)
+
+Top-level architecture
+- Central state:
+  - GameState
+    - settings
+    - input
+    - mode
+    - resources
+    - adventure
+    - debug
+    - script
+- Main subsystems currently include:
+  - adventure gameplay layer
+  - scene loading / authored scene import
+  - resource management
+  - actor system
+  - prop system
+  - Lua scripting system
+  - inventory data + UI
+  - dialogue system
+  - debug overlays
+  - debug console
+  - save/load system
+
+Current directory structure highlights
+- adventure/
+  - ActorDefinitionAsset.*
+  - Adventure.*
+  - AdventureActionSystem.*
+  - AdventureActorHelpers.*
+  - AdventureScriptCommands.cpp
+  - AdventureScriptInternal.h
+  - AdventureUpdate.*
+  - Dialogue.*
+  - DialogueChoiceAsset.*
+  - Inventory.*
+  - InventoryData.h
+  - InventoryUi.*
+  - ItemDefinitionAsset.*
+- scene/
+  - SceneData.h
+  - SceneHelpers.*
+  - SceneLoad.*
+  - TiledImport.*
+- render/
+  - DebugRender.*
+  - RenderHelpers.*
+  - SceneRender.*
+  - UiRender.*
+- scripting/
+  - ScriptData.h
+  - ScriptSystem.*
+  - ScriptSystemInternal.h
+  - ScriptSystemLuaApi.cpp
+- debug/
+  - DebugConsole.*
+  - DebugData.h
+- resources/
+  - AsepriteAsset.*
+  - TextureAsset.*
+  - Resources.*
+  - ResourceData.h
+- save/
+  - SaveGame.*
+- input/
+  - Input.*
+  - InputData.h
+- menu/
+  - Menu.*
+- data/
+  - GameState.h
+
+Scene/content pipeline
+- Scenes are data-driven via JSON using nlohmann::json
+- Tiled is used as a scene editor, not just for tilemaps
+- Tiled exported .tmj files define most authored scene content
+- Scene JSON points to:
+  - Tiled file
+  - Lua scene script
+- Scene JSON now also supports:
+  - saveName (player-facing name used in save slot summaries)
+- Aseprite JSON export + sidecar files are used for sprite animation
+- Scene-authored content from Tiled/.tmj currently includes:
+  - background image layers
+  - foreground image layers
+  - navigation polygons
+  - blocker polygons
+  - hotspots
+  - exits
+  - spawn points
+  - props
+  - actor placements
+- Actor definitions and item definitions live outside scenes as separate assets
+
+Important: Tiled /.tmj integration
+- Tiled exported .tmj is the main authored scene description
+- TiledImport.cpp recursively processes Tiled groups/layers/objects
+- Group/layer conventions currently include:
+  - background / foreground image layers
+  - navigation/navmesh polygons
+  - blockers
+  - spawns
+  - hotspots
+  - exits
+  - props
+  - actors
+- This is important for future lighting work, because authored lighting data will likely live in the Tiled scene and be imported from the .tmj, same way hotspots/exits/props/actors are imported now
+
+Scene loading flow
+- Roughly:
+  - scene.json
+  - parse scene metadata
+  - import Tiled .tmj content into SceneData
+  - build navmesh
+  - initialize props
+  - ensure/load actor definitions
+  - create runtime actors
+  - init scripting system
+  - run scene Lua file
+  - normally call Scene_onEnter()
+- Scene transitions call Scene_onExit() on the outgoing scene
+- Spawn points are used for controlled placement on transitions
+- Scene resources are unloaded between scenes
+- Global resources stay loaded
+- There is explicit resource scoping:
+  - Global
+  - Scene
+- Save-load path now supports skipping Scene_onEnter when restoring from save:
+  - SceneLoadMode::Normal
+  - SceneLoadMode::FromSave
+
+Scene JSON example shape
+- sceneId
+- saveName
+- tiledFile
+- script
+- baseAssetScale
+- worldWidth
+- worldHeight
+- playerSpawn
+- scale config
+- possibly older playerActorAsset field still exists in some scenes but may no longer be meaningfully used
+
+Resource system
+- ResourceData tracks textures and sprite assets
+- Integer handles are used, not raw resource pointers
+- Texture and sprite loading are cached by normalized path
+- Scene resources unload with:
+  - UnloadSceneResources(resources)
+- Full shutdown unload:
+  - UnloadAllResources(resources)
+
+Sprite / asset pipeline
+- Animated actors and animated props use Aseprite export + sidecar JSON
+- Static image layers and image props use plain textures
+- Aseprite system supports:
+  - clip lookup
+  - looping playback
+  - one-shot playback
+  - direction metadata
+  - repeat counts
+- Actor/prop rendering uses feet pivot and base draw scale from sprite assets
+
+Adventure layer overview
+- Main gameplay logic lives primarily in:
+  - Adventure.cpp
+  - AdventureUpdate.cpp
+  - AdventureActionSystem.cpp
+  - Inventory.cpp
+  - Dialogue.cpp
+  - related helpers
+- Large files have already been split to keep responsibilities manageable
+
+Actor system
+- Runtime actors live in:
+  - state.adventure.actors
+- Controlled actor index:
+  - state.adventure.controlledActorIndex
+- Actor definitions are separate from runtime instances
+- NPC scene actors come from Tiled actor placements
+- Controlled actor still uses spawn placement on scene loads/transitions
+- Actors support:
+  - walking
+  - facing
+  - animation
+  - visibility
+  - control switching
+  - separate inventories for controllable actors
+- Controlled actor is usually the current “player” for interaction purposes
+
+Actor authored data
+- actor.json currently includes at least:
+  - actorId
+  - displayName
+  - spriteAsset
+  - talkColor
+  - walkSpeed
+  - fastMoveMultiplier
+  - idleDelayMs
+  - controllable
+  - horizHitboxScale
+  - vertHitboxScale
+- horizHitboxScale / vertHitboxScale were added for interaction hitboxes only
+- GetActorScreenRect() remains full visual bounds and is used for speech anchoring
+- GetActorInteractionRect() is now used for click/hover detection
+- Interaction rect is shrunk:
+  - horizontally around center
+  - vertically upward from bottom
+  - bottom edge stays fixed at feet level
+
+Movement / pathfinding
+- Custom navmesh system uses:
+  - Clipper2 for boolean ops
+  - earcut triangulation
+  - A* over triangles
+  - funnel/string pulling
+- Important prior bug fix:
+  - A* cost uses shared-edge midpoint behavior rather than naive centroid-only feel
+- Pathfinding is already working well
+- earcut is intentionally not to be replaced
+
+Props
+- Props are scene-authored Tiled point objects
+- Props support:
+  - sprite or image visuals
+  - visibility
+  - flipX
+  - animation
+  - tweened movement
+  - depth scaling
+  - depth mode:
+    - depthSorted
+    - back
+    - front
+- Foreground image layers still render in front of everything
+- Background image layers still render behind everything
+
+Interaction model
+- Modern point-and-click style:
+  - left click = use / talk / interact
+  - right click = look / examine
+- No LucasArts verb bar
+- No cycling cursor modes
+- Hover UI shows display names for hovered targets
+- Supported world interactions include:
+  - hotspots
+  - exits
+  - actors
+- Controlled actor is excluded from normal actor interaction unless using held item on controlled actor
+
+Adventure action system
+- AdventureActionType includes variants like:
+  - WalkToPoint
+  - UseHotspot / LookHotspot
+  - UseExit / LookExit
+  - UseActor / LookActor
+- Input fills an action queue
+- Actions are processed centrally
+- Script hooks are consulted first where relevant
+- If not handled, default/fallback behavior runs
+
+Speech system
+- Existing speech system renders text above speaker/world anchor
+- Only one speech channel is active at a time
+- Speech can anchor to:
+  - player
+  - actor
+  - prop
+  - world position
+- Speech UI supports:
+  - wrapping
+  - clamping to screen
+  - colored text
+  - actor talk colors
+- Lua speech commands yield until speech completes
+- Speech can now be marked skippable internally
+- Clicking while skippable speech is active dismisses it early
+- That same click is swallowed so it does not also trigger world interactions
+
+Dialogue system
+- Dialogue is script-driven and not tied to any specific actor type
+- Any script trigger can start dialogue
+- Choice sets are global content assets loaded from:
+  - assets/dialogue/*.json
+- Dialogue UI appears at bottom of screen in LucasArts/AGS style
+- Lua API:
+  - dialogue("choice_set_id")
+  - dialogue("choice_set_id", { "option_to_hide_1", "option_to_hide_2" })
+- Dialogue yields Lua coroutine and resumes with chosen option id string
+- Dialogue UI is modal:
+  - blocks world interactions
+  - blocks inventory UI
+- Dialogue uses choice sets, but Lua controls all branching logic
+- No heavy dialogue tree system was introduced
+- Shared injected Lua helper namespace Adv currently includes:
+  - Adv.appendIf
+  - Adv.hiddenOptions
+  - Adv.runConversation
+  - Adv.runConversationDynamic (added later for recalculating hidden options each loop)
+- Shared Lua helpers are injected globally from C++ during ScriptSystemInit, so scene scripts do not need to include them manually
+
+Lua scripting system
+- Wren was abandoned; scripting is now fully Lua-based
+- One Lua file per scene
+- Hook naming style includes:
+  - Scene_onEnter()
+  - Scene_onExit()
+  - Scene_use_furnace()
+  - Scene_look_window()
+  - Scene_use_actor_npc_actor()
+  - Scene_look_actor_npc_actor()
+  - Scene_use_item_rusty_key_on_hotspot_window()
+  - etc.
+- ScriptSystem manages coroutines itself
+- Wait types include:
+  - WalkComplete
+  - SpeechComplete
+  - DelayMs
+  - DialogueChoice
+- Trigger contract:
+  - Missing => fallback may run
+  - Immediate false => fallback may run
+  - Immediate true => handled
+  - Yield => handled async
+  - Busy => suppress reentry / treated as handled-busy
+
+Lua API currently includes at least
+
+State / flags
+- setFlag(name, bool)
+- flag(name)
+- setInt(name, int)
+- getInt(name)
+- setString(name, value)
+- getString(name)
+
+Inventory
+- hasItem(itemId)
+- giveItem(itemId)
+- removeItem(itemId)
+- actorHasItem(actorId, itemId)
+- giveItemTo(actorId, itemId)
+- removeItemFrom(actorId, itemId)
+- clearHeldItem()
+- setHeldItem(itemId)
+
+Speech
+- say(text [, durationMs])
+- sayActor(actorId, text [, color] [, durationMs])
+- sayProp(propId, text [, color] [, durationMs])
+- sayAt(x, y, text [, color] [, durationMs])
+
+Movement / actor control
+- walkTo(x, y)
+- walkToHotspot(id)
+- walkToExit(id)
+- walkActorTo(actorId, x, y)
+- walkActorToHotspot(actorId, hotspotId)
+- walkActorToExit(actorId, exitId)
+- startWalkTo(x, y)
+- startWalkToHotspot(id)
+- startWalkToExit(id)
+- startWalkActorTo(actorId, x, y)
+- startWalkActorToHotspot(actorId, hotspotId)
+- startWalkActorToExit(actorId, exitId)
+- face(facing)
+- faceActor(actorId, facing)
+- controlActor(actorId)
+- setActorVisible(actorId, bool)
+
+Animation / props
+- playAnimation(anim)
+- playActorAnimation(actorId, anim)
+- playPropAnimation(propId, anim)
+- setPropAnimation(propId, anim)
+- setPropPosition(propId, x, y)
+- setPropPositionRelative(propId, dx, dy)
+- movePropTo(propId, x, y, durationMs, interpolation)
+- movePropBy(propId, dx, dy, durationMs, interpolation)
+- setPropVisible(propId, bool)
+- setPropFlipX(propId, bool)
+
+Scene / timing
+- changeScene(sceneId [, spawnId])
+- delay(ms)
+
+Controls
+- disableControls()
+- enableControls()
+
+Background script management
+- startScript(functionName)
+- stopScript(functionName)
+- stopAllScripts()
+
+Logging
+- log(text)
+- logf(fmt, ...)
+
+Dialogue
+- dialogue("choiceSetId")
+- dialogue("choiceSetId", { "hide_this_option", "hide_that_option" })
+
+Inventory system
+- Global item definitions loaded from:
+  - assets/items/*.json
+- Item definitions include:
+  - itemId
+  - displayName
+  - lookText
+  - iconPath
+  - iconTextureHandle
+- Item icons load globally at startup
+- Separate controllable actors can have separate inventories
+- Actor inventory data includes:
+  - actorId
+  - itemIds
+  - heldItemId
+  - pageStartIndex
+- Inventory UI behavior:
+  - opens from top screen zone
+  - closes after mouse leaves with delay
+  - paging
+  - right-click examine
+  - left-click pick/select item
+  - held item follows cursor
+  - item can be used on hotspots / exits / actors / controlled actor / inventory items
+  - right-click while holding cancels held item
+  - hover UI shows item displayName
+  - pickup popup queue exists
+  - controlsEnabled=false prevents inventory opening and closes it
+- Inventory script hooks are script-only for meaningful combinations
+
+Menu system
+- There is a menu system used for title/pause/settings/save/load
+- Menu is builder-based using std::function<std::shared_ptr<Menu>()>
+- Current menu supports:
+  - Start New Game
+  - Resume
+  - Save Game
+  - Load Game
+  - Settings
+  - Quit
+- Settings submenus include:
+  - Resolution
+  - Display Mode
+  - Exposure
+  - Debug Options
+  - FPS lock toggle
+- Save/load submenus now exist
+- Save slots currently set to 8 in Menu.cpp via constant / loop count
+- Save slot labels are automatic, based on scene saveName + timestamp
+- After successful save from menu:
+  - menu closes
+  - player returns to Game mode
+  - toast notification appears
+- Menu toast overlay exists for messages like:
+  - Game Saved
+  - Game Loaded
+  - Save Failed
+  - Load Failed
+
+Save/load system
+- New subsystem in:
+  - save/SaveGame.h
+  - save/SaveGame.cpp
+- One save file per slot:
+  - saves/slot1.json
+  - saves/slot2.json
+  - etc.
+- Save file stores at least:
+  - version
+  - sceneId
+  - saveName
+  - savedAt timestamp
+  - controlsEnabled
+  - controlledActorId
+  - script flags / ints / strings
+  - inventories
+  - actor runtime state by actorId
+  - prop runtime state by prop id
+- v1 intentionally does NOT restore:
+  - active Lua coroutines
+  - speech/dialogue UI
+  - pending actions
+  - action queue
+  - active cutscene mid-wait state
+- Load flow:
+  - load scene in FromSave mode
+  - execute scene Lua file so functions exist
+  - skip Scene_onEnter
+  - restore script globals
+  - restore inventories
+  - restore actor state
+  - restore prop state
+  - restore controlled actor
+  - clear transient UI/runtime junk
+- This works well already in testing
+
+Debug console
+- Strong in-game debug console exists
+- Features:
+  - open/close with grave key
+  - custom font (Inconsolata)
+  - raw Lua execution
+  - slash commands
+  - scrollback
+  - command history
+  - caret movement/editing
+  - page up/down scroll
+  - colored console lines
+- Slash commands currently include:
+  - /help
+  - /clear
+  - /goto <sceneId> [spawnId]
+  - /reload
+  - /save <slot>
+  - /load <slot>
+  - /saves
+  - /resources
+  - /flags
+  - /items
+  - /actors
+  - /scenes
+  - /hotspots
+  - /props
+  - /exits
+  - /spawns
+- Console can execute arbitrary Lua expressions/statements if line does not start with slash
+- Console logs are also used by Lua log/logf
+
+Debug overlays
+- Existing debug overlays include:
+  - walk polygons
+  - blockers
+  - nav triangles
+  - nav adjacency
+  - triangle path
+  - actor path
+  - feet points
+  - scene objects
+  - scale info
+  - scripts panel
+- Actor debug overlay now draws for all visible actors:
+  - full visual rect
+  - interaction rect
+  - feet point
+  - actor id label
+
+Input system
+- Small custom input abstraction on top of raylib
+- Input events include:
+  - MouseClick
+  - KeyPressed
+  - KeyReleased
+  - TextInput
+- Event helpers:
+  - FilterEvents(...)
+  - ConsumeEvent(...)
+- Engine prefers using input event abstraction, except where continuous polling makes more sense
+
+Main loop / startup
+- Main.cpp:
+  - init window
+  - create 1920x1080 render target
+  - apply settings
+  - init input
+  - load all item definitions
+  - load all dialogue choice sets
+  - init menu
+  - init debug console
+- During loop:
+  - UpdateInput
+  - ProcessGameModeInput
+  - UpdateDebugConsole
+  - MenuUpdate
+  - MenuHandleInput if in menu
+  - AdventureProcessPendingLoads if needed
+  - AdventureUpdate in game mode
+  - render scene/ui/debug
+  - render menu if in menu
+  - render menu toast overlay
+  - render debug console
+- Shutdown:
+  - ScriptSystemShutdown
+  - DebugConsoleShutdown
+  - UnloadAllResources
+  - unload render texture
+  - CloseWindow
+
+Current status
+The engine is already in very good shape and has working:
+- scene loading from scene.json + Tiled .tmj
+- navmesh/pathfinding
+- actor placement and movement
+- props
+- exits
+- hotspots
+- actor interactions
+- Lua scripts with coroutine waits
+- inventory data + UI
+- item definitions
+- dialogue system with choice sets + Lua branching
+- debug overlays
+- strong debug console
+- scoped resource unloading
+- save/load slots with summaries and timestamps
+
+Important current design philosophy going into lighting
+- This is a 2D adventure game, not a fully dynamic physically-lit renderer
+- Assets will carry most of their own baked/authored lighting
+- Future “lighting” should likely be additive/art-directed rather than pretending everything is neutral/unlit
+- Tiled /.tmj scene data is the natural place to author extra lighting metadata, because that file already defines most scene content and authorial layout
+
+What I want to do next in the new chat
+- Design a lighting system appropriate for this engine and this genre
+- Likely using authored data from the Tiled scene
+- Keeping in mind that built-in asset lighting is expected and desirable
+- I will still need to paste relevant files again for implementation details
