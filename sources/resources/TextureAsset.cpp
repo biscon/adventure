@@ -77,3 +77,40 @@ const TextureResource* FindTextureResource(const ResourceData& resources, Textur
     }
     return &resources.textures.at(it->second);
 }
+
+TextureHandle LoadTextureAssetFromImage(
+        ResourceData& resources,
+        const char* filePath,
+        const Image& image,
+        ResourceScope scope)
+{
+    const std::string normPath = NormalizePath(filePath);
+
+    auto existing = resources.textureHandleByPath.find(normPath);
+    if (existing != resources.textureHandleByPath.end()) {
+        return existing->second;
+    }
+
+    Texture2D tex = LoadTextureFromImage(image);
+    if (tex.id == 0) {
+        TraceLog(LOG_ERROR, "Failed to create texture from preloaded image: %s", normPath.c_str());
+        return -1;
+    }
+
+    SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+
+    TextureResource res;
+    res.handle = resources.nextTextureHandle++;
+    res.path = normPath;
+    res.texture = tex;
+    res.loaded = true;
+    res.scope = scope;
+
+    const size_t index = resources.textures.size();
+    resources.textures.push_back(res);
+    resources.textureIndexByHandle[res.handle] = index;
+    resources.textureHandleByPath[normPath] = res.handle;
+
+    TraceLog(LOG_INFO, "Loaded texture from predecoded image: %s", normPath.c_str());
+    return res.handle;
+}

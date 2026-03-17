@@ -6,8 +6,6 @@
 #include <cctype>
 
 #include "utils/json.hpp"
-#include "resources/TextureAsset.h"
-#include "resources/AsepriteAsset.h"
 #include "raylib.h"
 
 using json = nlohmann::json;
@@ -296,7 +294,6 @@ static void ProcessLayerRecursive(
         const json& layer,
         const fs::path& tiledDir,
         SceneData& scene,
-        ResourceData& resources,
         const std::string& currentGroup,
         float parentOffsetX,
         float parentOffsetY,
@@ -326,7 +323,6 @@ static void ProcessLayerRecursive(
                         child,
                         tiledDir,
                         scene,
-                        resources,
                         nextGroup,
                         totalOffsetX,
                         totalOffsetY,
@@ -353,7 +349,7 @@ static void ProcessLayerRecursive(
 
         const fs::path imagePath = (tiledDir / imageRel).lexically_normal();
         img.imagePath = NormalizePath(imagePath);
-        img.textureHandle = LoadTextureAsset(resources, img.imagePath.c_str());
+        img.textureHandle = -1;
 
         img.sourceSize.x = GetFloatOrDefault(layer, "imagewidth", 0.0f);
         img.sourceSize.y = GetFloatOrDefault(layer, "imageheight", 0.0f);
@@ -414,14 +410,7 @@ static void ProcessLayerRecursive(
 
         const fs::path imagePath = (tiledDir / imageRel).lexically_normal();
         effect.imagePath = NormalizePath(imagePath);
-        effect.textureHandle = LoadTextureAsset(resources, effect.imagePath.c_str());
-        if (effect.textureHandle < 0) {
-            TraceLog(LOG_ERROR,
-                     "Failed loading effect image for '%s': %s",
-                     effect.id.c_str(),
-                     effect.imagePath.c_str());
-            return;
-        }
+        effect.textureHandle = -1;
 
         effect.sourceSize.x = GetFloatOrDefault(layer, "imagewidth", 0.0f);
         effect.sourceSize.y = GetFloatOrDefault(layer, "imageheight", 0.0f);
@@ -637,25 +626,14 @@ static void ProcessLayerRecursive(
             }
 
             const fs::path assetPath = (tiledDir / assetRel).lexically_normal();
+            prop.assetPath = NormalizePath(assetPath);
+            prop.spriteAssetHandle = -1;
+            prop.textureHandle = -1;
 
             if (prop.visualType == ScenePropVisualType::Sprite) {
-                prop.spriteAssetHandle = LoadSpriteAsset(resources, assetPath.string().c_str());
-                if (prop.spriteAssetHandle < 0) {
-                    TraceLog(LOG_ERROR, "Failed loading sprite prop asset for %s: %s",
-                             prop.id.c_str(), assetPath.string().c_str());
-                    continue;
-                }
-
                 prop.defaultAnimation = GetStringPropertyOrDefault(obj, "animation", "");
                 if (prop.defaultAnimation.empty()) {
                     TraceLog(LOG_ERROR, "Sprite prop missing animation property: %s", prop.id.c_str());
-                    continue;
-                }
-            } else if (prop.visualType == ScenePropVisualType::Image) {
-                prop.textureHandle = LoadTextureAsset(resources, assetPath.string().c_str());
-                if (prop.textureHandle < 0) {
-                    TraceLog(LOG_ERROR, "Failed loading image prop asset for %s: %s",
-                             prop.id.c_str(), assetPath.string().c_str());
                     continue;
                 }
             }
@@ -781,7 +759,7 @@ static void ProcessLayerRecursive(
     }
 }
 
-bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, const char* tiledFilePath)
+bool ImportTiledSceneIntoSceneData(SceneData& scene, const char* tiledFilePath)
 {
     scene.backgroundLayers.clear();
     scene.foregroundLayers.clear();
@@ -819,7 +797,6 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
                 layer,
                 tiledDir,
                 scene,
-                resources,
                 "",
                 0.0f,
                 0.0f,

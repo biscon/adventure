@@ -9,3 +9,8 @@ TextureHandle LoadTextureAsset(
 
 TextureResource* FindTextureResource(ResourceData& resources, TextureHandle handle);
 const TextureResource* FindTextureResource(const ResourceData& resources, TextureHandle handle);
+TextureHandle LoadTextureAssetFromImage(
+        ResourceData& resources,
+        const char* filePath,
+        const Image& image,
+        ResourceScope scope = ResourceScope::Scene);

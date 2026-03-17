@@ -13,6 +13,7 @@
 #include "scripting/ScriptSystem.h"
 #include "adventure/DialogueChoiceAsset.h"
 #include "audio/Audio.h"
+#include "scene/SceneLoad.h"
 
 static bool IsMouseInInternalView()
 {
@@ -90,7 +91,9 @@ int main()
 
         if(state.mode == GameMode::Menu) MenuHandleInput(state);
 
-        if (state.mode == GameMode::Menu || state.adventure.hasPendingSceneLoad) {
+        if (state.mode == GameMode::Menu ||
+            state.adventure.hasPendingSceneLoad ||
+            IsAsyncSceneLoadActive(state)) {
             AdventureProcessPendingLoads(state);
         }
 
@@ -102,7 +105,8 @@ int main()
 
         BeginTextureMode(sceneTarget);
         ClearBackground(BLACK);
-        if (state.mode == GameMode::Game) {
+
+        if (state.mode == GameMode::Game && !IsAsyncSceneLoadActive(state)) {
             RenderAdventureScene(state);
             RenderAdventureUi(state);
             RenderAdventureDebug(state);
@@ -127,6 +131,7 @@ int main()
         EndDrawing();
     }
 
+    CancelAsyncSceneLoad(state);
     ScriptSystemShutdown(state.script);
     DebugConsoleShutdown();
     ShutdownAudio(state);

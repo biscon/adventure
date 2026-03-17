@@ -77,22 +77,7 @@ void AdventureQueueLoadScene(GameState& state, const char* sceneId, const char* 
 
 void AdventureProcessPendingLoads(GameState& state)
 {
-    if (!state.adventure.hasPendingSceneLoad) {
-        return;
-    }
-
-    const std::string sceneId = state.adventure.pendingSceneId;
-    state.adventure.pendingSceneId.clear();
-    state.adventure.hasPendingSceneLoad = false;
-
-    if (LoadSceneById(state, sceneId.c_str())) {
-        state.mode = GameMode::Game;
-    } else {
-        TraceLog(LOG_ERROR, "Scene load failed: %s", sceneId.c_str());
-        state.mode = GameMode::Menu;
-    }
-
-    state.adventure.pendingSpawnId.clear();
+    PumpAsyncSceneLoad(state);
 }
 
 static void UpdateActorFacingAndAnimation(ActorInstance& actor, Vector2 movementDir)

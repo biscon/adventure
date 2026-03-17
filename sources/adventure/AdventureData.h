@@ -8,6 +8,8 @@
 #include "resources/ResourceData.h"
 #include "adventure/AdventureActionData.h"
 #include "adventure/InventoryData.h"
+#include "scene/SceneLoadData.h"
+
 
 using ActorHandle = int;
 
@@ -191,6 +193,8 @@ struct AdventureData {
     std::string pendingSceneId;
     std::string pendingSpawnId;
     bool hasPendingSceneLoad = false;
+
+    SceneLoadJobData sceneLoadJob{};
 
     SceneData currentScene{};
 

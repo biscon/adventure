@@ -107,6 +107,8 @@ struct ScenePropData {
 
     ScenePropVisualType visualType = ScenePropVisualType::None;
 
+    std::string assetPath;
+
     SpriteAssetHandle spriteAssetHandle = -1;
     TextureHandle textureHandle = -1;
 
