@@ -4,7 +4,7 @@
             "id": "ui_click",
             "file": "ui/click.ogg",
             "type": "sound",
-            "volume": 0.6
+            "volume": 0.3
         },
         {
             "id": "item_added",

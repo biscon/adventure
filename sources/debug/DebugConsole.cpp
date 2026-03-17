@@ -250,7 +250,7 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
         DebugConsoleAddLine(state, "  /emitters", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /play <audioId>", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /music <audioId>", LIGHTGRAY);
-        DebugConsoleAddLine(state, "  /stopmusic", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /stopmusic [fadeMs]", LIGHTGRAY);
         return true;
     }
 
@@ -385,6 +385,30 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
             DebugConsoleAddLine(
                     state,
                     TextFormat("  [sprite %d] %s", asset.handle, asset.sidecarPath.c_str()),
+                    LIGHTGRAY);
+        }
+
+        DebugConsoleAddLine(
+                state,
+                TextFormat("sounds: %d", static_cast<int>(state.resources.sounds.size())),
+                SKYBLUE);
+
+        for (const SoundResource& sound : state.resources.sounds) {
+            DebugConsoleAddLine(
+                    state,
+                    TextFormat("  [sound %d] %s", sound.handle, sound.path.c_str()),
+                    LIGHTGRAY);
+        }
+
+        DebugConsoleAddLine(
+                state,
+                TextFormat("music streams: %d", static_cast<int>(state.resources.musics.size())),
+                SKYBLUE);
+
+        for (const MusicResource& music : state.resources.musics) {
+            DebugConsoleAddLine(
+                    state,
+                    TextFormat("  [music %d] %s", music.handle, music.path.c_str()),
                     LIGHTGRAY);
         }
 
@@ -800,8 +824,28 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
     }
 
     if (cmd == "/stopmusic") {
-        StopMusic(state);
-        DebugConsoleAddLine(state, "stopped music", SKYBLUE);
+        float fadeMs = 0.0f;
+
+        if (args.size() >= 2) {
+            try {
+                fadeMs = std::stof(args[1]);
+            } catch (...) {
+                DebugConsoleAddLine(state, "usage: /stopmusic [fadeMs]", RED);
+                return true;
+            }
+        }
+
+        StopMusic(state, fadeMs);
+
+        if (fadeMs > 0.0f) {
+            DebugConsoleAddLine(
+                    state,
+                    "stopping music with fade: " + std::to_string(static_cast<int>(fadeMs)) + " ms",
+                    SKYBLUE);
+        } else {
+            DebugConsoleAddLine(state, "stopped music", SKYBLUE);
+        }
+
         return true;
     }
 

@@ -54,6 +54,12 @@ namespace
         Color tint = WHITE;
     };
 
+    struct SavedSoundEmitterState {
+        std::string id;
+        bool enabled = true;
+        float volume = 1.0f;
+    };
+
     struct SaveRestoreData {
         std::string sceneId;
         std::string controlledActorId;
@@ -67,6 +73,7 @@ namespace
         std::vector<SavedActorState> actors;
         std::vector<SavedPropState> props;
         std::vector<SavedEffectSpriteState> effectSprites;
+        std::vector<SavedSoundEmitterState> soundEmitters;
     };
 
     static std::string NormalizePath(const fs::path& p)
@@ -299,6 +306,26 @@ namespace
         }
     }
 
+    static void SerializeSoundEmitters(const GameState& state, json& outRoot)
+    {
+        outRoot["soundEmitters"] = json::array();
+
+        const int count = std::min(
+                static_cast<int>(state.adventure.currentScene.soundEmitters.size()),
+                static_cast<int>(state.audio.sceneEmitters.size()));
+
+        for (int i = 0; i < count; ++i) {
+            const SceneSoundEmitterData& sceneEmitter = state.adventure.currentScene.soundEmitters[i];
+            const SoundEmitterInstance& emitter = state.audio.sceneEmitters[i];
+
+            json j;
+            j["id"] = sceneEmitter.id;
+            j["enabled"] = emitter.enabled;
+            j["volume"] = emitter.volume;
+            outRoot["soundEmitters"].push_back(j);
+        }
+    }
+
     static bool ParseSaveFile(const fs::path& savePath, SaveRestoreData& outData)
     {
         outData = {};
@@ -411,6 +438,19 @@ namespace
 
                 if (!effect.id.empty()) {
                     outData.effectSprites.push_back(effect);
+                }
+            }
+        }
+
+        if (root.contains("soundEmitters") && root["soundEmitters"].is_array()) {
+            for (const json& j : root["soundEmitters"]) {
+                SavedSoundEmitterState emitter;
+                emitter.id = j.value("id", "");
+                emitter.enabled = j.value("enabled", true);
+                emitter.volume = j.value("volume", 1.0f);
+
+                if (!emitter.id.empty()) {
+                    outData.soundEmitters.push_back(emitter);
                 }
             }
         }
@@ -565,6 +605,35 @@ namespace
         }
     }
 
+    static int FindSceneSoundEmitterIndexById(const GameState& state, const std::string& emitterId)
+    {
+        for (int i = 0; i < static_cast<int>(state.adventure.currentScene.soundEmitters.size()); ++i) {
+            if (state.adventure.currentScene.soundEmitters[i].id == emitterId) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    static void RestoreSoundEmitters(GameState& state, const SaveRestoreData& data)
+    {
+        for (const SavedSoundEmitterState& saved : data.soundEmitters) {
+            const int emitterIndex = FindSceneSoundEmitterIndexById(state, saved.id);
+            if (emitterIndex < 0 ||
+                emitterIndex >= static_cast<int>(state.audio.sceneEmitters.size())) {
+                continue;
+            }
+
+            SoundEmitterInstance& emitter = state.audio.sceneEmitters[emitterIndex];
+            emitter.enabled = saved.enabled;
+
+            float volume = saved.volume;
+            if (volume < 0.0f) volume = 0.0f;
+            if (volume > 1.0f) volume = 1.0f;
+            emitter.volume = volume;
+        }
+    }
+
     static bool ApplySaveRestoreData(GameState& state, const SaveRestoreData& data)
     {
         if (!LoadSceneById(state, data.sceneId.c_str(), SceneLoadMode::FromSave)) {
@@ -577,6 +646,7 @@ namespace
         RestoreActors(state, data);
         RestoreProps(state, data);
         RestoreEffectSprites(state, data);
+        RestoreSoundEmitters(state, data);
         RestoreControlledActor(state, data);
 
         state.adventure.controlsEnabled = data.controlsEnabled;
@@ -620,6 +690,7 @@ bool SaveGameToSlot(GameState& state, int slotIndex)
     SerializeActors(state, root);
     SerializeProps(state, root);
     SerializeEffectSprites(state, root);
+    SerializeSoundEmitters(state, root);
 
     const fs::path savePath = GetSaveSlotPath(slotIndex);
     std::ofstream out(savePath);

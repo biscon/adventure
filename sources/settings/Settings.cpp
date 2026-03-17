@@ -65,6 +65,8 @@ void SaveSettings(const SettingsData& settings) {
     j["showFPS"] = settings.showFPS;
     j["lockFPS"] = settings.fpsLock;
     j["exposure"] = settings.exposure;
+    j["soundVolume"] = settings.soundVolume;
+    j["musicVolume"] = settings.musicVolume;
 
     std::ofstream file(settings.filename);
     if (file) {
@@ -116,6 +118,12 @@ void InitSettings(SettingsData& data, const std::string &filename) {
         }
         if(j.contains("exposure")) {
             j["exposure"].get_to(data.exposure);
+        }
+        if (j.contains("soundVolume")) {
+            j["soundVolume"].get_to(data.soundVolume);
+        }
+        if (j.contains("musicVolume")) {
+            j["musicVolume"].get_to(data.musicVolume);
         }
     }
 

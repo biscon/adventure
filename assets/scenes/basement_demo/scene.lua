@@ -18,6 +18,11 @@ function Scene_onEnter()
     playMusic("basement_music")
 end
 
+function Scene_onExit()
+    stopMusic(1000)
+    print("On exit fired from LUA!!")
+end
+
 function FurnaceGlowCoreLoop()
     while true do
         setEffectOpacity("furnace_glow_core", math.random(70,100)/100)
@@ -161,10 +166,6 @@ function Looper()
         --sayActor("npc_actor", "Looping...", CYAN, 700)
         delay(1200)
     end
-end
-
-function Scene_onExit()
-    print("On exit fired from LUA!!")
 end
 
 function Scene_use_furnace()

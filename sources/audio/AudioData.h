@@ -60,6 +60,11 @@ struct MusicPlaybackState {
     bool playing = false;
 
     float volume = 1.0f;
+
+    bool fadingOut = false;
+    float fadeElapsedMs = 0.0f;
+    float fadeDurationMs = 0.0f;
+    float fadeStartVolume = 1.0f;
 };
 
 // ------------------------------------------------------------

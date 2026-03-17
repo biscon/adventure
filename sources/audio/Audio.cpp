@@ -259,7 +259,7 @@ void ShutdownAudio(GameState& state)
     TraceLog(LOG_INFO, "Audio shutdown");
 }
 
-void UpdateAudio(GameState& state, float /*dt*/)
+void UpdateAudio(GameState& state, float dt)
 {
     if (!state.audio.initialized) {
         return;
@@ -268,7 +268,47 @@ void UpdateAudio(GameState& state, float /*dt*/)
     if (state.audio.music.playing && state.audio.music.musicHandle >= 0) {
         Music* music = GetMusicResource(state, state.audio.music.musicHandle);
         if (music != nullptr) {
-            UpdateMusicStream(*music);
+            if (state.audio.music.fadingOut) {
+                state.audio.music.fadeElapsedMs += dt * 1000.0f;
+
+                float t = 1.0f;
+                if (state.audio.music.fadeDurationMs > 0.0f) {
+                    t = state.audio.music.fadeElapsedMs / state.audio.music.fadeDurationMs;
+                }
+
+                if (t < 0.0f) t = 0.0f;
+                if (t > 1.0f) t = 1.0f;
+
+                const float newVolume =
+                        state.audio.music.fadeStartVolume * (1.0f - t);
+
+                SetMusicVolume(*music, newVolume);
+
+                if (t >= 1.0f) {
+                    StopMusicStream(*music);
+                    state.audio.music = {};
+                } else {
+                    UpdateMusicStream(*music);
+                }
+            } else {
+                AudioDefinitionData* playingDef = nullptr;
+                for (AudioDefinitionData& def : state.audio.definitions) {
+                    if (def.type == AudioType::Music &&
+                        def.musicHandle == state.audio.music.musicHandle) {
+                        playingDef = &def;
+                        break;
+                    }
+                }
+
+                if (playingDef != nullptr) {
+                    const float targetVolume = playingDef->volume * state.settings.musicVolume;
+                    state.audio.music.volume = targetVolume;
+                    SetMusicVolume(*music, targetVolume);
+                }
+                UpdateMusicStream(*music);
+            }
+        } else {
+            state.audio.music = {};
         }
     }
 
@@ -282,6 +322,7 @@ void UpdateAudio(GameState& state, float /*dt*/)
             ++it;
         }
     }
+
     UpdateSceneSoundEmitters(state);
 }
 
@@ -356,22 +397,36 @@ bool PlayMusicById(GameState& state, const std::string& id)
     state.audio.music.musicHandle = def->musicHandle;
     state.audio.music.playing = true;
     state.audio.music.volume = volume;
+    state.audio.music.fadingOut = false;
+    state.audio.music.fadeElapsedMs = 0.0f;
+    state.audio.music.fadeDurationMs = 0.0f;
+    state.audio.music.fadeStartVolume = volume;
 
     return true;
 }
 
-void StopMusic(GameState& state, float /*fadeMs*/)
+void StopMusic(GameState& state, float fadeMs)
 {
     if (!state.audio.music.playing || state.audio.music.musicHandle < 0) {
         return;
     }
 
     Music* music = GetMusicResource(state, state.audio.music.musicHandle);
-    if (music != nullptr) {
-        StopMusicStream(*music);
+    if (music == nullptr) {
+        state.audio.music = {};
+        return;
     }
 
-    state.audio.music = {};
+    if (fadeMs <= 0.0f) {
+        StopMusicStream(*music);
+        state.audio.music = {};
+        return;
+    }
+
+    state.audio.music.fadingOut = true;
+    state.audio.music.fadeElapsedMs = 0.0f;
+    state.audio.music.fadeDurationMs = fadeMs;
+    state.audio.music.fadeStartVolume = state.audio.music.volume;
 }
 
 bool LoadSceneAudioDefinitions(GameState& state, const std::string& sceneDir)

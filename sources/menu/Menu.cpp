@@ -206,6 +206,62 @@ static std::shared_ptr<Menu> createExposureMenu() {
     return menu;
 }
 
+static std::shared_ptr<Menu> createSoundVolumeMenu() {
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Sound Volume";
+    menu->hint = "Adjust sound effects volume.";
+
+    MenuItem slider;
+    slider.text = "Sound Volume";
+    slider.isSlider = true;
+    slider.sliderMin = 0.0f;
+    slider.sliderMax = 1.0f;
+    slider.getValue = []() { return game->settings.soundVolume; };
+    slider.setValue = [](float v) {
+        game->settings.soundVolume = v;
+    };
+    menu->items.push_back(slider);
+
+    MenuItem back;
+    back.text = "Back";
+    back.isSubmenu = false;
+    back.action = [] {
+        SaveSettings(game->settings);
+        if (!menuStack.empty()) menuStack.pop();
+    };
+    menu->items.push_back(back);
+
+    return menu;
+}
+
+static std::shared_ptr<Menu> createMusicVolumeMenu() {
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Music Volume";
+    menu->hint = "Adjust music volume.";
+
+    MenuItem slider;
+    slider.text = "Music Volume";
+    slider.isSlider = true;
+    slider.sliderMin = 0.0f;
+    slider.sliderMax = 1.0f;
+    slider.getValue = []() { return game->settings.musicVolume; };
+    slider.setValue = [](float v) {
+        game->settings.musicVolume = v;
+    };
+    menu->items.push_back(slider);
+
+    MenuItem back;
+    back.text = "Back";
+    back.isSubmenu = false;
+    back.action = [] {
+        SaveSettings(game->settings);
+        if (!menuStack.empty()) menuStack.pop();
+    };
+    menu->items.push_back(back);
+
+    return menu;
+}
+
 static std::shared_ptr<Menu> createSettingsMenu() {
     // Settings submenu
     auto settingsMenu = std::make_shared<Menu>();
@@ -227,6 +283,18 @@ static std::shared_ptr<Menu> createSettingsMenu() {
     exposure.isSubmenu = true;
     exposure.submenuBuilder = createExposureMenu;
     settingsMenu->items.push_back(exposure);
+
+    MenuItem soundVolume;
+    soundVolume.text = "Sound Volume";
+    soundVolume.isSubmenu = true;
+    soundVolume.submenuBuilder = createSoundVolumeMenu;
+    settingsMenu->items.push_back(soundVolume);
+
+    MenuItem musicVolume;
+    musicVolume.text = "Music Volume";
+    musicVolume.isSubmenu = true;
+    musicVolume.submenuBuilder = createMusicVolumeMenu;
+    settingsMenu->items.push_back(musicVolume);
 
     MenuItem debugOptions;
     debugOptions.text = "Debug Options";
