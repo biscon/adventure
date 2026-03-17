@@ -9,6 +9,7 @@
 #include "adventure/AdventureData.h"
 #include "debug/DebugData.h"
 #include "scripting/ScriptData.h"
+#include "audio/AudioData.h"
 
 static constexpr int INTERNAL_WIDTH = 1920;
 static constexpr int INTERNAL_HEIGHT = 1080;
@@ -28,4 +29,5 @@ struct GameState {
     AdventureData adventure;
     DebugData debug;
     ScriptData script;
+    AudioData audio;
 };

@@ -7,6 +7,8 @@
 
 using TextureHandle = int;
 using SpriteAssetHandle = int;
+using SoundHandle = int;
+using MusicHandle = int;
 
 enum class ResourceScope {
     Global,
@@ -67,6 +69,20 @@ struct SpriteAssetResource {
     ResourceScope scope = ResourceScope::Scene;
 };
 
+struct SoundResource {
+    SoundHandle handle = -1;
+    std::string path;
+    Sound sound{};
+    ResourceScope scope = ResourceScope::Global;
+};
+
+struct MusicResource {
+    MusicHandle handle = -1;
+    std::string path;
+    Music music{};
+    ResourceScope scope = ResourceScope::Global;
+};
+
 struct ResourceData {
     int nextTextureHandle = 1;
     int nextSpriteAssetHandle = 1;
@@ -78,4 +94,10 @@ struct ResourceData {
     std::vector<SpriteAssetResource> spriteAssets;
     std::unordered_map<SpriteAssetHandle, size_t> spriteAssetIndexByHandle;
     std::unordered_map<std::string, SpriteAssetHandle> spriteAssetHandleByPath;
+
+    std::vector<SoundResource> sounds;
+    std::vector<MusicResource> musics;
+
+    std::unordered_map<std::string, SoundHandle> soundPathToHandle;
+    std::unordered_map<std::string, MusicHandle> musicPathToHandle;
 };

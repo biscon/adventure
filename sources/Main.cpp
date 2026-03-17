@@ -12,6 +12,7 @@
 #include "resources/Resources.h"
 #include "scripting/ScriptSystem.h"
 #include "adventure/DialogueChoiceAsset.h"
+#include "audio/Audio.h"
 
 static bool IsMouseInInternalView()
 {
@@ -59,6 +60,8 @@ int main()
     ApplySettings(state.settings);
 
     InitInput(state.input);
+    InitAudio(state);
+
     LoadAllItemDefinitions(state);
     LoadAllDialogueChoiceSets(state);
 
@@ -95,6 +98,7 @@ int main()
             AdventureUpdate(state, dt);
         }
 
+        UpdateAudio(state, dt);
 
         BeginTextureMode(sceneTarget);
         ClearBackground(BLACK);
@@ -125,6 +129,7 @@ int main()
 
     ScriptSystemShutdown(state.script);
     DebugConsoleShutdown();
+    ShutdownAudio(state);
     UnloadAllResources(state.resources);
     UnloadRenderTexture(sceneTarget);
     CloseWindow();

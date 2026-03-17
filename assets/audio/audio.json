@@ -1,0 +1,23 @@
+{
+    "audio": [
+        {
+            "id": "ui_click",
+            "file": "ui/click.ogg",
+            "type": "sound",
+            "volume": 0.6
+        },
+        {
+            "id": "item_added",
+            "file": "ui/item_added.ogg",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "basement_music",
+            "file": "music/basement.mp3",
+            "type": "music",
+            "volume": 0.7,
+            "loop": true
+        }
+    ]
+}
