@@ -362,6 +362,60 @@ static void DrawScriptDebugPanel(const GameState& state)
     }
 }
 
+static void DrawSoundEmitterDebug(const GameState& state)
+{
+    const SceneData& scene = state.adventure.currentScene;
+
+    const int count = std::min(
+            static_cast<int>(scene.soundEmitters.size()),
+            static_cast<int>(state.audio.sceneEmitters.size()));
+
+    for (int i = 0; i < count; ++i) {
+        const SceneSoundEmitterData& sceneEmitter = scene.soundEmitters[i];
+        const SoundEmitterInstance& emitter = state.audio.sceneEmitters[i];
+
+        const Vector2 center{
+                sceneEmitter.position.x - state.adventure.camera.position.x,
+                sceneEmitter.position.y - state.adventure.camera.position.y
+        };
+
+        Color color = emitter.enabled ? ORANGE : GRAY;
+        if (emitter.active) {
+            color = GREEN;
+        }
+
+        DrawCircleLines(
+                static_cast<int>(center.x),
+                static_cast<int>(center.y),
+                sceneEmitter.radius,
+                Fade(color, 0.75f));
+
+        DrawCircleV(center, 5.0f, color);
+
+        DrawText(
+                sceneEmitter.id.c_str(),
+                static_cast<int>(center.x + 8.0f),
+                static_cast<int>(center.y - 26.0f),
+                16,
+                color);
+
+        DrawText(
+                sceneEmitter.soundId.c_str(),
+                static_cast<int>(center.x + 8.0f),
+                static_cast<int>(center.y - 8.0f),
+                16,
+                color);
+
+        if (sceneEmitter.pan) {
+            DrawLineEx(
+                    Vector2{center.x - 16.0f, center.y},
+                    Vector2{center.x + 16.0f, center.y},
+                    2.0f,
+                    color);
+        }
+    }
+}
+
 void RenderAdventureDebug(const GameState& state) {
     if (!state.adventure.currentScene.loaded) {
         return;
@@ -394,6 +448,7 @@ void RenderAdventureDebug(const GameState& state) {
 
     if (state.debug.showEffects) {
         DrawEffectDebug(state);
+        DrawSoundEmitterDebug(state);
     }
 
     if (state.debug.showFeetPoints) {

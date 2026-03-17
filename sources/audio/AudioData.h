@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include "raylib.h"
+#include "resources/ResourceData.h"
 
 // ------------------------------------------------------------
 // Basic audio enums
@@ -30,6 +31,7 @@ struct AudioDefinitionData {
     AudioGroup group = AudioGroup::Sound;
 
     std::string filePath;
+    ResourceScope scope = ResourceScope::Global;
 
     float volume = 1.0f;
     bool loop = false;
@@ -61,7 +63,7 @@ struct MusicPlaybackState {
 };
 
 // ------------------------------------------------------------
-// Scene sound emitter runtime (filled later)
+// Scene sound emitter runtime
 // ------------------------------------------------------------
 
 struct SoundEmitterInstance {
@@ -69,6 +71,9 @@ struct SoundEmitterInstance {
 
     bool enabled = true;
     float volume = 1.0f;
+
+    bool active = false;
+    Sound sound{};
 };
 
 // ------------------------------------------------------------

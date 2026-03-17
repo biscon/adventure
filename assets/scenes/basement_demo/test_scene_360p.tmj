@@ -286,6 +286,61 @@
     
         {
          "draworder":"topdown",
+         "id":32,
+         "name":"sound_emitters",
+         "objects":[
+                {
+                 "height":0,
+                 "id":40,
+                 "name":"furnace_hum",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":900
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"furnace_crackle"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":317,
+                 "y":208.5
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
          "id":12,
          "name":"hotspots",
          "objects":[
@@ -873,8 +928,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":32,
- "nextobjectid":40,
+ "nextlayerid":33,
+ "nextobjectid":41,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

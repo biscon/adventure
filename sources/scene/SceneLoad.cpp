@@ -13,6 +13,7 @@
 #include "adventure/ActorDefinitionAsset.h"
 #include "adventure/Inventory.h"
 #include "resources/Resources.h"
+#include "audio/Audio.h"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -104,6 +105,7 @@ void UnloadCurrentScene(GameState& state)
     state.adventure.actorDefinitions.clear();
     state.adventure.dialogueUi = {};
 
+    ClearSceneAudio(state);
     UnloadSceneResources(state.resources);
 }
 
@@ -199,6 +201,13 @@ bool LoadSceneById(GameState& state, const char* sceneId, SceneLoadMode loadMode
     scene.loaded = true;
     state.adventure.controlsEnabled = true;
     state.adventure.currentScene = scene;
+
+    if (!LoadSceneAudioDefinitions(state, sceneDir.string())) {
+        TraceLog(LOG_ERROR, "Failed to load scene audio definitions for scene: %s", scene.sceneId.c_str());
+        return false;
+    }
+
+    BuildSceneSoundEmitters(state);
 
     state.adventure.props.clear();
     state.adventure.props.reserve(state.adventure.currentScene.props.size());

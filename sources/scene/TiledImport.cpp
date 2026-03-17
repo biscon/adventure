@@ -719,6 +719,61 @@ static void ProcessLayerRecursive(
         }
         return;
     }
+
+    if (type == "objectgroup" && name == "sound_emitters") {
+        if (!layer.contains("objects") || !layer["objects"].is_array()) {
+            return;
+        }
+
+        for (const auto& obj : layer["objects"]) {
+            if (!obj.value("visible", true) || !obj.value("point", false)) {
+                continue;
+            }
+
+            SceneSoundEmitterData emitter;
+            emitter.id = obj.value("name", "");
+            if (emitter.id.empty()) {
+                TraceLog(LOG_ERROR, "Sound emitter missing name");
+                continue;
+            }
+
+            emitter.soundId = GetStringPropertyOrDefault(obj, "sound", "");
+            if (emitter.soundId.empty()) {
+                TraceLog(LOG_ERROR, "Sound emitter missing sound property: %s", emitter.id.c_str());
+                continue;
+            }
+
+            if (!GetFloatProperty(obj, "radius", emitter.radius)) {
+                TraceLog(LOG_ERROR, "Sound emitter missing radius property: %s", emitter.id.c_str());
+                continue;
+            }
+
+            float volume = 1.0f;
+            if (GetFloatProperty(obj, "volume", volume)) {
+                emitter.volume = volume;
+            }
+
+            bool enabled = true;
+            if (GetBoolProperty(obj, "enabled", enabled)) {
+                emitter.enabled = enabled;
+            }
+
+            bool pan = true;
+            if (GetBoolProperty(obj, "pan", pan)) {
+                emitter.pan = pan;
+            }
+
+            emitter.position.x =
+                    (totalOffsetX + GetFloatOrDefault(obj, "x", 0.0f)) *
+                    static_cast<float>(scene.baseAssetScale);
+            emitter.position.y =
+                    (totalOffsetY + GetFloatOrDefault(obj, "y", 0.0f)) *
+                    static_cast<float>(scene.baseAssetScale);
+
+            scene.soundEmitters.push_back(emitter);
+        }
+        return;
+    }
 }
 
 bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, const char* tiledFilePath)
@@ -732,6 +787,7 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
     scene.exits.clear();
     scene.props.clear();
     scene.actorPlacements.clear();
+    scene.soundEmitters.clear();
 
     const fs::path tiledPath = fs::path(tiledFilePath).lexically_normal();
     scene.tiledFilePath = tiledPath.string();
@@ -767,7 +823,7 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
     }
 
     TraceLog(LOG_INFO,
-             "Imported Tiled scene: %s (bg=%d fg=%d effects=%d navPolys=%d spawns=%d hotspots=%d exits=%d props=%d actors=%d)",
+             "Imported Tiled scene: %s (bg=%d fg=%d effects=%d navPolys=%d spawns=%d hotspots=%d exits=%d props=%d actors=%d emitters=%d)",
              scene.tiledFilePath.c_str(),
              static_cast<int>(scene.backgroundLayers.size()),
              static_cast<int>(scene.foregroundLayers.size()),
@@ -777,7 +833,8 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
              static_cast<int>(scene.hotspots.size()),
              static_cast<int>(scene.exits.size()),
              static_cast<int>(scene.props.size()),
-             static_cast<int>(scene.actorPlacements.size()));
+             static_cast<int>(scene.actorPlacements.size()),
+             static_cast<int>(scene.soundEmitters.size()));
 
     return true;
 }

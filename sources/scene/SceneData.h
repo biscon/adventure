@@ -134,6 +134,19 @@ struct SceneScaleConfig {
     float farScale = 1.0f;
 };
 
+struct SceneSoundEmitterData {
+    std::string id;
+    std::string soundId;
+
+    Vector2 position{};
+
+    float radius = 0.0f;
+    float volume = 1.0f;
+
+    bool enabled = true;
+    bool pan = true;
+};
+
 struct SceneData {
     std::string sceneId;
     std::string saveName;
@@ -162,6 +175,8 @@ struct SceneData {
     std::vector<SceneExit> exits;
     std::vector<ScenePropData> props;
     std::vector<SceneActorPlacement> actorPlacements;
+
+    std::vector<SceneSoundEmitterData> soundEmitters;
 
     bool loaded = false;
 };
