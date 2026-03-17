@@ -28,21 +28,21 @@
             "id": "basement_music",
             "file": "music/basement.mp3",
             "type": "music",
-            "volume": 0.7,
+            "volume": 0.5,
             "loop": true
         },
         {
             "id": "crystal_skies_music",
             "file": "music/crystal_skies.mp3",
             "type": "music",
-            "volume": 0.7,
+            "volume": 0.5,
             "loop": true
         },
         {
             "id": "sleeping_giant_music",
             "file": "music/sleeping_giant.mp3",
             "type": "music",
-            "volume": 0.7,
+            "volume": 0.5,
             "loop": true
         }
     ]

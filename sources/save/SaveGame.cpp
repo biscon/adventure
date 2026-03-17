@@ -12,6 +12,7 @@
 #include "adventure/Inventory.h"
 #include "adventure/Dialogue.h"
 #include "debug/DebugConsole.h"
+#include "resources/Resources.h"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -60,6 +61,23 @@ namespace
         float volume = 1.0f;
     };
 
+    struct SavedMusicSlotState {
+        std::string audioId;
+        bool playing = false;
+        float positionSeconds = 0.0f;
+        float volume = 0.0f;
+        float targetVolume = 1.0f;
+        int fadeMode = 0;
+        float fadeElapsed = 0.0f;
+        float fadeDuration = 0.0f;
+    };
+
+    struct SavedAudioState {
+        SavedMusicSlotState musicA;
+        SavedMusicSlotState musicB;
+        bool musicAIsCurrent = true;
+    };
+
     struct SaveRestoreData {
         std::string sceneId;
         std::string controlledActorId;
@@ -74,6 +92,7 @@ namespace
         std::vector<SavedPropState> props;
         std::vector<SavedEffectSpriteState> effectSprites;
         std::vector<SavedSoundEmitterState> soundEmitters;
+        SavedAudioState audio;
     };
 
     static std::string NormalizePath(const fs::path& p)
@@ -326,6 +345,71 @@ namespace
         }
     }
 
+    static const AudioDefinitionData* FindAudioDefinitionByMusicHandle(
+            const GameState& state,
+            int musicHandle)
+    {
+        for (const AudioDefinitionData& def : state.audio.definitions) {
+            if (def.type == AudioType::Music && def.musicHandle == musicHandle) {
+                return &def;
+            }
+        }
+
+        return nullptr;
+    }
+
+    static void SerializeMusicSlotState(
+            const GameState& state,
+            const MusicPlaybackState& slot,
+            json& outJson)
+    {
+        outJson = json::object();
+
+        outJson["playing"] = slot.playing;
+        outJson["volume"] = slot.volume;
+        outJson["targetVolume"] = slot.targetVolume;
+        outJson["fadeMode"] = static_cast<int>(slot.fadeMode);
+        outJson["fadeElapsed"] = slot.fadeElapsed;
+        outJson["fadeDuration"] = slot.fadeDuration;
+
+        if (!slot.playing || slot.musicHandle < 0) {
+            outJson["audioId"] = "";
+            outJson["positionSeconds"] = 0.0f;
+            return;
+        }
+
+        const AudioDefinitionData* def =
+                FindAudioDefinitionByMusicHandle(state, slot.musicHandle);
+
+        outJson["audioId"] = (def != nullptr) ? def->id : "";
+        outJson["positionSeconds"] = GetMusicTimePlayed(*GetMusicResource(const_cast<GameState&>(state), slot.musicHandle));
+    }
+
+    static SavedMusicSlotState DeserializeMusicSlotState(const json& j)
+    {
+        SavedMusicSlotState out;
+        out.audioId = j.value("audioId", "");
+        out.playing = j.value("playing", false);
+        out.positionSeconds = j.value("positionSeconds", 0.0f);
+        out.volume = j.value("volume", 0.0f);
+        out.targetVolume = j.value("targetVolume", 1.0f);
+        out.fadeMode = j.value("fadeMode", 0);
+        out.fadeElapsed = j.value("fadeElapsed", 0.0f);
+        out.fadeDuration = j.value("fadeDuration", 0.0f);
+        return out;
+    }
+
+    static void SerializeAudioState(const GameState& state, json& outRoot)
+    {
+        json audioState;
+        audioState["musicAIsCurrent"] = state.audio.musicAIsCurrent;
+
+        SerializeMusicSlotState(state, state.audio.musicA, audioState["musicA"]);
+        SerializeMusicSlotState(state, state.audio.musicB, audioState["musicB"]);
+
+        outRoot["audioState"] = audioState;
+    }
+
     static bool ParseSaveFile(const fs::path& savePath, SaveRestoreData& outData)
     {
         outData = {};
@@ -452,6 +536,20 @@ namespace
                 if (!emitter.id.empty()) {
                     outData.soundEmitters.push_back(emitter);
                 }
+            }
+        }
+
+        if (root.contains("audioState") && root["audioState"].is_object()) {
+            const json& audioState = root["audioState"];
+
+            outData.audio.musicAIsCurrent = audioState.value("musicAIsCurrent", true);
+
+            if (audioState.contains("musicA") && audioState["musicA"].is_object()) {
+                outData.audio.musicA = DeserializeMusicSlotState(audioState["musicA"]);
+            }
+
+            if (audioState.contains("musicB") && audioState["musicB"].is_object()) {
+                outData.audio.musicB = DeserializeMusicSlotState(audioState["musicB"]);
             }
         }
 
@@ -634,6 +732,88 @@ namespace
         }
     }
 
+    static bool RestoreMusicSlotState(
+            GameState& state,
+            const SavedMusicSlotState& saved,
+            MusicPlaybackState& outSlot)
+    {
+        outSlot = {};
+
+        if (!saved.playing || saved.audioId.empty()) {
+            return true;
+        }
+
+        AudioDefinitionData* def = nullptr;
+        auto it = state.audio.defIndexById.find(saved.audioId);
+        if (it != state.audio.defIndexById.end()) {
+            const int index = it->second;
+            if (index >= 0 && index < static_cast<int>(state.audio.definitions.size())) {
+                def = &state.audio.definitions[index];
+            }
+        }
+
+        if (def == nullptr || def->type != AudioType::Music || def->musicHandle < 0) {
+            TraceLog(LOG_WARNING,
+                     "Failed restoring music slot, audio id not found or invalid: %s",
+                     saved.audioId.c_str());
+            return false;
+        }
+
+        Music* music = GetMusicResource(state, def->musicHandle);
+        if (music == nullptr) {
+            TraceLog(LOG_WARNING,
+                     "Failed restoring music slot, resource missing: %s",
+                     saved.audioId.c_str());
+            return false;
+        }
+
+        PlayMusicStream(*music);
+
+        if (saved.positionSeconds > 0.0f) {
+            SeekMusicStream(*music, saved.positionSeconds);
+        }
+
+        outSlot.musicHandle = def->musicHandle;
+        outSlot.playing = true;
+        outSlot.volume = saved.volume;
+        outSlot.targetVolume = saved.targetVolume;
+        switch (saved.fadeMode) {
+            case 1: outSlot.fadeMode = MusicFadeMode::FadeIn; break;
+            case 2: outSlot.fadeMode = MusicFadeMode::FadeOut; break;
+            default: outSlot.fadeMode = MusicFadeMode::None; break;
+        }
+        outSlot.fadeElapsed = saved.fadeElapsed;
+        outSlot.fadeDuration = saved.fadeDuration;
+
+        SetMusicVolume(*music, outSlot.volume * state.settings.musicVolume);
+        return true;
+    }
+
+    static void RestoreAudioState(GameState& state, const SaveRestoreData& data)
+    {
+        // stop anything currently active first
+        if (state.audio.musicA.playing && state.audio.musicA.musicHandle >= 0) {
+            Music* music = GetMusicResource(state, state.audio.musicA.musicHandle);
+            if (music != nullptr) {
+                StopMusicStream(*music);
+            }
+        }
+
+        if (state.audio.musicB.playing && state.audio.musicB.musicHandle >= 0) {
+            Music* music = GetMusicResource(state, state.audio.musicB.musicHandle);
+            if (music != nullptr) {
+                StopMusicStream(*music);
+            }
+        }
+
+        state.audio.musicA = {};
+        state.audio.musicB = {};
+        state.audio.musicAIsCurrent = data.audio.musicAIsCurrent;
+
+        RestoreMusicSlotState(state, data.audio.musicA, state.audio.musicA);
+        RestoreMusicSlotState(state, data.audio.musicB, state.audio.musicB);
+    }
+
     static bool ApplySaveRestoreData(GameState& state, const SaveRestoreData& data)
     {
         if (!LoadSceneById(state, data.sceneId.c_str(), SceneLoadMode::FromSave)) {
@@ -647,6 +827,7 @@ namespace
         RestoreProps(state, data);
         RestoreEffectSprites(state, data);
         RestoreSoundEmitters(state, data);
+        RestoreAudioState(state, data);
         RestoreControlledActor(state, data);
 
         state.adventure.controlsEnabled = data.controlsEnabled;
@@ -691,6 +872,7 @@ bool SaveGameToSlot(GameState& state, int slotIndex)
     SerializeProps(state, root);
     SerializeEffectSprites(state, root);
     SerializeSoundEmitters(state, root);
+    SerializeAudioState(state, root);
 
     const fs::path savePath = GetSaveSlotPath(slotIndex);
     std::ofstream out(savePath);

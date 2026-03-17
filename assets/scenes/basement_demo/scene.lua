@@ -15,11 +15,11 @@ function Scene_onEnter()
     stopScript("FurnaceGlowCoreLoop")
     startScript("FurnaceGlowCoreLoop")
 
-    playMusic("basement_music")
+    playMusic("basement_music", 3000)
 end
 
 function Scene_onExit()
-    stopMusic(1000)
+    --stopMusic(1000)
     print("On exit fired from LUA!!")
 end
 
