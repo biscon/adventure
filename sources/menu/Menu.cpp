@@ -1,34 +1,35 @@
 #include "Menu.h"
-#include "raylib.h"
-#include <memory>
-#include <vector>
-#include <string>
-#include <functional>
-#include <stack>
+
 #include <cmath>
-#include "settings/Settings.h"
-#include "input/Input.h"
+#include <functional>
+#include <memory>
+#include <stack>
+#include <string>
+#include <vector>
+
 #include "adventure/Adventure.h"
-#include "save/SaveGame.h"
 #include "audio/Audio.h"
+#include "input/Input.h"
+#include "raylib.h"
+#include "save/SaveGame.h"
+#include "settings/Settings.h"
 
-static GameState* game;
+static GameState* game = nullptr;
 
-const Color MENU_BG_COLOR = Color{25, 25, 25, 255};
-
+static constexpr Color MENU_BG_COLOR = Color{25, 25, 25, 255};
 static constexpr int SAVE_SLOT_COUNT = 8;
 
 static std::string menuToastText;
 static float menuToastTimer = 0.0f;
 static float menuToastDuration = 0.0f;
 
-static void ShowMenuToast(const std::string& text, float durationSeconds = 1.5f) {
+static void ShowMenuToast(const std::string& text, float durationSeconds = 1.5f)
+{
     menuToastText = text;
     menuToastDuration = durationSeconds;
     menuToastTimer = durationSeconds;
 }
 
-// Forward declaration
 struct Menu;
 static std::shared_ptr<Menu> createMainMenu();
 
@@ -38,11 +39,14 @@ struct MenuItem {
     std::string text;
     bool isSubmenu = false;
     bool isSlider = false;
-    std::function<void()> action;               // only used if !isSubmenu
-    std::function<float()> getValue;            // slider value getter
-    std::function<void(float)> setValue;        // slider value setter
-    float sliderMin = 0.0f;  // slider range
+
+    std::function<void()> action;
+    std::function<float()> getValue;
+    std::function<void(float)> setValue;
+
+    float sliderMin = 0.0f;
     float sliderMax = 1.0f;
+
     MenuBuilder submenuBuilder = nullptr;
     Color color = LIGHTGRAY;
     bool enabled = true;
@@ -55,280 +59,395 @@ struct Menu {
     int selected = 0;
 };
 
+static std::stack<std::function<std::shared_ptr<Menu>()>> menuStack;
 
-static void startNewGame() {
+static constexpr float MENU_TITLE_Y = 10.0f;
+static constexpr float MENU_HINT_Y = 255.0f;
+static constexpr float MENU_CENTER_X = INTERNAL_WIDTH * 0.5f;
+static constexpr float MENU_CENTER_Y = INTERNAL_HEIGHT * 0.5f;
+
+static constexpr float MENU_ITEM_SPACING = 44.0f;
+static constexpr float MENU_ITEM_HEIGHT = 36.0f;
+static constexpr float MENU_MIN_ITEM_WIDTH = 440.0f;
+static constexpr float MENU_ITEM_SIDE_PADDING = 14.0f;
+
+static constexpr float SLIDER_TRACK_HEIGHT = 6.0f;
+static constexpr float SLIDER_KNOB_WIDTH = 10.0f;
+static constexpr float SLIDER_KNOB_EXTRA_HEIGHT = 4.0f;
+static constexpr float SLIDER_LABEL_WIDTH = 180.0f;
+static constexpr float SLIDER_VALUE_WIDTH = 80.0f;
+static constexpr float SLIDER_INNER_GAP = 18.0f;
+
+static int gDraggingSliderIndex = -1;
+
+static float Clamp01(float t)
+{
+    if (t < 0.0f) return 0.0f;
+    if (t > 1.0f) return 1.0f;
+    return t;
+}
+
+static float ClampFloat(float v, float minValue, float maxValue)
+{
+    if (v < minValue) return minValue;
+    if (v > maxValue) return maxValue;
+    return v;
+}
+
+static void startNewGame()
+{
     AdventureQueueLoadScene(*game, "basement_demo");
 }
 
-//static std::stack<std::shared_ptr<Menu>> menuStack;
-static std::stack<std::function<std::shared_ptr<Menu>()>> menuStack;
+static Rectangle GetMenuItemRect(const Menu& menu, float itemWidth, int index)
+{
+    const float x = MENU_CENTER_X - itemWidth * 0.5f;
+    const float y = MENU_CENTER_Y + (index - menu.items.size() * 0.5f) * MENU_ITEM_SPACING;
 
-static std::shared_ptr<Menu> createResolutionMenu() {
+    return Rectangle{
+            x,
+            y,
+            itemWidth,
+            MENU_ITEM_HEIGHT
+    };
+}
+
+static float ComputeMenuItemWidth(const Menu& menu)
+{
+    float itemWidth = 0.0f;
+
+    for (const MenuItem& item : menu.items) {
+        const int textWidth = MeasureText(item.text.c_str(), 20);
+        if (static_cast<float>(textWidth) > itemWidth) {
+            itemWidth = static_cast<float>(textWidth);
+        }
+    }
+
+    itemWidth += 80.0f;
+    if (itemWidth < MENU_MIN_ITEM_WIDTH) {
+        itemWidth = MENU_MIN_ITEM_WIDTH;
+    }
+
+    return itemWidth;
+}
+
+static Rectangle GetSliderTrackRect(const Rectangle& itemRect)
+{
+    const float labelWidth = SLIDER_LABEL_WIDTH;
+    const float valueWidth = SLIDER_VALUE_WIDTH;
+
+    const float trackX =
+            itemRect.x + MENU_ITEM_SIDE_PADDING + labelWidth + SLIDER_INNER_GAP;
+    const float trackWidth =
+            itemRect.width - MENU_ITEM_SIDE_PADDING * 2.0f - labelWidth - valueWidth - SLIDER_INNER_GAP * 2.0f;
+
+    const float trackY = itemRect.y + itemRect.height * 0.5f - SLIDER_TRACK_HEIGHT * 0.5f;
+
+    return Rectangle{
+            trackX,
+            trackY,
+            trackWidth,
+            SLIDER_TRACK_HEIGHT
+    };
+}
+
+static Rectangle GetSliderHitRect(const Rectangle& itemRect)
+{
+    const Rectangle track = GetSliderTrackRect(itemRect);
+    return Rectangle{
+            track.x,
+            itemRect.y,
+            track.width,
+            itemRect.height
+    };
+}
+
+static Rectangle GetSliderValueRect(const Rectangle& itemRect)
+{
+    const Rectangle track = GetSliderTrackRect(itemRect);
+    return Rectangle{
+            track.x + track.width + SLIDER_INNER_GAP,
+            itemRect.y,
+            SLIDER_VALUE_WIDTH,
+            itemRect.height
+    };
+}
+
+static void ReturnToMainMenuRoot()
+{
+    while (!menuStack.empty()) {
+        menuStack.pop();
+    }
+    menuStack.push(&createMainMenu);
+}
+
+static std::shared_ptr<Menu> createResolutionMenu()
+{
     RefreshResolutions(game->settings);
-    // Resolution submenu
-    auto resolutionMenu = std::make_shared<Menu>();
-    resolutionMenu->title = "Resolution";
+
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Resolution";
 
     for (size_t i = 0; i < game->settings.availableResolutions.size(); ++i) {
-        auto& availRes = game->settings.availableResolutions[i];
-        MenuItem res;
-        bool selected = (int)i == game->settings.selectedResolutionIndex;
-        res.text = (selected ? "< " : "  ") +
-                   std::to_string(availRes.width) + " x " + std::to_string(availRes.height) + (selected ? " > " : "");
+        const Resolution& availRes = game->settings.availableResolutions[i];
 
-        res.color = selected ? WHITE : LIGHTGRAY;
-        res.isSubmenu = false;
-        res.action = [i] {
+        MenuItem item;
+        const bool selected = static_cast<int>(i) == game->settings.selectedResolutionIndex;
+        item.text =
+                (selected ? "< " : "  ") +
+                std::to_string(availRes.width) + " x " + std::to_string(availRes.height) +
+                (selected ? " >" : "");
+        item.color = selected ? WHITE : LIGHTGRAY;
+        item.action = [i] {
             SettingsData& settings = game->settings;
-            settings.selectedResolutionIndex = (int) i;
+            settings.selectedResolutionIndex = static_cast<int>(i);
             settings.needsApply = true;
             ApplySettings(settings);
             SaveSettings(settings);
         };
-        resolutionMenu->items.push_back(res);
+
+        menu->items.push_back(item);
     }
 
     MenuItem back;
     back.text = "Back";
-    back.isSubmenu = false;
     back.action = [] {
-        if (!menuStack.empty()) menuStack.pop();
-    };
-    resolutionMenu->items.push_back(back);
-    return resolutionMenu;
-}
-
-static std::shared_ptr<Menu> createDisplayModeMenu() {
-    // Resolution submenu
-    auto menu = std::make_shared<Menu>();
-    menu->title = "Display Mode";
-    menu->hint = "Fullscreen is buggy AF, consider yourself warned.";
-    MenuItem i1;
-    i1.text = game->settings.displayMode == DisplayMode::Windowed ? "< Windowed >" : "Windowed";
-    i1.color = game->settings.displayMode == DisplayMode::Windowed ? WHITE : LIGHTGRAY;
-    i1.isSubmenu = false;
-    i1.action = [] {
-        game->settings.displayMode = DisplayMode::Windowed;
-        game->settings.needsApply = true;
-        ApplySettings(game->settings);
-        SaveSettings(game->settings);
-    };
-    menu->items.push_back(i1);
-
-    MenuItem i2;
-    i2.text = game->settings.displayMode == DisplayMode::Fullscreen ? "< Fullscreen >" : "Fullscreen";
-    i2.color = game->settings.displayMode == DisplayMode::Fullscreen ? WHITE : LIGHTGRAY;
-    i2.isSubmenu = false;
-    i2.action = [] {
-        game->settings.displayMode = DisplayMode::Fullscreen;
-        game->settings.needsApply = true;
-        ApplySettings(game->settings);
-        SaveSettings(game->settings);
-    };
-    i2.enabled = true;
-    menu->items.push_back(i2);
-
-    MenuItem i3;
-    i3.text = game->settings.displayMode == DisplayMode::Borderless ? "< Borderless >" : "Borderless";
-    i3.color = game->settings.displayMode == DisplayMode::Borderless ? WHITE : LIGHTGRAY;
-    i3.isSubmenu = false;
-    i3.action = [] {
-        game->settings.displayMode = DisplayMode::Borderless;
-        game->settings.needsApply = true;
-        ApplySettings(game->settings);
-        SaveSettings(game->settings);
-    };
-    menu->items.push_back(i3);
-
-    MenuItem back;
-    back.text = "Back";
-    back.isSubmenu = false;
-    back.action = [] {
-        if (!menuStack.empty()) menuStack.pop();
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
     };
     menu->items.push_back(back);
+
     return menu;
 }
 
-static std::shared_ptr<Menu> createDebugMenu() {
-    auto debugMenu = std::make_shared<Menu>();
-    debugMenu->title = "Debug Options";
+static std::shared_ptr<Menu> createDisplayModeMenu()
+{
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Display Mode";
+    menu->hint = "Fullscreen is buggy AF, consider yourself warned.";
+
+    {
+        MenuItem item;
+        item.text = game->settings.displayMode == DisplayMode::Windowed ? "< Windowed >" : "Windowed";
+        item.color = game->settings.displayMode == DisplayMode::Windowed ? WHITE : LIGHTGRAY;
+        item.action = [] {
+            game->settings.displayMode = DisplayMode::Windowed;
+            game->settings.needsApply = true;
+            ApplySettings(game->settings);
+            SaveSettings(game->settings);
+        };
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = game->settings.displayMode == DisplayMode::Fullscreen ? "< Fullscreen >" : "Fullscreen";
+        item.color = game->settings.displayMode == DisplayMode::Fullscreen ? WHITE : LIGHTGRAY;
+        item.action = [] {
+            game->settings.displayMode = DisplayMode::Fullscreen;
+            game->settings.needsApply = true;
+            ApplySettings(game->settings);
+            SaveSettings(game->settings);
+        };
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = game->settings.displayMode == DisplayMode::Borderless ? "< Borderless >" : "Borderless";
+        item.color = game->settings.displayMode == DisplayMode::Borderless ? WHITE : LIGHTGRAY;
+        item.action = [] {
+            game->settings.displayMode = DisplayMode::Borderless;
+            game->settings.needsApply = true;
+            ApplySettings(game->settings);
+            SaveSettings(game->settings);
+        };
+        menu->items.push_back(item);
+    }
+
+    MenuItem back;
+    back.text = "Back";
+    back.action = [] {
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
+    };
+    menu->items.push_back(back);
+
+    return menu;
+}
+
+static std::shared_ptr<Menu> createDebugMenu()
+{
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Debug Options";
 
     MenuItem toggleFPS;
-    if(game->settings.showFPS) {
-        toggleFPS.text = "Disable FPS";
-    } else {
-        toggleFPS.text = "Enable FPS";
-    }
-    toggleFPS.isSubmenu = false;
+    toggleFPS.text = game->settings.showFPS ? "Disable FPS" : "Enable FPS";
     toggleFPS.action = [] {
         game->settings.showFPS = !game->settings.showFPS;
         SaveSettings(game->settings);
     };
-    debugMenu->items.push_back(toggleFPS);
+    menu->items.push_back(toggleFPS);
 
     MenuItem back;
     back.text = "Back";
-    back.isSubmenu = false;
     back.action = [] {
-        if (!menuStack.empty()) menuStack.pop();
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
     };
-    debugMenu->items.push_back(back);
-    return debugMenu;
+    menu->items.push_back(back);
+
+    return menu;
 }
 
-static std::shared_ptr<Menu> createExposureMenu() {
+static std::shared_ptr<Menu> createExposureMenu()
+{
     auto menu = std::make_shared<Menu>();
     menu->title = "Exposure";
     menu->hint = "Increase to make the game world look brighter.";
 
-    MenuItem exposureSlider;
-    exposureSlider.text = "Exposure";
-    exposureSlider.isSlider = true;
-    exposureSlider.sliderMin = 0.5;
-    exposureSlider.sliderMax = 2.5;
-    exposureSlider.getValue = []() { return game->settings.exposure; };
-    exposureSlider.setValue = [](float v) {
+    MenuItem slider;
+    slider.text = "Exposure";
+    slider.isSlider = true;
+    slider.sliderMin = 0.5f;
+    slider.sliderMax = 2.5f;
+    slider.getValue = []() { return game->settings.exposure; };
+    slider.setValue = [](float v) {
         game->settings.exposure = v;
-        TraceLog(LOG_INFO, "exposure = %f", game->settings.exposure);
-    };
-    menu->items.push_back(exposureSlider);
-
-    MenuItem back;
-    back.text = "Back";
-    back.isSubmenu = false;
-    back.action = [] {
-        SaveSettings(game->settings);
-        if (!menuStack.empty()) menuStack.pop();
-    };
-    menu->items.push_back(back);
-
-    return menu;
-}
-
-static std::shared_ptr<Menu> createSoundVolumeMenu() {
-    auto menu = std::make_shared<Menu>();
-    menu->title = "Sound Volume";
-    menu->hint = "Adjust sound effects volume.";
-
-    MenuItem slider;
-    slider.text = "Sound Volume";
-    slider.isSlider = true;
-    slider.sliderMin = 0.0f;
-    slider.sliderMax = 1.0f;
-    slider.getValue = []() { return game->settings.soundVolume; };
-    slider.setValue = [](float v) {
-        game->settings.soundVolume = v;
     };
     menu->items.push_back(slider);
 
     MenuItem back;
     back.text = "Back";
-    back.isSubmenu = false;
     back.action = [] {
         SaveSettings(game->settings);
-        if (!menuStack.empty()) menuStack.pop();
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
     };
     menu->items.push_back(back);
 
     return menu;
 }
 
-static std::shared_ptr<Menu> createMusicVolumeMenu() {
+static std::shared_ptr<Menu> createAudioMenu()
+{
     auto menu = std::make_shared<Menu>();
-    menu->title = "Music Volume";
-    menu->hint = "Adjust music volume.";
+    menu->title = "Audio";
+    menu->hint = "Adjust sound and music levels.";
 
-    MenuItem slider;
-    slider.text = "Music Volume";
-    slider.isSlider = true;
-    slider.sliderMin = 0.0f;
-    slider.sliderMax = 1.0f;
-    slider.getValue = []() { return game->settings.musicVolume; };
-    slider.setValue = [](float v) {
-        game->settings.musicVolume = v;
-    };
-    menu->items.push_back(slider);
-
-    MenuItem back;
-    back.text = "Back";
-    back.isSubmenu = false;
-    back.action = [] {
-        SaveSettings(game->settings);
-        if (!menuStack.empty()) menuStack.pop();
-    };
-    menu->items.push_back(back);
-
-    return menu;
-}
-
-static std::shared_ptr<Menu> createSettingsMenu() {
-    // Settings submenu
-    auto settingsMenu = std::make_shared<Menu>();
-    settingsMenu->title = "Settings";
-    MenuItem resolution;
-    resolution.text = "Resolution";
-    resolution.isSubmenu = true;
-    resolution.submenuBuilder = createResolutionMenu;
-    settingsMenu->items.push_back(resolution);
-
-    MenuItem displayMode;
-    displayMode.text = "Display Mode";
-    displayMode.isSubmenu = true;
-    displayMode.submenuBuilder = createDisplayModeMenu;
-    settingsMenu->items.push_back(displayMode);
-
-    MenuItem exposure;
-    exposure.text = "Exposure";
-    exposure.isSubmenu = true;
-    exposure.submenuBuilder = createExposureMenu;
-    settingsMenu->items.push_back(exposure);
-
-    MenuItem soundVolume;
-    soundVolume.text = "Sound Volume";
-    soundVolume.isSubmenu = true;
-    soundVolume.submenuBuilder = createSoundVolumeMenu;
-    settingsMenu->items.push_back(soundVolume);
-
-    MenuItem musicVolume;
-    musicVolume.text = "Music Volume";
-    musicVolume.isSubmenu = true;
-    musicVolume.submenuBuilder = createMusicVolumeMenu;
-    settingsMenu->items.push_back(musicVolume);
-
-    MenuItem debugOptions;
-    debugOptions.text = "Debug Options";
-    debugOptions.isSubmenu = true;
-    debugOptions.submenuBuilder = createDebugMenu;
-    settingsMenu->items.push_back(debugOptions);
-
-
-    MenuItem toggleFPSLock;
-    if(game->settings.fpsLock) {
-        toggleFPSLock.text = "Unlock FPS";
-    } else {
-        toggleFPSLock.text = "Lock FPS (60)";
+    {
+        MenuItem slider;
+        slider.text = "Sound Volume";
+        slider.isSlider = true;
+        slider.sliderMin = 0.0f;
+        slider.sliderMax = 1.0f;
+        slider.getValue = []() { return game->settings.soundVolume; };
+        slider.setValue = [](float v) {
+            game->settings.soundVolume = v;
+        };
+        menu->items.push_back(slider);
     }
-    toggleFPSLock.isSubmenu = false;
-    toggleFPSLock.action = [] {
-        game->settings.fpsLock = !game->settings.fpsLock;
-        ApplySettings(game->settings);
-        SaveSettings(game->settings);
-    };
-    settingsMenu->items.push_back(toggleFPSLock);
 
+    {
+        MenuItem slider;
+        slider.text = "Music Volume";
+        slider.isSlider = true;
+        slider.sliderMin = 0.0f;
+        slider.sliderMax = 1.0f;
+        slider.getValue = []() { return game->settings.musicVolume; };
+        slider.setValue = [](float v) {
+            game->settings.musicVolume = v;
+        };
+        menu->items.push_back(slider);
+    }
 
     MenuItem back;
     back.text = "Back";
-    back.isSubmenu = false;
     back.action = [] {
-        if (!menuStack.empty()) menuStack.pop();
+        SaveSettings(game->settings);
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
     };
-    settingsMenu->items.push_back(back);
-    return settingsMenu;
+    menu->items.push_back(back);
+
+    return menu;
 }
 
-static std::shared_ptr<Menu> createSaveMenu() {
+static std::shared_ptr<Menu> createSettingsMenu()
+{
+    auto menu = std::make_shared<Menu>();
+    menu->title = "Settings";
+
+    {
+        MenuItem item;
+        item.text = "Resolution";
+        item.isSubmenu = true;
+        item.submenuBuilder = createResolutionMenu;
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = "Display Mode";
+        item.isSubmenu = true;
+        item.submenuBuilder = createDisplayModeMenu;
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = "Exposure";
+        item.isSubmenu = true;
+        item.submenuBuilder = createExposureMenu;
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = "Audio";
+        item.isSubmenu = true;
+        item.submenuBuilder = createAudioMenu;
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = "Debug Options";
+        item.isSubmenu = true;
+        item.submenuBuilder = createDebugMenu;
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = game->settings.fpsLock ? "Unlock FPS" : "Lock FPS (60)";
+        item.action = [] {
+            game->settings.fpsLock = !game->settings.fpsLock;
+            ApplySettings(game->settings);
+            SaveSettings(game->settings);
+        };
+        menu->items.push_back(item);
+    }
+
+    MenuItem back;
+    back.text = "Back";
+    back.action = [] {
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
+    };
+    menu->items.push_back(back);
+
+    return menu;
+}
+
+static std::shared_ptr<Menu> createSaveMenu()
+{
     auto menu = std::make_shared<Menu>();
     menu->title = "Save Game";
     menu->hint = "Select a slot to overwrite.";
@@ -336,18 +455,12 @@ static std::shared_ptr<Menu> createSaveMenu() {
     for (int slot = 1; slot <= SAVE_SLOT_COUNT; ++slot) {
         MenuItem item;
         item.text = "Slot " + std::to_string(slot) + " - " + GetSaveSlotSummary(slot);
-        item.isSubmenu = false;
         item.enabled = game->adventure.currentScene.loaded;
         item.action = [slot] {
             if (SaveGameToSlot(*game, slot)) {
                 TraceLog(LOG_INFO, "Saved game to slot %d", slot);
                 ShowMenuToast("Game Saved");
-
-                while (!menuStack.empty()) {
-                    menuStack.pop();
-                }
-                menuStack.push(&createMainMenu);
-
+                ReturnToMainMenuRoot();
                 game->mode = GameMode::Game;
             } else {
                 TraceLog(LOG_ERROR, "Failed saving game to slot %d", slot);
@@ -359,16 +472,18 @@ static std::shared_ptr<Menu> createSaveMenu() {
 
     MenuItem back;
     back.text = "Back";
-    back.isSubmenu = false;
     back.action = [] {
-        if (!menuStack.empty()) menuStack.pop();
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
     };
     menu->items.push_back(back);
 
     return menu;
 }
 
-static std::shared_ptr<Menu> createLoadMenu() {
+static std::shared_ptr<Menu> createLoadMenu()
+{
     auto menu = std::make_shared<Menu>();
     menu->title = "Load Game";
     menu->hint = "Select a save slot to load.";
@@ -376,16 +491,12 @@ static std::shared_ptr<Menu> createLoadMenu() {
     for (int slot = 1; slot <= SAVE_SLOT_COUNT; ++slot) {
         MenuItem item;
         item.text = "Slot " + std::to_string(slot) + " - " + GetSaveSlotSummary(slot);
-        item.isSubmenu = false;
         item.enabled = DoesSaveSlotExist(slot);
         item.action = [slot] {
             if (LoadGameFromSlot(*game, slot)) {
                 TraceLog(LOG_INFO, "Loaded game from slot %d", slot);
                 ShowMenuToast("Game Loaded");
-                while (!menuStack.empty()) {
-                    menuStack.pop();
-                }
-                menuStack.push(&createMainMenu);
+                ReturnToMainMenuRoot();
             } else {
                 TraceLog(LOG_ERROR, "Failed loading game from slot %d", slot);
                 ShowMenuToast("Load Failed");
@@ -396,16 +507,18 @@ static std::shared_ptr<Menu> createLoadMenu() {
 
     MenuItem back;
     back.text = "Back";
-    back.isSubmenu = false;
     back.action = [] {
-        if (!menuStack.empty()) menuStack.pop();
+        if (!menuStack.empty()) {
+            menuStack.pop();
+        }
     };
     menu->items.push_back(back);
 
     return menu;
 }
 
-static std::shared_ptr<Menu> createMainMenu() {
+static std::shared_ptr<Menu> createMainMenu()
+{
     auto menu = std::make_shared<Menu>();
     menu->title = "Main Menu";
 
@@ -414,13 +527,11 @@ static std::shared_ptr<Menu> createMainMenu() {
     if (!hasGameLoaded) {
         MenuItem item;
         item.text = "Start New Game";
-        item.isSubmenu = false;
         item.action = startNewGame;
         menu->items.push_back(item);
     } else {
         MenuItem resume;
         resume.text = "Resume";
-        resume.isSubmenu = false;
         resume.action = [] {
             game->mode = GameMode::Game;
             TraceLog(LOG_DEBUG, "Resume selected");
@@ -434,37 +545,45 @@ static std::shared_ptr<Menu> createMainMenu() {
         menu->items.push_back(save);
     }
 
-    MenuItem load;
-    load.text = "Load Game";
-    load.isSubmenu = true;
-    load.submenuBuilder = createLoadMenu;
-    menu->items.push_back(load);
+    {
+        MenuItem item;
+        item.text = "Load Game";
+        item.isSubmenu = true;
+        item.submenuBuilder = createLoadMenu;
+        menu->items.push_back(item);
+    }
 
-    MenuItem settings;
-    settings.text = "Settings";
-    settings.isSubmenu = true;
-    settings.submenuBuilder = createSettingsMenu;
-    menu->items.push_back(settings);
+    {
+        MenuItem item;
+        item.text = "Settings";
+        item.isSubmenu = true;
+        item.submenuBuilder = createSettingsMenu;
+        menu->items.push_back(item);
+    }
 
-    MenuItem quit;
-    quit.text = "Quit";
-    quit.isSubmenu = false;
-    quit.action = [] {
-        TraceLog(LOG_INFO, "main menu quit");
-        game->mode = GameMode::Quit;
-    };
-    menu->items.push_back(quit);
+    {
+        MenuItem item;
+        item.text = "Quit";
+        item.action = [] {
+            TraceLog(LOG_INFO, "main menu quit");
+            game->mode = GameMode::Quit;
+        };
+        menu->items.push_back(item);
+    }
 
     return menu;
 }
 
-void MenuInit(GameState* gameState) {
+void MenuInit(GameState* gameState)
+{
     game = gameState;
     menuStack = std::stack<std::function<std::shared_ptr<Menu>()>>();
     menuStack.push(&createMainMenu);
+    gDraggingSliderIndex = -1;
 }
 
-void MenuUpdate(float dt) {
+void MenuUpdate(float dt)
+{
     if (menuToastTimer > 0.0f) {
         menuToastTimer -= dt;
         if (menuToastTimer < 0.0f) {
@@ -474,119 +593,145 @@ void MenuUpdate(float dt) {
     }
 }
 
-void MenuRenderUi(GameState& state) {
+void MenuRenderUi(GameState& state)
+{
     ClearBackground(MENU_BG_COLOR);
-    if (menuStack.empty()) return;
-
-    std::shared_ptr<Menu> menu = menuStack.top()(); // call the builder
-    float menuX = INTERNAL_WIDTH / 2.0f;
-    float menuY = INTERNAL_HEIGHT / 2.0f;
-    float spacing = 40.0f;
-    float itemHeight = 36.0f;
-
-    float itemWidth = 0.0f;
-    for (const MenuItem& item : menu->items) {
-        const int textWidth = MeasureText(item.text.c_str(), 20);
-        if (static_cast<float>(textWidth) > itemWidth) {
-            itemWidth = static_cast<float>(textWidth);
-        }
+    if (menuStack.empty()) {
+        return;
     }
 
-    itemWidth += 80.0f; // left/right padding
-    if (itemWidth < 400.0f) {
-        itemWidth = 400.0f;
+    std::shared_ptr<Menu> menu = menuStack.top()();
+    if (!menu) {
+        return;
     }
 
-    if(!menu->title.empty()) {
-        DrawText(menu->title.c_str(), menuX - (MeasureText(menu->title.c_str(), 40) / 2), 10, 40, WHITE);
+    const float itemWidth = ComputeMenuItemWidth(*menu);
+
+    if (!menu->title.empty()) {
+        DrawText(menu->title.c_str(),
+                 static_cast<int>(MENU_CENTER_X - MeasureText(menu->title.c_str(), 40) * 0.5f),
+                 static_cast<int>(MENU_TITLE_Y),
+                 40,
+                 WHITE);
     }
 
-    if(!menu->hint.empty()) {
-        DrawText(menu->hint.c_str(), menuX - (MeasureText(menu->hint.c_str(), 30) / 2), 255, 30, LIGHTGRAY);
+    if (!menu->hint.empty()) {
+        DrawText(menu->hint.c_str(),
+                 static_cast<int>(MENU_CENTER_X - MeasureText(menu->hint.c_str(), 30) * 0.5f),
+                 static_cast<int>(MENU_HINT_Y),
+                 30,
+                 LIGHTGRAY);
     }
-    static bool dragging = false;
 
-    for (int i = 0; i < (int)menu->items.size(); ++i) {
-        bool enabled = menu->items[i].enabled;
-        float x = menuX - itemWidth / 2;
-        float y = menuY + (i - menu->items.size() / 2.0f) * spacing;
-        Rectangle rect = {x, y, itemWidth, itemHeight};
+    const Vector2 mouse = GetMousePosition();
 
-        bool hovered = enabled && CheckCollisionPointRec(GetMousePosition(), rect);
+    for (int i = 0; i < static_cast<int>(menu->items.size()); ++i) {
+        MenuItem& item = menu->items[i];
+        const bool enabled = item.enabled;
+
+        const Rectangle itemRect = GetMenuItemRect(*menu, itemWidth, i);
 
         bool clicked = false;
         for (auto& ev : FilterEvents(state.input, true, InputEventType::MouseClick)) {
-            if(CheckCollisionPointRec(ev.mouse.pos, rect) && ev.mouse.button == MOUSE_LEFT_BUTTON) {
+            if (ev.mouse.button == MOUSE_LEFT_BUTTON &&
+                CheckCollisionPointRec(ev.mouse.pos, itemRect)) {
                 clicked = true;
                 ConsumeEvent(ev);
             }
         }
 
-        //bool clicked = hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+        if (!item.isSlider) {
+            const bool hovered = enabled && CheckCollisionPointRec(mouse, itemRect);
 
-        if (!menu->items[i].isSlider) {
-            DrawRectangleRec(rect, hovered ? Fade(WHITE, 0.1f) : Fade(WHITE, 0.05f));
-            DrawRectangleLinesEx(rect, 1.0f, hovered ? YELLOW : DARKGRAY);
-            if (enabled) {
-                DrawText(menu->items[i].text.c_str(), (int) (x + 10), (int) (y + 8), 20,
-                         hovered ? YELLOW : menu->items[i].color);
-            } else {
-                DrawText(menu->items[i].text.c_str(), (int) (x + 10), (int) (y + 8), 20, DARKGRAY);
-            }
+            DrawRectangleRec(itemRect, hovered ? Fade(WHITE, 0.10f) : Fade(WHITE, 0.05f));
+            DrawRectangleLinesEx(itemRect, 1.0f, hovered ? YELLOW : DARKGRAY);
 
-            if (clicked) {
+            DrawText(item.text.c_str(),
+                     static_cast<int>(itemRect.x + 10.0f),
+                     static_cast<int>(itemRect.y + 8.0f),
+                     20,
+                     enabled ? (hovered ? YELLOW : item.color) : DARKGRAY);
+
+            if (clicked && enabled) {
                 PlaySoundById(state, "ui_click");
-                auto &item = menu->items[i];
+
                 if (item.isSubmenu && item.submenuBuilder) {
                     menuStack.push(item.submenuBuilder);
                 } else if (item.action) {
                     item.action();
                 }
             }
+
+            continue;
         }
 
-        if (menu->items[i].isSlider) {
-            float sliderWidth = itemWidth - 20;
-            float sliderHeight = 6;
-            float sliderX = x + 10;
-            float sliderY = y;
+        const Rectangle sliderHitRect = GetSliderHitRect(itemRect);
+        const Rectangle trackRect = GetSliderTrackRect(itemRect);
+        const Rectangle valueRect = GetSliderValueRect(itemRect);
 
-            // normalize value 0..1
-            float rawValue = menu->items[i].getValue();
-            float value = (rawValue - menu->items[i].sliderMin) / (menu->items[i].sliderMax - menu->items[i].sliderMin);
-            value = fminf(fmaxf(value, 0.0f), 1.0f);
+        const bool hovered = enabled && CheckCollisionPointRec(mouse, sliderHitRect);
 
-            float knobX = sliderX + value * sliderWidth;
+        DrawRectangleRec(itemRect, hovered ? Fade(WHITE, 0.06f) : Fade(WHITE, 0.035f));
+        DrawRectangleLinesEx(itemRect, 1.0f, hovered ? YELLOW : DARKGRAY);
 
-            // track
-            DrawRectangle(sliderX, sliderY, sliderWidth, sliderHeight, DARKGRAY);
-            DrawRectangle(knobX - 5, sliderY - 2, 10, sliderHeight + 4, YELLOW);
+        DrawText(item.text.c_str(),
+                 static_cast<int>(itemRect.x + MENU_ITEM_SIDE_PADDING),
+                 static_cast<int>(itemRect.y + 8.0f),
+                 20,
+                 enabled ? (hovered ? YELLOW : item.color) : DARKGRAY);
 
-            // numeric value
-            char buf[16];
-            snprintf(buf, sizeof(buf), "%.2f", rawValue);
-            DrawText(buf, sliderX + sliderWidth + 10, sliderY-2, 20, WHITE);
+        const float rawValue = item.getValue ? item.getValue() : item.sliderMin;
+        const float normalized =
+                Clamp01((rawValue - item.sliderMin) / (item.sliderMax - item.sliderMin));
 
-            // mouse interaction
-            if (CheckCollisionPointRec(GetMousePosition(), {sliderX, sliderY - 4, sliderWidth, sliderHeight + 8})
-                && IsMouseButtonDown(MOUSE_LEFT_BUTTON) && !dragging) {
-                dragging = true;
-            }
-            if(dragging) {
-                float newValue = (GetMousePosition().x - sliderX) / sliderWidth;
-                newValue = fminf(fmaxf(newValue, 0.0f), 1.0f);
-                // map back to raw range
-                newValue = menu->items[i].sliderMin + newValue * (menu->items[i].sliderMax - menu->items[i].sliderMin);
-                menu->items[i].setValue(newValue);
-                if(!IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-                    dragging = false;
+        const float knobCenterX = trackRect.x + normalized * trackRect.width;
+
+        DrawRectangle(static_cast<int>(trackRect.x),
+                      static_cast<int>(trackRect.y),
+                      static_cast<int>(trackRect.width),
+                      static_cast<int>(trackRect.height),
+                      DARKGRAY);
+
+        DrawRectangle(static_cast<int>(knobCenterX - SLIDER_KNOB_WIDTH * 0.5f),
+                      static_cast<int>(trackRect.y - SLIDER_KNOB_EXTRA_HEIGHT * 0.5f),
+                      static_cast<int>(SLIDER_KNOB_WIDTH),
+                      static_cast<int>(trackRect.height + SLIDER_KNOB_EXTRA_HEIGHT),
+                      YELLOW);
+
+        char valueBuf[32];
+        std::snprintf(valueBuf, sizeof(valueBuf), "%.2f", rawValue);
+
+        DrawText(valueBuf,
+                 static_cast<int>(valueRect.x),
+                 static_cast<int>(itemRect.y + 8.0f),
+                 20,
+                 WHITE);
+
+        if (enabled && hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            gDraggingSliderIndex = i;
+            PlaySoundById(state, "ui_click");
+        }
+
+        if (gDraggingSliderIndex == i) {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+                float newNormalized = (mouse.x - trackRect.x) / trackRect.width;
+                newNormalized = Clamp01(newNormalized);
+
+                const float newValue =
+                        item.sliderMin + newNormalized * (item.sliderMax - item.sliderMin);
+
+                if (item.setValue) {
+                    item.setValue(newValue);
                 }
+            } else {
+                gDraggingSliderIndex = -1;
             }
         }
     }
 }
 
-void MenuRenderOverlay() {
+void MenuRenderOverlay()
+{
     if (menuToastTimer <= 0.0f || menuToastText.empty()) {
         return;
     }
@@ -594,8 +739,7 @@ void MenuRenderOverlay() {
     float alpha = 1.0f;
     if (menuToastDuration > 0.0f && menuToastTimer < 0.35f) {
         alpha = menuToastTimer / 0.35f;
-        if (alpha < 0.0f) alpha = 0.0f;
-        if (alpha > 1.0f) alpha = 1.0f;
+        alpha = ClampFloat(alpha, 0.0f, 1.0f);
     }
 
     const int fontSize = 24;
@@ -622,15 +766,19 @@ void MenuRenderOverlay() {
              textColor);
 }
 
-void MenuHandleInput(GameState& state) {
+void MenuHandleInput(GameState& state)
+{
     for (auto& ev : FilterEvents(state.input, true, InputEventType::KeyPressed)) {
-        if(ev.key.key == KEY_ESCAPE) {
+        if (ev.key.key == KEY_ESCAPE) {
+            gDraggingSliderIndex = -1;
+
             if (menuStack.size() > 1) {
                 menuStack.pop();
             } else {
                 state.mode = GameMode::Game;
                 TraceLog(LOG_DEBUG, "closing menu");
             }
+
             ConsumeEvent(ev);
         }
     }
