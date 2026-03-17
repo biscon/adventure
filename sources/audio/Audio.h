@@ -10,6 +10,9 @@ bool PlaySoundById(GameState& state, const std::string& id);
 bool PlayMusicById(GameState& state, const std::string& id);
 void StopMusic(GameState& state, float fadeMs = 0.0f);
 
+bool PlaySoundEmitterById(GameState& state, const std::string& emitterId);
+bool StopSoundEmitterById(GameState& state, const std::string& emitterId);
+
 bool LoadSceneAudioDefinitions(GameState& state, const std::string& sceneDir);
 void BuildSceneSoundEmitters(GameState& state);
 void ClearSceneAudio(GameState& state);

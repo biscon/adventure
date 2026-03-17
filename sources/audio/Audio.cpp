@@ -63,6 +63,68 @@ static float Clamp01(float t)
     return t;
 }
 
+static int FindSceneEmitterIndexById(const GameState& state, const std::string& emitterId)
+{
+    const int count = std::min(
+            static_cast<int>(state.adventure.currentScene.soundEmitters.size()),
+            static_cast<int>(state.audio.sceneEmitters.size()));
+
+    for (int i = 0; i < count; ++i) {
+        if (state.adventure.currentScene.soundEmitters[i].id == emitterId) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static bool ComputeEmitterPlaybackParams(const GameState& state,
+                                         const SceneSoundEmitterData& sceneEmitter,
+                                         const SoundEmitterInstance& emitter,
+                                         const AudioDefinitionData& def,
+                                         float& outVolume,
+                                         float& outPan)
+{
+    const ActorInstance* listener = GetControlledActor(state);
+    if (listener == nullptr) {
+        return false;
+    }
+
+    if (sceneEmitter.radius <= 0.0f) {
+        return false;
+    }
+
+    const float dx = sceneEmitter.position.x - listener->feetPos.x;
+    const float dy = sceneEmitter.position.y - listener->feetPos.y;
+    const float dist = std::sqrt(dx * dx + dy * dy);
+
+    if (dist >= sceneEmitter.radius) {
+        return false;
+    }
+
+    const float atten = std::pow(1.0f - Clamp01(dist / sceneEmitter.radius), 2.0f);
+
+    outVolume =
+            def.volume *
+            state.settings.soundVolume *
+            emitter.volume *
+            atten;
+
+    outPan = 0.5f;
+    if (sceneEmitter.pan) {
+        float normPan = -dx / sceneEmitter.radius;
+        if (normPan < -1.0f) normPan = -1.0f;
+        if (normPan > 1.0f) normPan = 1.0f;
+
+        const float maxPanAmount = 0.35f;
+        outPan = 0.5f + normPan * maxPanAmount;
+        if (outPan < 0.0f) outPan = 0.0f;
+        if (outPan > 1.0f) outPan = 1.0f;
+    }
+
+    return true;
+}
+
 static void UpdateSceneSoundEmitters(GameState& state)
 {
     if (!state.adventure.currentScene.loaded) {
@@ -71,16 +133,6 @@ static void UpdateSceneSoundEmitters(GameState& state)
         }
         return;
     }
-
-    const ActorInstance* listener = GetControlledActor(state);
-    if (listener == nullptr) {
-        for (SoundEmitterInstance& emitter : state.audio.sceneEmitters) {
-            StopEmitterSound(emitter);
-        }
-        return;
-    }
-
-    const float maxPanAmount = 0.35f;
 
     for (SoundEmitterInstance& emitter : state.audio.sceneEmitters) {
         if (emitter.sceneEmitterIndex < 0 ||
@@ -91,6 +143,11 @@ static void UpdateSceneSoundEmitters(GameState& state)
 
         const SceneSoundEmitterData& sceneEmitter =
                 state.adventure.currentScene.soundEmitters[emitter.sceneEmitterIndex];
+
+        if (!sceneEmitter.loop) {
+            StopEmitterSound(emitter);
+            continue;
+        }
 
         if (!emitter.enabled || sceneEmitter.radius <= 0.0f) {
             StopEmitterSound(emitter);
@@ -123,36 +180,11 @@ static void UpdateSceneSoundEmitters(GameState& state)
             continue;
         }
 
-        const float dx = sceneEmitter.position.x - listener->feetPos.x;
-        const float dy = sceneEmitter.position.y - listener->feetPos.y;
-        const float dist = std::sqrt(dx * dx + dy * dy);
-
-        if (dist >= sceneEmitter.radius) {
+        float finalVolume = 0.0f;
+        float pan = 0.5f;
+        if (!ComputeEmitterPlaybackParams(state, sceneEmitter, emitter, *def, finalVolume, pan)) {
             StopEmitterSound(emitter);
             continue;
-        }
-
-        // linear attenuation
-        const float atten = 1.0f - Clamp01(dist / sceneEmitter.radius);
-        // more realistic exponential falloff
-        //const float atten = std::pow(1.0f - Clamp01(dist / sceneEmitter.radius), 2.0f);
-
-        const float finalVolume =
-                def->volume *
-                state.settings.soundVolume *
-                emitter.volume *
-                atten;
-
-        float pan = 0.5f;
-        if (sceneEmitter.pan) {
-            //float normPan = dx / sceneEmitter.radius;
-            float normPan = -dx / sceneEmitter.radius;
-            if (normPan < -1.0f) normPan = -1.0f;
-            if (normPan > 1.0f) normPan = 1.0f;
-
-            pan = 0.5f + normPan * maxPanAmount;
-            if (pan < 0.0f) pan = 0.0f;
-            if (pan > 1.0f) pan = 1.0f;
         }
 
         if (!emitter.active) {
@@ -402,6 +434,102 @@ bool PlayMusicById(GameState& state, const std::string& id)
     state.audio.music.fadeDurationMs = 0.0f;
     state.audio.music.fadeStartVolume = volume;
 
+    return true;
+}
+
+bool PlaySoundEmitterById(GameState& state, const std::string& emitterId)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int emitterIndex = FindSceneEmitterIndexById(state, emitterId);
+    if (emitterIndex < 0 ||
+        emitterIndex >= static_cast<int>(state.audio.sceneEmitters.size()) ||
+        emitterIndex >= static_cast<int>(state.adventure.currentScene.soundEmitters.size())) {
+        return false;
+    }
+
+    SoundEmitterInstance& emitter = state.audio.sceneEmitters[emitterIndex];
+    const SceneSoundEmitterData& sceneEmitter = state.adventure.currentScene.soundEmitters[emitterIndex];
+
+    if (sceneEmitter.loop) {
+        emitter.enabled = true;
+        return true;
+    }
+
+    AudioDefinitionData* def = FindAudioDef(state, sceneEmitter.soundId);
+    if (def == nullptr) {
+        WarnMissingAudioIdOnce(state, sceneEmitter.soundId);
+        return false;
+    }
+
+    if (def->type != AudioType::Sound) {
+        TraceLog(LOG_WARNING,
+                 "Triggered emitter '%s' references non-sound audio id '%s'",
+                 sceneEmitter.id.c_str(),
+                 sceneEmitter.soundId.c_str());
+        return false;
+    }
+
+    Sound* base = GetSoundResource(state, def->soundHandle);
+    if (base == nullptr) {
+        TraceLog(LOG_WARNING,
+                 "Triggered emitter '%s' missing sound resource for audio id '%s'",
+                 sceneEmitter.id.c_str(),
+                 sceneEmitter.soundId.c_str());
+        return false;
+    }
+
+    float finalVolume = 0.0f;
+    float pan = 0.5f;
+    if (!ComputeEmitterPlaybackParams(state, sceneEmitter, emitter, *def, finalVolume, pan)) {
+        return false;
+    }
+
+    Sound alias = LoadSoundAlias(*base);
+    if (alias.frameCount <= 0) {
+        TraceLog(LOG_ERROR,
+                 "Failed creating triggered sound alias for emitter '%s'",
+                 sceneEmitter.id.c_str());
+        return false;
+    }
+
+    SetSoundVolume(alias, finalVolume);
+    SetSoundPan(alias, pan);
+    PlaySound(alias);
+
+    ActiveSoundInstance inst;
+    inst.sound = alias;
+    inst.baseSoundHandle = def->soundHandle;
+    inst.active = true;
+    state.audio.activeSounds.push_back(inst);
+
+    return true;
+}
+
+bool StopSoundEmitterById(GameState& state, const std::string& emitterId)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int emitterIndex = FindSceneEmitterIndexById(state, emitterId);
+    if (emitterIndex < 0 ||
+        emitterIndex >= static_cast<int>(state.audio.sceneEmitters.size()) ||
+        emitterIndex >= static_cast<int>(state.adventure.currentScene.soundEmitters.size())) {
+        return false;
+    }
+
+    SoundEmitterInstance& emitter = state.audio.sceneEmitters[emitterIndex];
+    const SceneSoundEmitterData& sceneEmitter = state.adventure.currentScene.soundEmitters[emitterIndex];
+
+    if (!sceneEmitter.loop) {
+        return false;
+    }
+
+    emitter.enabled = false;
+    StopEmitterSound(emitter);
     return true;
 }
 

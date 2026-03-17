@@ -870,3 +870,21 @@ bool AdventureScriptSetSoundEmitterVolume(GameState& state, const std::string& e
     state.audio.sceneEmitters[emitterIndex].volume = volume;
     return true;
 }
+
+bool AdventureScriptPlayEmitter(GameState& state, const std::string& emitterId)
+{
+    if (emitterId.empty()) {
+        return false;
+    }
+
+    return PlaySoundEmitterById(state, emitterId);
+}
+
+bool AdventureScriptStopEmitter(GameState& state, const std::string& emitterId)
+{
+    if (emitterId.empty()) {
+        return false;
+    }
+
+    return StopSoundEmitterById(state, emitterId);
+}

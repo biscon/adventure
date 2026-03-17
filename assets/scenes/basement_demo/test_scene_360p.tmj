@@ -331,10 +331,110 @@
                  "width":0,
                  "x":317,
                  "y":208.5
+                },
+            
+                {
+                 "height":0,
+                 "id":41,
+                 "name":"door_open",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":1200
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"door_open"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":452.5,
+                 "y":99.5
+                },
+            
+                {
+                 "height":0,
+                 "id":42,
+                 "name":"door_close",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":1200
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"door_close"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":456.5,
+                 "y":103.5
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         },
@@ -929,7 +1029,7 @@
          "y":0
         }],
  "nextlayerid":33,
- "nextobjectid":41,
+ "nextobjectid":43,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

@@ -763,6 +763,11 @@ static void ProcessLayerRecursive(
                 emitter.pan = pan;
             }
 
+            bool loop = true;
+            if (GetBoolProperty(obj, "loop", loop)) {
+                emitter.loop = loop;
+            }
+
             emitter.position.x =
                     (totalOffsetX + GetFloatOrDefault(obj, "x", 0.0f)) *
                     static_cast<float>(scene.baseAssetScale);

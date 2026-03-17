@@ -1371,6 +1371,34 @@ static int Lua_setSoundEmitterVolume(lua_State* L)
     return 1;
 }
 
+static int Lua_playEmitter(lua_State* L)
+{
+    const char* emitterId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || emitterId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptPlayEmitter(*gameState, std::string(emitterId));
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_stopEmitter(lua_State* L)
+{
+    const char* emitterId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || emitterId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptStopEmitter(*gameState, std::string(emitterId));
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 void RegisterLuaAPI(lua_State* L)
 {
     lua_register(L, "setFlag", Lua_setFlag);
@@ -1447,6 +1475,8 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "setSoundEmitterEnabled", Lua_setSoundEmitterEnabled);
     lua_register(L, "soundEmitterEnabled", Lua_soundEmitterEnabled);
     lua_register(L, "setSoundEmitterVolume", Lua_setSoundEmitterVolume);
+    lua_register(L, "playEmitter", Lua_playEmitter);
+    lua_register(L, "stopEmitter", Lua_stopEmitter);
 
     lua_register(L, "print", Lua_consolePrint);
     lua_register(L, "log", Lua_log);

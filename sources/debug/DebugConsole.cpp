@@ -248,6 +248,8 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
         DebugConsoleAddLine(state, "  /spawns", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /audio", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /emitters", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /playemitter <emitterId>", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /stopemitter <emitterId>", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /play <audioId>", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /music <audioId>", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /stopmusic [fadeMs]", LIGHTGRAY);
@@ -783,6 +785,7 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
                     "  " + sceneEmitter.id +
                     " sound=" + sceneEmitter.soundId +
                     " radius=" + std::to_string(static_cast<int>(sceneEmitter.radius)) +
+                    " loop=" + std::string(sceneEmitter.loop ? "true" : "false") +
                     " enabled=" + std::string(emitter.enabled ? "true" : "false") +
                     " active=" + std::string(emitter.active ? "true" : "false") +
                     " volume=" + std::to_string(emitter.volume);
@@ -844,6 +847,36 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
                     SKYBLUE);
         } else {
             DebugConsoleAddLine(state, "stopped music", SKYBLUE);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/playemitter") {
+        if (args.size() < 2) {
+            DebugConsoleAddLine(state, "usage: /playemitter <emitterId>", RED);
+            return true;
+        }
+
+        if (PlaySoundEmitterById(state, args[1])) {
+            DebugConsoleAddLine(state, "played emitter: " + args[1], SKYBLUE);
+        } else {
+            DebugConsoleAddLine(state, "failed playing emitter: " + args[1], RED);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/stopemitter") {
+        if (args.size() < 2) {
+            DebugConsoleAddLine(state, "usage: /stopemitter <emitterId>", RED);
+            return true;
+        }
+
+        if (StopSoundEmitterById(state, args[1])) {
+            DebugConsoleAddLine(state, "stopped emitter: " + args[1], SKYBLUE);
+        } else {
+            DebugConsoleAddLine(state, "failed stopping emitter: " + args[1], RED);
         }
 
         return true;

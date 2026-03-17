@@ -77,3 +77,5 @@ bool AdventureScriptStopMusic(GameState& state, float fadeMs = 0.0f);
 bool AdventureScriptSetSoundEmitterEnabled(GameState& state, const std::string& emitterId, bool enabled);
 bool AdventureScriptGetSoundEmitterEnabled(const GameState& state, const std::string& emitterId, bool& outEnabled);
 bool AdventureScriptSetSoundEmitterVolume(GameState& state, const std::string& emitterId, float volume);
+bool AdventureScriptPlayEmitter(GameState& state, const std::string& emitterId);
+bool AdventureScriptStopEmitter(GameState& state, const std::string& emitterId);

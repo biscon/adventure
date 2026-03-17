@@ -18,6 +18,18 @@
             "type": "music",
             "volume": 0.7,
             "loop": true
+        },
+        {
+            "id": "door_open",
+            "file": "sfx/door_open.ogg",
+            "type": "sound",
+            "volume": 1.0
+        },
+        {
+            "id": "door_close",
+            "file": "sfx/door_close.ogg",
+            "type": "sound",
+            "volume": 1.0
         }
     ]
 }

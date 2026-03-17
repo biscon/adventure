@@ -145,6 +145,7 @@ struct SceneSoundEmitterData {
 
     bool enabled = true;
     bool pan = true;
+    bool loop = true;
 };
 
 struct SceneData {
