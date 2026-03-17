@@ -1,6 +1,7 @@
 #include "Menu.h"
 
 #include <cmath>
+#include <cstdio>
 #include <functional>
 #include <memory>
 #include <stack>
@@ -22,6 +23,10 @@ static constexpr int SAVE_SLOT_COUNT = 8;
 static std::string menuToastText;
 static float menuToastTimer = 0.0f;
 static float menuToastDuration = 0.0f;
+
+static int gDraggingSliderIndex = -1;
+static float gSliderPreviewCooldown = 0.0f;
+static float gLastSliderPreviewValue = -9999.0f;
 
 static void ShowMenuToast(const std::string& text, float durationSeconds = 1.5f)
 {
@@ -61,24 +66,22 @@ struct Menu {
 
 static std::stack<std::function<std::shared_ptr<Menu>()>> menuStack;
 
-static constexpr float MENU_TITLE_Y = 10.0f;
-static constexpr float MENU_HINT_Y = 255.0f;
+static constexpr float MENU_TITLE_Y = 105.0f;
 static constexpr float MENU_CENTER_X = INTERNAL_WIDTH * 0.5f;
 static constexpr float MENU_CENTER_Y = INTERNAL_HEIGHT * 0.5f;
 
-static constexpr float MENU_ITEM_SPACING = 44.0f;
+static constexpr float MENU_ITEM_SPACING = 40.0f;
 static constexpr float MENU_ITEM_HEIGHT = 36.0f;
-static constexpr float MENU_MIN_ITEM_WIDTH = 440.0f;
-static constexpr float MENU_ITEM_SIDE_PADDING = 14.0f;
+static constexpr float MENU_MIN_ITEM_WIDTH = 560.0f;
+static constexpr float MENU_ITEM_SIDE_PADDING = 12.0f;
 
 static constexpr float SLIDER_TRACK_HEIGHT = 6.0f;
 static constexpr float SLIDER_KNOB_WIDTH = 10.0f;
 static constexpr float SLIDER_KNOB_EXTRA_HEIGHT = 4.0f;
-static constexpr float SLIDER_LABEL_WIDTH = 180.0f;
-static constexpr float SLIDER_VALUE_WIDTH = 80.0f;
-static constexpr float SLIDER_INNER_GAP = 18.0f;
-
-static int gDraggingSliderIndex = -1;
+static constexpr float SLIDER_LABEL_WIDTH = 170.0f;
+static constexpr float SLIDER_VALUE_WIDTH = 56.0f;
+static constexpr float SLIDER_INNER_GAP = 12.0f;
+static constexpr float MENU_HINT_GAP_ABOVE_ITEMS = 64.0f;
 
 static float Clamp01(float t)
 {
@@ -123,7 +126,7 @@ static float ComputeMenuItemWidth(const Menu& menu)
         }
     }
 
-    itemWidth += 80.0f;
+    itemWidth += 120.0f;
     if (itemWidth < MENU_MIN_ITEM_WIDTH) {
         itemWidth = MENU_MIN_ITEM_WIDTH;
     }
@@ -133,13 +136,15 @@ static float ComputeMenuItemWidth(const Menu& menu)
 
 static Rectangle GetSliderTrackRect(const Rectangle& itemRect)
 {
-    const float labelWidth = SLIDER_LABEL_WIDTH;
-    const float valueWidth = SLIDER_VALUE_WIDTH;
-
     const float trackX =
-            itemRect.x + MENU_ITEM_SIDE_PADDING + labelWidth + SLIDER_INNER_GAP;
+            itemRect.x + MENU_ITEM_SIDE_PADDING + SLIDER_LABEL_WIDTH + SLIDER_INNER_GAP;
+
     const float trackWidth =
-            itemRect.width - MENU_ITEM_SIDE_PADDING * 2.0f - labelWidth - valueWidth - SLIDER_INNER_GAP * 2.0f;
+            itemRect.width -
+            MENU_ITEM_SIDE_PADDING * 2.0f -
+            SLIDER_LABEL_WIDTH -
+            SLIDER_VALUE_WIDTH -
+            SLIDER_INNER_GAP * 2.0f;
 
     const float trackY = itemRect.y + itemRect.height * 0.5f - SLIDER_TRACK_HEIGHT * 0.5f;
 
@@ -580,6 +585,8 @@ void MenuInit(GameState* gameState)
     menuStack = std::stack<std::function<std::shared_ptr<Menu>()>>();
     menuStack.push(&createMainMenu);
     gDraggingSliderIndex = -1;
+    gSliderPreviewCooldown = 0.0f;
+    gLastSliderPreviewValue = -9999.0f;
 }
 
 void MenuUpdate(float dt)
@@ -589,6 +596,13 @@ void MenuUpdate(float dt)
         if (menuToastTimer < 0.0f) {
             menuToastTimer = 0.0f;
             menuToastText.clear();
+        }
+    }
+
+    if (gSliderPreviewCooldown > 0.0f) {
+        gSliderPreviewCooldown -= dt;
+        if (gSliderPreviewCooldown < 0.0f) {
+            gSliderPreviewCooldown = 0.0f;
         }
     }
 }
@@ -606,6 +620,10 @@ void MenuRenderUi(GameState& state)
     }
 
     const float itemWidth = ComputeMenuItemWidth(*menu);
+    const Rectangle firstItemRect =
+            menu->items.empty()
+            ? Rectangle{MENU_CENTER_X - itemWidth * 0.5f, MENU_CENTER_Y, itemWidth, MENU_ITEM_HEIGHT}
+            : GetMenuItemRect(*menu, itemWidth, 0);
 
     if (!menu->title.empty()) {
         DrawText(menu->title.c_str(),
@@ -618,7 +636,7 @@ void MenuRenderUi(GameState& state)
     if (!menu->hint.empty()) {
         DrawText(menu->hint.c_str(),
                  static_cast<int>(MENU_CENTER_X - MeasureText(menu->hint.c_str(), 30) * 0.5f),
-                 static_cast<int>(MENU_HINT_Y),
+                 static_cast<int>(firstItemRect.y - MENU_HINT_GAP_ABOVE_ITEMS),
                  30,
                  LIGHTGRAY);
     }
@@ -700,15 +718,17 @@ void MenuRenderUi(GameState& state)
 
         char valueBuf[32];
         std::snprintf(valueBuf, sizeof(valueBuf), "%.2f", rawValue);
+        const int valueTextWidth = MeasureText(valueBuf, 20);
 
         DrawText(valueBuf,
-                 static_cast<int>(valueRect.x),
+                 static_cast<int>(valueRect.x + valueRect.width - valueTextWidth),
                  static_cast<int>(itemRect.y + 8.0f),
                  20,
                  WHITE);
 
         if (enabled && hovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             gDraggingSliderIndex = i;
+            gLastSliderPreviewValue = rawValue;
             PlaySoundById(state, "ui_click");
         }
 
@@ -723,8 +743,18 @@ void MenuRenderUi(GameState& state)
                 if (item.setValue) {
                     item.setValue(newValue);
                 }
+
+                if (std::fabs(newValue - gLastSliderPreviewValue) >= 0.02f &&
+                    gSliderPreviewCooldown <= 0.0f) {
+                    gLastSliderPreviewValue = newValue;
+                    gSliderPreviewCooldown = 0.08f;
+                    if (item.text == "Sound Volume") {
+                        PlaySoundById(state, "ui_click");
+                    }
+                }
             } else {
                 gDraggingSliderIndex = -1;
+                gLastSliderPreviewValue = -9999.0f;
             }
         }
     }
@@ -771,6 +801,7 @@ void MenuHandleInput(GameState& state)
     for (auto& ev : FilterEvents(state.input, true, InputEventType::KeyPressed)) {
         if (ev.key.key == KEY_ESCAPE) {
             gDraggingSliderIndex = -1;
+            gLastSliderPreviewValue = -9999.0f;
 
             if (menuStack.size() > 1) {
                 menuStack.pop();
