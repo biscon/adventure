@@ -598,13 +598,19 @@ void ScriptSystemInit(GameState& state)
 {
     gameState = &state;
 
-    state.script = {};
+    if (state.script.vm != nullptr) {
+        ScriptSystemShutdown(state.script);
+    }
+
     state.script.vm = luaL_newstate();
 
     if (state.script.vm == nullptr) {
         TraceLog(LOG_ERROR, "Failed to create Lua state");
         return;
     }
+
+    state.script.coroutines.clear();
+    state.script.pendingStarts.clear();
 
     luaL_openlibs(state.script.vm);
     RegisterLuaAPI(state.script.vm);
@@ -620,12 +626,13 @@ void ScriptSystemShutdown(ScriptData& script)
         for (ScriptCoroutine& co : script.coroutines) {
             ResetScriptCoroutine(script, co);
         }
-        script.coroutines.clear();
-        script.pendingStarts.clear();
 
         lua_close(script.vm);
         script.vm = nullptr;
     }
+
+    script.coroutines.clear();
+    script.pendingStarts.clear();
 }
 // -----------------------------------------------------------------------------
 

@@ -235,7 +235,8 @@ void InitAudio(GameState& state)
     }
 
     InitAudioDevice();
-
+    //SetAudioStreamBufferSizeDefault(16384);
+    SetAudioStreamBufferSizeDefault(32768);
     state.audio = {};
     state.audio.initialized = true;
 

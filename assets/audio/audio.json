@@ -4,13 +4,13 @@
             "id": "ui_click",
             "file": "ui/click.ogg",
             "type": "sound",
-            "volume": 0.3
+            "volume": 0.4
         },
         {
             "id": "item_added",
             "file": "ui/item_added.ogg",
             "type": "sound",
-            "volume": 0.8
+            "volume": 0.6
         },
         {
             "id": "door_open",
