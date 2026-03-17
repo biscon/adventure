@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include "adventure/AdventureActorHelpers.h"
+#include "audio/Audio.h"
 
 const ItemDefinitionData* FindItemDefinitionById(const GameState& state, const std::string& itemId)
 {
@@ -94,6 +95,7 @@ bool GiveItemToActor(GameState& state, const std::string& actorId, const std::st
 
     inv->itemIds.push_back(itemId);
     ShowInventoryPickupPopup(state, itemId);
+    PlaySoundById(state, "item_added");
     return true;
 }
 

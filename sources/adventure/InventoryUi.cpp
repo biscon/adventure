@@ -8,6 +8,7 @@
 #include "Adventure.h"
 #include "resources/TextureAsset.h"
 #include "Dialogue.h"
+#include "audio/Audio.h"
 
 static constexpr float INVENTORY_TRIGGER_HEIGHT = 24.0f;
 static constexpr float INVENTORY_PANEL_WIDTH = 1348.0f;
@@ -308,6 +309,7 @@ static void HandleInventoryPagingInput(GameState& state, InputEvent& ev)
     if (CanInventoryPageBackward(*inv) && CheckCollisionPointRec(mouse, prevRect)) {
         inv->pageStartIndex -= INVENTORY_VISIBLE_SLOT_COUNT;
         ClampInventoryPageStart(*inv);
+        PlaySoundById(state, "ui_click");
         ConsumeEvent(ev);
         return;
     }
@@ -315,6 +317,7 @@ static void HandleInventoryPagingInput(GameState& state, InputEvent& ev)
     if (CanInventoryPageForward(*inv) && CheckCollisionPointRec(mouse, nextRect)) {
         inv->pageStartIndex += INVENTORY_VISIBLE_SLOT_COUNT;
         ClampInventoryPageStart(*inv);
+        PlaySoundById(state, "ui_click");
         ConsumeEvent(ev);
         return;
     }
@@ -340,11 +343,13 @@ static void HandleInventoryItemInput(GameState& state, InputEvent& ev)
         ev.mouse.button == MOUSE_BUTTON_LEFT) {
         if (inv->heldItemId.empty()) {
             inv->heldItemId = itemDef->itemId;
+            PlaySoundById(state, "ui_click");
             ConsumeEvent(ev);
             return;
         }
 
         if (inv->heldItemId == itemDef->itemId) {
+            PlaySoundById(state, "ui_click");
             ConsumeEvent(ev);
             return;
         }
@@ -392,6 +397,7 @@ static void HandleInventoryCancelHeldItemInput(GameState& state, InputEvent& ev)
     if (ev.type == InputEventType::MouseClick &&
         ev.mouse.button == MOUSE_BUTTON_RIGHT) {
         inv->heldItemId.clear();
+        PlaySoundById(state, "ui_click");
         ConsumeEvent(ev);
     }
 }

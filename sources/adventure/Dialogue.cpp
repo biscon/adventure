@@ -5,6 +5,7 @@
 
 #include "input/Input.h"
 #include "raylib.h"
+#include "audio/Audio.h"
 
 static Rectangle GetDialogueOptionRect(int optionIndex, int optionCount)
 {
@@ -205,6 +206,7 @@ void UpdateDialogueUi(GameState& state)
             const int optionIndex = visibleOptionIndices[ui.hoveredOptionIndex];
             ui.selectedOptionId = choiceSet.options[optionIndex].id;
             ui.resultReady = true;
+            PlaySoundById(state, "ui_click");
         }
 
         ConsumeEvent(ev);

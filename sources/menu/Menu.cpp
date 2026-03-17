@@ -10,6 +10,7 @@
 #include "input/Input.h"
 #include "adventure/Adventure.h"
 #include "save/SaveGame.h"
+#include "audio/Audio.h"
 
 static GameState* game;
 
@@ -466,6 +467,7 @@ void MenuRenderUi(GameState& state) {
             }
 
             if (clicked) {
+                PlaySoundById(state, "ui_click");
                 auto &item = menu->items[i];
                 if (item.isSubmenu && item.submenuBuilder) {
                     menuStack.push(item.submenuBuilder);
