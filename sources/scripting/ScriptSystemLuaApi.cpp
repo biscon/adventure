@@ -1283,30 +1283,36 @@ static int Lua_playSound(lua_State* L)
 
 static int Lua_playMusic(lua_State* L)
 {
-    const char* audioId = luaL_checkstring(L, 1);
+    const char* id = luaL_checkstring(L, 1);
 
-    if (gameState == nullptr || audioId == nullptr) {
+    float fadeMs = 0.0f;
+    if (lua_gettop(L) >= 2 && lua_isnumber(L, 2)) {
+        fadeMs = (float)lua_tonumber(L, 2);
+    }
+
+    if (gameState == nullptr || id == nullptr) {
         lua_pushboolean(L, 0);
         return 1;
     }
 
-    const bool ok = AdventureScriptPlayMusic(*gameState, std::string(audioId));
+    const bool ok = PlayMusicById(*gameState, std::string(id), fadeMs);
     lua_pushboolean(L, ok ? 1 : 0);
     return 1;
 }
 
 static int Lua_stopMusic(lua_State* L)
 {
-    const float fadeMs = static_cast<float>(luaL_optnumber(L, 1, 0.0));
-
-    if (gameState == nullptr) {
-        lua_pushboolean(L, 0);
-        return 1;
+    float fadeMs = 0.0f;
+    if (lua_gettop(L) >= 1 && lua_isnumber(L, 1)) {
+        fadeMs = (float)lua_tonumber(L, 1);
     }
 
-    const bool ok = AdventureScriptStopMusic(*gameState, fadeMs);
-    lua_pushboolean(L, ok ? 1 : 0);
-    return 1;
+    if (gameState == nullptr) {
+        return 0;
+    }
+
+    StopMusic(*gameState, fadeMs);
+    return 0;
 }
 
 static int Lua_setSoundEmitterEnabled(lua_State* L)

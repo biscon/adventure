@@ -7,7 +7,7 @@ void ShutdownAudio(GameState& state);
 void UpdateAudio(GameState& state, float dt);
 
 bool PlaySoundById(GameState& state, const std::string& id);
-bool PlayMusicById(GameState& state, const std::string& id);
+bool PlayMusicById(GameState& state, const std::string& id, float fadeMs = 0.0f);
 void StopMusic(GameState& state, float fadeMs = 0.0f);
 
 bool PlaySoundEmitterById(GameState& state, const std::string& emitterId);

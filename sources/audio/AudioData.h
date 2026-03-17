@@ -55,16 +55,23 @@ struct ActiveSoundInstance {
 // Music playback state
 // ------------------------------------------------------------
 
+enum class MusicFadeMode {
+    None,
+    FadeIn,
+    FadeOut
+};
+
 struct MusicPlaybackState {
     int musicHandle = -1;
     bool playing = false;
 
-    float volume = 1.0f;
+    float volume = 0.0f;
+    float targetVolume = 1.0f;
 
-    bool fadingOut = false;
-    float fadeElapsedMs = 0.0f;
-    float fadeDurationMs = 0.0f;
-    float fadeStartVolume = 1.0f;
+    float fadeElapsed = 0.0f;
+    float fadeDuration = 0.0f;
+
+    MusicFadeMode fadeMode = MusicFadeMode::None;
 };
 
 // ------------------------------------------------------------
@@ -93,7 +100,10 @@ struct AudioData {
 
     // runtime
     std::vector<ActiveSoundInstance> activeSounds;
-    MusicPlaybackState music;
+
+    MusicPlaybackState musicA;
+    MusicPlaybackState musicB;
+    bool musicAIsCurrent = true;
 
     std::vector<SoundEmitterInstance> sceneEmitters;
 

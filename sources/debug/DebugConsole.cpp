@@ -251,7 +251,7 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
         DebugConsoleAddLine(state, "  /playemitter <emitterId>", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /stopemitter <emitterId>", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /play <audioId>", LIGHTGRAY);
-        DebugConsoleAddLine(state, "  /music <audioId>", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /music <audioId> [fadeMs]", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /stopmusic [fadeMs]", LIGHTGRAY);
         return true;
     }
@@ -813,12 +813,30 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
 
     if (cmd == "/music") {
         if (args.size() < 2) {
-            DebugConsoleAddLine(state, "usage: /music <audioId>", RED);
+            DebugConsoleAddLine(state, "usage: /music <audioId> [fadeMs]", RED);
             return true;
         }
 
-        if (PlayMusicById(state, args[1])) {
-            DebugConsoleAddLine(state, "playing music: " + args[1], SKYBLUE);
+        float fadeMs = 0.0f;
+        if (args.size() >= 3) {
+            try {
+                fadeMs = std::stof(args[2]);
+            } catch (...) {
+                DebugConsoleAddLine(state, "usage: /music <audioId> [fadeMs]", RED);
+                return true;
+            }
+        }
+
+        if (PlayMusicById(state, args[1], fadeMs)) {
+            if (fadeMs > 0.0f) {
+                DebugConsoleAddLine(
+                        state,
+                        "playing music: " + args[1] +
+                        " (fade " + std::to_string(static_cast<int>(fadeMs)) + " ms)",
+                        SKYBLUE);
+            } else {
+                DebugConsoleAddLine(state, "playing music: " + args[1], SKYBLUE);
+            }
         } else {
             DebugConsoleAddLine(state, "failed playing music: " + args[1], RED);
         }

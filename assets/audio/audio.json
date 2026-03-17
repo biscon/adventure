@@ -13,13 +13,6 @@
             "volume": 0.8
         },
         {
-            "id": "basement_music",
-            "file": "music/basement.mp3",
-            "type": "music",
-            "volume": 0.7,
-            "loop": true
-        },
-        {
             "id": "door_open",
             "file": "sfx/door_open.ogg",
             "type": "sound",
@@ -30,6 +23,27 @@
             "file": "sfx/door_close.ogg",
             "type": "sound",
             "volume": 1.0
+        },
+        {
+            "id": "basement_music",
+            "file": "music/basement.mp3",
+            "type": "music",
+            "volume": 0.7,
+            "loop": true
+        },
+        {
+            "id": "crystal_skies_music",
+            "file": "music/crystal_skies.mp3",
+            "type": "music",
+            "volume": 0.7,
+            "loop": true
+        },
+        {
+            "id": "sleeping_giant_music",
+            "file": "music/sleeping_giant.mp3",
+            "type": "music",
+            "volume": 0.7,
+            "loop": true
         }
     ]
 }

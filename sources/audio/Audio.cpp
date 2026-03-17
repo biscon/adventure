@@ -213,6 +213,21 @@ static void UpdateSceneSoundEmitters(GameState& state)
     }
 }
 
+static MusicPlaybackState& GetCurrentMusic(AudioData& audio)
+{
+return audio.musicAIsCurrent ? audio.musicA : audio.musicB;
+}
+
+static MusicPlaybackState& GetNextMusic(AudioData& audio)
+{
+    return audio.musicAIsCurrent ? audio.musicB : audio.musicA;
+}
+
+static void SwapMusicSlots(AudioData& audio)
+{
+    audio.musicAIsCurrent = !audio.musicAIsCurrent;
+}
+
 void InitAudio(GameState& state)
 {
     if (state.audio.initialized) {
@@ -280,12 +295,32 @@ void ShutdownAudio(GameState& state)
     }
 
     state.audio.activeSounds.clear();
-    state.audio.music = {};
-    state.audio.sceneEmitters.clear();
 
     ClearSceneAudio(state);
-    CloseAudioDevice();
 
+    MusicPlaybackState& current = GetCurrentMusic(state.audio);
+    MusicPlaybackState& next = GetNextMusic(state.audio);
+
+    if (current.playing && current.musicHandle >= 0) {
+        Music* music = GetMusicResource(state, current.musicHandle);
+        if (music != nullptr) {
+            StopMusicStream(*music);
+        }
+    }
+
+    if (next.playing && next.musicHandle >= 0) {
+        Music* music = GetMusicResource(state, next.musicHandle);
+        if (music != nullptr) {
+            StopMusicStream(*music);
+        }
+    }
+
+    state.audio.musicA = {};
+    state.audio.musicB = {};
+    state.audio.musicAIsCurrent = true;
+    state.audio.sceneEmitters.clear();
+
+    CloseAudioDevice();
     state.audio = {};
 
     TraceLog(LOG_INFO, "Audio shutdown");
@@ -297,51 +332,71 @@ void UpdateAudio(GameState& state, float dt)
         return;
     }
 
-    if (state.audio.music.playing && state.audio.music.musicHandle >= 0) {
-        Music* music = GetMusicResource(state, state.audio.music.musicHandle);
-        if (music != nullptr) {
-            if (state.audio.music.fadingOut) {
-                state.audio.music.fadeElapsedMs += dt * 1000.0f;
+    auto UpdateMusicSlot = [&](MusicPlaybackState& m)
+    {
+        if (!m.playing || m.musicHandle < 0) {
+            return;
+        }
 
-                float t = 1.0f;
-                if (state.audio.music.fadeDurationMs > 0.0f) {
-                    t = state.audio.music.fadeElapsedMs / state.audio.music.fadeDurationMs;
+        Music* music = GetMusicResource(state, m.musicHandle);
+        if (music == nullptr) {
+            m = {};
+            return;
+        }
+
+        UpdateMusicStream(*music);
+
+        AudioDefinitionData* playingDef = nullptr;
+        for (AudioDefinitionData& def : state.audio.definitions) {
+            if (def.type == AudioType::Music && def.musicHandle == m.musicHandle) {
+                playingDef = &def;
+                break;
+            }
+        }
+
+        const float settingsVolume = state.settings.musicVolume;
+        const float baseTargetVolume =
+                (playingDef != nullptr) ? playingDef->volume : m.targetVolume;
+
+        m.targetVolume = baseTargetVolume;
+
+        if (m.fadeMode != MusicFadeMode::None && m.fadeDuration > 0.0f) {
+            m.fadeElapsed += dt * 1000.0f;
+            float t = m.fadeElapsed / m.fadeDuration;
+            if (t < 0.0f) t = 0.0f;
+            if (t > 1.0f) t = 1.0f;
+
+            if (m.fadeMode == MusicFadeMode::FadeIn) {
+                m.volume = m.targetVolume * t;
+
+                if (t >= 1.0f) {
+                    m.volume = m.targetVolume;
+                    m.fadeMode = MusicFadeMode::None;
                 }
-
-                if (t < 0.0f) t = 0.0f;
-                if (t > 1.0f) t = 1.0f;
-
-                const float newVolume =
-                        state.audio.music.fadeStartVolume * (1.0f - t);
-
-                SetMusicVolume(*music, newVolume);
+            } else if (m.fadeMode == MusicFadeMode::FadeOut) {
+                m.volume = m.targetVolume * (1.0f - t);
 
                 if (t >= 1.0f) {
                     StopMusicStream(*music);
-                    state.audio.music = {};
-                } else {
-                    UpdateMusicStream(*music);
+                    m = {};
+                    return;
                 }
-            } else {
-                AudioDefinitionData* playingDef = nullptr;
-                for (AudioDefinitionData& def : state.audio.definitions) {
-                    if (def.type == AudioType::Music &&
-                        def.musicHandle == state.audio.music.musicHandle) {
-                        playingDef = &def;
-                        break;
-                    }
-                }
-
-                if (playingDef != nullptr) {
-                    const float targetVolume = playingDef->volume * state.settings.musicVolume;
-                    state.audio.music.volume = targetVolume;
-                    SetMusicVolume(*music, targetVolume);
-                }
-                UpdateMusicStream(*music);
             }
         } else {
-            state.audio.music = {};
+            m.volume = m.targetVolume;
         }
+
+        SetMusicVolume(*music, m.volume * settingsVolume);
+    };
+
+    UpdateMusicSlot(state.audio.musicA);
+    UpdateMusicSlot(state.audio.musicB);
+
+    MusicPlaybackState& current = GetCurrentMusic(state.audio);
+    MusicPlaybackState& next = GetNextMusic(state.audio);
+
+    if (!current.playing && next.playing) {
+        SwapMusicSlots(state.audio);
     }
 
     for (auto it = state.audio.activeSounds.begin(); it != state.audio.activeSounds.end(); ) {
@@ -396,7 +451,7 @@ bool PlaySoundById(GameState& state, const std::string& id)
     return true;
 }
 
-bool PlayMusicById(GameState& state, const std::string& id)
+bool PlayMusicById(GameState& state, const std::string& id, float fadeMs)
 {
     AudioDefinitionData* def = FindAudioDef(state, id);
     if (def == nullptr) {
@@ -415,24 +470,63 @@ bool PlayMusicById(GameState& state, const std::string& id)
         return false;
     }
 
-    if (state.audio.music.playing && state.audio.music.musicHandle >= 0) {
-        Music* oldMusic = GetMusicResource(state, state.audio.music.musicHandle);
-        if (oldMusic != nullptr) {
-            StopMusicStream(*oldMusic);
+    MusicPlaybackState& current = GetCurrentMusic(state.audio);
+    MusicPlaybackState& next = GetNextMusic(state.audio);
+
+    // Same track already current and no pending second slot
+    if (current.playing &&
+        current.musicHandle == def->musicHandle &&
+        !next.playing) {
+        current.targetVolume = def->volume;
+        current.fadeMode = MusicFadeMode::None;
+        current.fadeElapsed = 0.0f;
+        current.fadeDuration = 0.0f;
+        return true;
+    }
+
+    // Clear any previous next slot
+    if (next.playing && next.musicHandle >= 0) {
+        Music* nextMusic = GetMusicResource(state, next.musicHandle);
+        if (nextMusic != nullptr) {
+            StopMusicStream(*nextMusic);
+        }
+        next = {};
+    }
+
+    next.musicHandle = def->musicHandle;
+    next.playing = true;
+    next.targetVolume = def->volume;
+    next.fadeElapsed = 0.0f;
+    next.fadeDuration = fadeMs;
+
+    if (fadeMs > 0.0f) {
+        next.volume = 0.0f;
+        next.fadeMode = MusicFadeMode::FadeIn;
+    } else {
+        next.volume = def->volume;
+        next.fadeMode = MusicFadeMode::None;
+    }
+
+    PlayMusicStream(*music);
+    SetMusicVolume(*music, next.volume * state.settings.musicVolume);
+
+    if (current.playing && current.musicHandle >= 0) {
+        if (fadeMs > 0.0f) {
+            current.fadeMode = MusicFadeMode::FadeOut;
+            current.fadeElapsed = 0.0f;
+            current.fadeDuration = fadeMs;
+        } else {
+            Music* oldMusic = GetMusicResource(state, current.musicHandle);
+            if (oldMusic != nullptr) {
+                StopMusicStream(*oldMusic);
+            }
+            current = {};
         }
     }
 
-    const float volume = def->volume * state.settings.musicVolume;
-    SetMusicVolume(*music, volume);
-    PlayMusicStream(*music);
-
-    state.audio.music.musicHandle = def->musicHandle;
-    state.audio.music.playing = true;
-    state.audio.music.volume = volume;
-    state.audio.music.fadingOut = false;
-    state.audio.music.fadeElapsedMs = 0.0f;
-    state.audio.music.fadeDurationMs = 0.0f;
-    state.audio.music.fadeStartVolume = volume;
+    if (!current.playing && next.playing) {
+        SwapMusicSlots(state.audio);
+    }
 
     return true;
 }
@@ -535,26 +629,36 @@ bool StopSoundEmitterById(GameState& state, const std::string& emitterId)
 
 void StopMusic(GameState& state, float fadeMs)
 {
-    if (!state.audio.music.playing || state.audio.music.musicHandle < 0) {
+    MusicPlaybackState& current = GetCurrentMusic(state.audio);
+    MusicPlaybackState& next = GetNextMusic(state.audio);
+
+    if (next.playing && next.musicHandle >= 0) {
+        Music* music = GetMusicResource(state, next.musicHandle);
+        if (music != nullptr) {
+            StopMusicStream(*music);
+        }
+        next = {};
+    }
+
+    if (!current.playing || current.musicHandle < 0) {
         return;
     }
 
-    Music* music = GetMusicResource(state, state.audio.music.musicHandle);
+    Music* music = GetMusicResource(state, current.musicHandle);
     if (music == nullptr) {
-        state.audio.music = {};
+        current = {};
         return;
     }
 
     if (fadeMs <= 0.0f) {
         StopMusicStream(*music);
-        state.audio.music = {};
+        current = {};
         return;
     }
 
-    state.audio.music.fadingOut = true;
-    state.audio.music.fadeElapsedMs = 0.0f;
-    state.audio.music.fadeDurationMs = fadeMs;
-    state.audio.music.fadeStartVolume = state.audio.music.volume;
+    current.fadeMode = MusicFadeMode::FadeOut;
+    current.fadeElapsed = 0.0f;
+    current.fadeDuration = fadeMs;
 }
 
 bool LoadSceneAudioDefinitions(GameState& state, const std::string& sceneDir)
@@ -645,25 +749,31 @@ void ClearSceneAudio(GameState& state)
 
     state.audio.sceneEmitters.clear();
 
-    bool stopCurrentMusic = false;
-    if (state.audio.music.playing && state.audio.music.musicHandle >= 0) {
-        AudioDefinitionData* playingDef = nullptr;
+    auto StopSceneScopedMusicIfNeeded = [&](MusicPlaybackState& slot)
+    {
+        if (!slot.playing || slot.musicHandle < 0) {
+            return;
+        }
 
+        AudioDefinitionData* playingDef = nullptr;
         for (AudioDefinitionData& def : state.audio.definitions) {
-            if (def.type == AudioType::Music && def.musicHandle == state.audio.music.musicHandle) {
+            if (def.type == AudioType::Music && def.musicHandle == slot.musicHandle) {
                 playingDef = &def;
                 break;
             }
         }
 
         if (playingDef != nullptr && playingDef->scope == ResourceScope::Scene) {
-            stopCurrentMusic = true;
+            Music* music = GetMusicResource(state, slot.musicHandle);
+            if (music != nullptr) {
+                StopMusicStream(*music);
+            }
+            slot = {};
         }
-    }
+    };
 
-    if (stopCurrentMusic) {
-        StopMusic(state);
-    }
+    StopSceneScopedMusicIfNeeded(state.audio.musicA);
+    StopSceneScopedMusicIfNeeded(state.audio.musicB);
 
     state.audio.definitions.erase(
             std::remove_if(
