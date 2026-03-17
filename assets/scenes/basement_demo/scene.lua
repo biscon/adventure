@@ -14,6 +14,8 @@ function Scene_onEnter()
 
     stopScript("FurnaceGlowCoreLoop")
     startScript("FurnaceGlowCoreLoop")
+
+    playMusic("basement_music")
 end
 
 function FurnaceGlowCoreLoop()

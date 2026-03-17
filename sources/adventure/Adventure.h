@@ -69,3 +69,11 @@ bool AdventureScriptSetEffectOpacity(GameState& state, const std::string& effect
 bool AdventureScriptSetEffectTint(GameState& state,
                                   const std::string& effectId,
                                   Color tint);
+
+bool AdventureScriptPlaySound(GameState& state, const std::string& audioId);
+bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId);
+bool AdventureScriptStopMusic(GameState& state, float fadeMs = 0.0f);
+
+bool AdventureScriptSetSoundEmitterEnabled(GameState& state, const std::string& emitterId, bool enabled);
+bool AdventureScriptGetSoundEmitterEnabled(const GameState& state, const std::string& emitterId, bool& outEnabled);
+bool AdventureScriptSetSoundEmitterVolume(GameState& state, const std::string& emitterId, float volume);

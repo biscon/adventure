@@ -7,6 +7,7 @@
 #include "debug/DebugConsole.h"
 #include "adventure/Dialogue.h"
 #include "raymath.h"
+#include "audio/Audio.h"
 
 static bool ParseOptionalTalkColorAndDuration(
         lua_State* L,
@@ -1266,6 +1267,110 @@ static int Lua_setEffectTint(lua_State* L)
     return 1;
 }
 
+static int Lua_playSound(lua_State* L)
+{
+    const char* audioId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || audioId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptPlaySound(*gameState, std::string(audioId));
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_playMusic(lua_State* L)
+{
+    const char* audioId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || audioId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptPlayMusic(*gameState, std::string(audioId));
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_stopMusic(lua_State* L)
+{
+    const float fadeMs = static_cast<float>(luaL_optnumber(L, 1, 0.0));
+
+    if (gameState == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptStopMusic(*gameState, fadeMs);
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_setSoundEmitterEnabled(lua_State* L)
+{
+    const char* emitterId = luaL_checkstring(L, 1);
+    const bool enabled = lua_toboolean(L, 2) != 0;
+
+    if (gameState == nullptr || emitterId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetSoundEmitterEnabled(
+            *gameState,
+            std::string(emitterId),
+            enabled);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_soundEmitterEnabled(lua_State* L)
+{
+    const char* emitterId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || emitterId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    bool enabled = false;
+    const bool ok = AdventureScriptGetSoundEmitterEnabled(
+            *gameState,
+            std::string(emitterId),
+            enabled);
+
+    if (!ok) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    lua_pushboolean(L, enabled ? 1 : 0);
+    return 1;
+}
+
+static int Lua_setSoundEmitterVolume(lua_State* L)
+{
+    const char* emitterId = luaL_checkstring(L, 1);
+    const float volume = static_cast<float>(luaL_checknumber(L, 2));
+
+    if (gameState == nullptr || emitterId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetSoundEmitterVolume(
+            *gameState,
+            std::string(emitterId),
+            volume);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 void RegisterLuaAPI(lua_State* L)
 {
     lua_register(L, "setFlag", Lua_setFlag);
@@ -1334,6 +1439,14 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "effectVisible", Lua_effectVisible);
     lua_register(L, "setEffectOpacity", Lua_setEffectOpacity);
     lua_register(L, "setEffectTint", Lua_setEffectTint);
+
+    lua_register(L, "playSound", Lua_playSound);
+    lua_register(L, "playMusic", Lua_playMusic);
+    lua_register(L, "stopMusic", Lua_stopMusic);
+
+    lua_register(L, "setSoundEmitterEnabled", Lua_setSoundEmitterEnabled);
+    lua_register(L, "soundEmitterEnabled", Lua_soundEmitterEnabled);
+    lua_register(L, "setSoundEmitterVolume", Lua_setSoundEmitterVolume);
 
     lua_register(L, "print", Lua_consolePrint);
     lua_register(L, "log", Lua_log);

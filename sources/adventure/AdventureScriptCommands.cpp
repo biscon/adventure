@@ -3,6 +3,7 @@
 #include "adventure/AdventureActorHelpers.h"
 #include "raylib.h"
 #include "raymath.h"
+#include "audio/Audio.h"
 
 bool AdventureScriptSay(GameState& state, const std::string& text, int durationMs)
 {
@@ -783,3 +784,89 @@ bool AdventureScriptSetEffectTint(GameState& state,
     return true;
 }
 
+static int FindSoundEmitterIndexById(const GameState& state, const std::string& emitterId)
+{
+    const int count = std::min(
+            static_cast<int>(state.adventure.currentScene.soundEmitters.size()),
+            static_cast<int>(state.audio.sceneEmitters.size()));
+
+    for (int i = 0; i < count; ++i) {
+        if (state.adventure.currentScene.soundEmitters[i].id == emitterId) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+bool AdventureScriptPlaySound(GameState& state, const std::string& audioId)
+{
+    if (audioId.empty()) {
+        return false;
+    }
+
+    return PlaySoundById(state, audioId);
+}
+
+bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId)
+{
+    if (audioId.empty()) {
+        return false;
+    }
+
+    return PlayMusicById(state, audioId);
+}
+
+bool AdventureScriptStopMusic(GameState& state, float fadeMs)
+{
+    StopMusic(state, fadeMs);
+    return true;
+}
+
+bool AdventureScriptSetSoundEmitterEnabled(GameState& state, const std::string& emitterId, bool enabled)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int emitterIndex = FindSoundEmitterIndexById(state, emitterId);
+    if (emitterIndex < 0 || emitterIndex >= static_cast<int>(state.audio.sceneEmitters.size())) {
+        return false;
+    }
+
+    state.audio.sceneEmitters[emitterIndex].enabled = enabled;
+    return true;
+}
+
+bool AdventureScriptGetSoundEmitterEnabled(const GameState& state, const std::string& emitterId, bool& outEnabled)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int emitterIndex = FindSoundEmitterIndexById(state, emitterId);
+    if (emitterIndex < 0 || emitterIndex >= static_cast<int>(state.audio.sceneEmitters.size())) {
+        return false;
+    }
+
+    outEnabled = state.audio.sceneEmitters[emitterIndex].enabled;
+    return true;
+}
+
+bool AdventureScriptSetSoundEmitterVolume(GameState& state, const std::string& emitterId, float volume)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int emitterIndex = FindSoundEmitterIndexById(state, emitterId);
+    if (emitterIndex < 0 || emitterIndex >= static_cast<int>(state.audio.sceneEmitters.size())) {
+        return false;
+    }
+
+    if (volume < 0.0f) volume = 0.0f;
+    if (volume > 1.0f) volume = 1.0f;
+
+    state.audio.sceneEmitters[emitterIndex].volume = volume;
+    return true;
+}

@@ -15,6 +15,7 @@
 #include <cstring>
 #include "adventure/AdventureActorHelpers.h"
 #include "save/SaveGame.h"
+#include "audio/Audio.h"
 
 static constexpr int CONSOLE_PADDING = 16;
 static constexpr int CONSOLE_INPUT_HEIGHT = 40;
@@ -245,6 +246,11 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
         DebugConsoleAddLine(state, "  /effects", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /exits", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /spawns", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /audio", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /emitters", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /play <audioId>", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /music <audioId>", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /stopmusic", LIGHTGRAY);
         return true;
     }
 
@@ -704,6 +710,98 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
                     LIGHTGRAY);
         }
 
+        return true;
+    }
+
+    if (cmd == "/audio") {
+        DebugConsoleAddLine(state, "audio definitions:", SKYBLUE);
+
+        if (state.audio.definitions.empty()) {
+            DebugConsoleAddLine(state, "  <none>", LIGHTGRAY);
+            return true;
+        }
+
+        for (const AudioDefinitionData& def : state.audio.definitions) {
+            const std::string typeText = (def.type == AudioType::Sound) ? "sound" : "music";
+            const std::string scopeText = (def.scope == ResourceScope::Global) ? "global" : "scene";
+
+            DebugConsoleAddLine(
+                    state,
+                    "  " + def.id + "  type=" + typeText + " scope=" + scopeText + " file=" + def.filePath,
+                    LIGHTGRAY);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/emitters") {
+        if (!state.adventure.currentScene.loaded) {
+            DebugConsoleAddLine(state, "no scene loaded", RED);
+            return true;
+        }
+
+        DebugConsoleAddLine(state, "sound emitters:", SKYBLUE);
+
+        const int count = std::min(
+                static_cast<int>(state.adventure.currentScene.soundEmitters.size()),
+                static_cast<int>(state.audio.sceneEmitters.size()));
+
+        if (count <= 0) {
+            DebugConsoleAddLine(state, "  <none>", LIGHTGRAY);
+            return true;
+        }
+
+        for (int i = 0; i < count; ++i) {
+            const SceneSoundEmitterData& sceneEmitter = state.adventure.currentScene.soundEmitters[i];
+            const SoundEmitterInstance& emitter = state.audio.sceneEmitters[i];
+
+            std::string line =
+                    "  " + sceneEmitter.id +
+                    " sound=" + sceneEmitter.soundId +
+                    " radius=" + std::to_string(static_cast<int>(sceneEmitter.radius)) +
+                    " enabled=" + std::string(emitter.enabled ? "true" : "false") +
+                    " active=" + std::string(emitter.active ? "true" : "false") +
+                    " volume=" + std::to_string(emitter.volume);
+
+            DebugConsoleAddLine(state, line, LIGHTGRAY);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/play") {
+        if (args.size() < 2) {
+            DebugConsoleAddLine(state, "usage: /play <audioId>", RED);
+            return true;
+        }
+
+        if (PlaySoundById(state, args[1])) {
+            DebugConsoleAddLine(state, "played sound: " + args[1], SKYBLUE);
+        } else {
+            DebugConsoleAddLine(state, "failed playing sound: " + args[1], RED);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/music") {
+        if (args.size() < 2) {
+            DebugConsoleAddLine(state, "usage: /music <audioId>", RED);
+            return true;
+        }
+
+        if (PlayMusicById(state, args[1])) {
+            DebugConsoleAddLine(state, "playing music: " + args[1], SKYBLUE);
+        } else {
+            DebugConsoleAddLine(state, "failed playing music: " + args[1], RED);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/stopmusic") {
+        StopMusic(state);
+        DebugConsoleAddLine(state, "stopped music", SKYBLUE);
         return true;
     }
 
