@@ -33,6 +33,47 @@ static Vector2 MakeCameraTopLeftForCenterTarget(const CameraData& cam, Vector2 c
     };
 }
 
+// observe, the epsion cut
+static float ApplyScalarSmoothing(float currentValue, float targetValue, float smoothing, float dt)
+{
+    if (smoothing <= 0.0f) {
+        return targetValue;
+    }
+
+    const float factor = 1.0f - std::exp(-smoothing * dt);
+    const float out = currentValue + (targetValue - currentValue) * factor;
+
+    if (std::fabs(targetValue - out) <= 1.0f) {
+        return targetValue;
+    }
+
+    return out;
+}
+
+static Vector2 ApplyCameraSmoothing(Vector2 currentPos, Vector2 targetPos, float smoothing, float dt)
+{
+    if (smoothing <= 0.0f) {
+        return targetPos;
+    }
+
+    const float factor = 1.0f - std::exp(-smoothing * dt);
+
+    Vector2 out{
+            currentPos.x + (targetPos.x - currentPos.x) * factor,
+            currentPos.y + (targetPos.y - currentPos.y) * factor
+    };
+
+    const float dx = targetPos.x - out.x;
+    const float dy = targetPos.y - out.y;
+    const float distSq = dx * dx + dy * dy;
+
+    if (distSq <= 1.0f) { // 0.5 px threshold
+        return targetPos;
+    }
+
+    return out;
+}
+
 static Vector2 ApplyCameraDeadZone(CameraData& cam,
                                    Vector2 currentCameraPos,
                                    Vector2 targetCenterWorldPos)
@@ -47,49 +88,27 @@ static Vector2 ApplyCameraDeadZone(CameraData& cam,
     const float screenCenterX = currentCameraPos.x + cam.viewportWidth * 0.5f;
     const float screenCenterY = currentCameraPos.y + cam.viewportHeight * 0.5f;
 
-    auto getBiasShiftX = [&cam]() -> float {
-        switch (cam.biasLatch) {
-            case CameraBiasLatch::Left:
-                return cam.followBiasX;   // shift whole zone right on screen
-            case CameraBiasLatch::Right:
-                return -cam.followBiasX;  // shift whole zone left on screen
-            case CameraBiasLatch::None:
-            default:
-                return 0.0f;
-        }
-    };
-
-    float biasShiftX = getBiasShiftX();
-
-    float zoneLeft   = screenCenterX - zoneHalfW + biasShiftX;
-    float zoneRight  = screenCenterX + zoneHalfW + biasShiftX;
+    const float zoneLeft   = screenCenterX - zoneHalfW + cam.currentBiasShiftX;
+    const float zoneRight  = screenCenterX + zoneHalfW + cam.currentBiasShiftX;
     const float zoneTop    = screenCenterY - zoneHalfH;
     const float zoneBottom = screenCenterY + zoneHalfH;
 
     Vector2 newCameraPos = currentCameraPos;
 
-    // Horizontal
     if (targetCenterWorldPos.x < zoneLeft) {
         if (cam.biasLatch != CameraBiasLatch::Left) {
             cam.biasLatch = CameraBiasLatch::Left;
-            biasShiftX = getBiasShiftX();
-            zoneLeft  = screenCenterX - zoneHalfW + biasShiftX;
-            zoneRight = screenCenterX + zoneHalfW + biasShiftX;
         }
 
         newCameraPos.x += targetCenterWorldPos.x - zoneLeft;
     } else if (targetCenterWorldPos.x > zoneRight) {
         if (cam.biasLatch != CameraBiasLatch::Right) {
             cam.biasLatch = CameraBiasLatch::Right;
-            biasShiftX = getBiasShiftX();
-            zoneLeft  = screenCenterX - zoneHalfW + biasShiftX;
-            zoneRight = screenCenterX + zoneHalfW + biasShiftX;
         }
 
         newCameraPos.x += targetCenterWorldPos.x - zoneRight;
     }
 
-    // Vertical stays plain centered deadzone
     if (targetCenterWorldPos.y < zoneTop) {
         newCameraPos.y += targetCenterWorldPos.y - zoneTop;
     } else if (targetCenterWorldPos.y > zoneBottom) {
@@ -97,20 +116,6 @@ static Vector2 ApplyCameraDeadZone(CameraData& cam,
     }
 
     return newCameraPos;
-}
-
-static Vector2 ApplyCameraSmoothing(Vector2 currentPos, Vector2 targetPos, float smoothing, float dt)
-{
-    if (smoothing <= 0.0f) {
-        return targetPos;
-    }
-
-    const float factor = 1.0f - std::exp(-smoothing * dt);
-
-    return Vector2{
-            currentPos.x + (targetPos.x - currentPos.x) * factor,
-            currentPos.y + (targetPos.y - currentPos.y) * factor
-    };
 }
 
 Vector2 GetImmediateCenteredCameraPosition(const GameState& state, const ActorInstance& actor)
@@ -132,6 +137,24 @@ void UpdateCamera(GameState& state, float dt)
 
     CameraData& cam = state.adventure.camera;
     const SceneData& scene = state.adventure.currentScene;
+
+    auto getTargetBiasShiftX = [&cam]() -> float {
+        switch (cam.biasLatch) {
+            case CameraBiasLatch::Left:
+                return cam.followBiasX;   // shift whole zone right on screen
+            case CameraBiasLatch::Right:
+                return -cam.followBiasX;  // shift whole zone left on screen
+            case CameraBiasLatch::None:
+            default:
+                return 0.0f;
+        }
+    };
+
+    cam.currentBiasShiftX = ApplyScalarSmoothing(
+            cam.currentBiasShiftX,
+            getTargetBiasShiftX(),
+            cam.biasShiftSmoothing,
+            dt);
 
     Vector2 targetPos = cam.position;
 
@@ -164,6 +187,9 @@ void UpdateCamera(GameState& state, float dt)
 
         case CameraModeData::Scripted:
         {
+            cam.currentBiasShiftX = 0.0f;
+            cam.biasLatch = CameraBiasLatch::None;
+
             if (cam.moving) {
                 cam.moveElapsedMs += dt * 1000.0f;
 
@@ -188,3 +214,4 @@ void UpdateCamera(GameState& state, float dt)
 
     cam.position = ClampCameraPositionToScene(scene, cam, targetPos);
 }
+
