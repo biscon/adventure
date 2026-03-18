@@ -122,8 +122,7 @@ int main()
         // blit 1080p to actual screen size. Settings menu make sure there are only resolutions with the same aspect ratio (eg 1080p 1440p and 4k)
         Rectangle src = GetFullscreenSrcRect(sceneTarget.texture);
         DrawTexturePro(sceneTarget.texture, src, dst, {0,0}, 0.0f, WHITE);
-
-        DrawFPS(10, 10);
+        if(state.settings.showFPS) DrawFPS(10, 10);
         EndDrawing();
     }
 

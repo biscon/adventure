@@ -25,6 +25,18 @@
             "volume": 1.0
         },
         {
+            "id": "electrical_current",
+            "file": "sfx/electrical_current.mp3",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "cat_meow",
+            "file": "sfx/cat_meow.mp3",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
             "id": "basement_music",
             "file": "music/basement.mp3",
             "type": "music",
