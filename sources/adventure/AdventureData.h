@@ -127,6 +127,13 @@ enum class CameraModeData
     Scripted
 };
 
+enum class CameraBiasLatch
+{
+    None,
+    Left,
+    Right
+};
+
 struct CameraData {
     Vector2 position{};
     float viewportWidth = 1920.0f;
@@ -147,7 +154,12 @@ struct CameraData {
 
     float followDeadZoneWidth = 300.0f;
     float followDeadZoneHeight = 120.0f;
-    float followSmoothing = 5.0f; // 0 = snap
+    float followSmoothing = 4.0f; // 0 = snap
+
+    CameraBiasLatch biasLatch = CameraBiasLatch::None;
+    float followBiasX = 240.0f;
+    float currentBiasShiftX = 0.0f;
+    float biasShiftSmoothing = 4.0f;
 };
 
 struct PendingInteraction {

@@ -33,7 +33,9 @@ static Vector2 MakeCameraTopLeftForCenterTarget(const CameraData& cam, Vector2 c
     };
 }
 
-static Vector2 ApplyCameraDeadZone(const CameraData& cam, Vector2 currentCameraPos, Vector2 targetCenterWorldPos)
+static Vector2 ApplyCameraDeadZone(CameraData& cam,
+                                   Vector2 currentCameraPos,
+                                   Vector2 targetCenterWorldPos)
 {
     if (cam.followDeadZoneWidth <= 0.0f || cam.followDeadZoneHeight <= 0.0f) {
         return MakeCameraTopLeftForCenterTarget(cam, targetCenterWorldPos);
@@ -45,23 +47,53 @@ static Vector2 ApplyCameraDeadZone(const CameraData& cam, Vector2 currentCameraP
     const float screenCenterX = currentCameraPos.x + cam.viewportWidth * 0.5f;
     const float screenCenterY = currentCameraPos.y + cam.viewportHeight * 0.5f;
 
-    const float zoneLeft   = screenCenterX - zoneHalfW;
-    const float zoneRight  = screenCenterX + zoneHalfW;
+    auto getBiasShiftX = [&cam]() -> float {
+        switch (cam.biasLatch) {
+            case CameraBiasLatch::Left:
+                return cam.followBiasX;   // shift whole zone right on screen
+            case CameraBiasLatch::Right:
+                return -cam.followBiasX;  // shift whole zone left on screen
+            case CameraBiasLatch::None:
+            default:
+                return 0.0f;
+        }
+    };
+
+    float biasShiftX = getBiasShiftX();
+
+    float zoneLeft   = screenCenterX - zoneHalfW + biasShiftX;
+    float zoneRight  = screenCenterX + zoneHalfW + biasShiftX;
     const float zoneTop    = screenCenterY - zoneHalfH;
     const float zoneBottom = screenCenterY + zoneHalfH;
 
     Vector2 newCameraPos = currentCameraPos;
 
+    // Horizontal
     if (targetCenterWorldPos.x < zoneLeft) {
-        newCameraPos.x = targetCenterWorldPos.x - (cam.viewportWidth * 0.5f - zoneHalfW);
+        if (cam.biasLatch != CameraBiasLatch::Left) {
+            cam.biasLatch = CameraBiasLatch::Left;
+            biasShiftX = getBiasShiftX();
+            zoneLeft  = screenCenterX - zoneHalfW + biasShiftX;
+            zoneRight = screenCenterX + zoneHalfW + biasShiftX;
+        }
+
+        newCameraPos.x += targetCenterWorldPos.x - zoneLeft;
     } else if (targetCenterWorldPos.x > zoneRight) {
-        newCameraPos.x = targetCenterWorldPos.x - (cam.viewportWidth * 0.5f + zoneHalfW);
+        if (cam.biasLatch != CameraBiasLatch::Right) {
+            cam.biasLatch = CameraBiasLatch::Right;
+            biasShiftX = getBiasShiftX();
+            zoneLeft  = screenCenterX - zoneHalfW + biasShiftX;
+            zoneRight = screenCenterX + zoneHalfW + biasShiftX;
+        }
+
+        newCameraPos.x += targetCenterWorldPos.x - zoneRight;
     }
 
+    // Vertical stays plain centered deadzone
     if (targetCenterWorldPos.y < zoneTop) {
-        newCameraPos.y = targetCenterWorldPos.y - (cam.viewportHeight * 0.5f - zoneHalfH);
+        newCameraPos.y += targetCenterWorldPos.y - zoneTop;
     } else if (targetCenterWorldPos.y > zoneBottom) {
-        newCameraPos.y = targetCenterWorldPos.y - (cam.viewportHeight * 0.5f + zoneHalfH);
+        newCameraPos.y += targetCenterWorldPos.y - zoneBottom;
     }
 
     return newCameraPos;
@@ -90,6 +122,7 @@ Vector2 GetImmediateCenteredCameraPosition(const GameState& state, const ActorIn
     Vector2 targetPos = MakeCameraTopLeftForCenterTarget(cam, actorCenter);
     return ClampCameraPositionToScene(scene, cam, targetPos);
 }
+
 
 void UpdateCamera(GameState& state, float dt)
 {

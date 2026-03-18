@@ -340,6 +340,7 @@ bool LoadSceneById(GameState& state, const char* sceneId, SceneLoadMode loadMode
     state.adventure.camera.viewportWidth = 1920.0f;
     state.adventure.camera.viewportHeight = 1080.0f;
     state.adventure.camera.position = { 0.0f, 0.0f };
+    state.adventure.camera.biasLatch = CameraBiasLatch::None;
 
     const ActorInstance* controlledActor = GetControlledActor(state);
     if (controlledActor != nullptr) {

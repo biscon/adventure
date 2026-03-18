@@ -219,8 +219,22 @@ static void DrawDebugActors(const GameState& state)
         if (i == controlledActorIndex &&
             cam.followDeadZoneWidth > 0.0f &&
             cam.followDeadZoneHeight > 0.0f) {
+
+            float biasShiftX = 0.0f;
+            switch (cam.biasLatch) {
+                case CameraBiasLatch::Left:
+                    biasShiftX = cam.followBiasX;
+                    break;
+                case CameraBiasLatch::Right:
+                    biasShiftX = -cam.followBiasX;
+                    break;
+                case CameraBiasLatch::None:
+                default:
+                    break;
+            }
+
             const Rectangle deadZoneRect{
-                    (cam.viewportWidth - cam.followDeadZoneWidth) * 0.5f,
+                    (cam.viewportWidth - cam.followDeadZoneWidth) * 0.5f + biasShiftX,
                     (cam.viewportHeight - cam.followDeadZoneHeight) * 0.5f,
                     cam.followDeadZoneWidth,
                     cam.followDeadZoneHeight

@@ -1001,6 +1001,7 @@ bool AdventureScriptSetCameraPosition(GameState& state, Vector2 worldPos)
     const float maxY = std::max(0.0f, scene.worldHeight - cam.viewportHeight);
 
     cam.mode = CameraModeData::Scripted;
+    cam.biasLatch = CameraBiasLatch::None;
     cam.followedActor = -1;
     cam.moving = false;
     cam.moveElapsedMs = 0.0f;
@@ -1035,6 +1036,7 @@ bool AdventureScriptMoveCameraTo(GameState& state,
     clampedTarget.x = Clamp(worldPos.x, 0.0f, maxX);
     clampedTarget.y = Clamp(worldPos.y, 0.0f, maxY);
 
+    cam.biasLatch = CameraBiasLatch::None;
     cam.mode = CameraModeData::Scripted;
     cam.followedActor = -1;
     cam.interpolation = interpolation;
