@@ -86,6 +86,18 @@ Rectangle GetActorScreenRect(const GameState& state, const ActorInstance& actor)
     return rect;
 }
 
+Rectangle GetActorWorldRect(const GameState& state, const ActorInstance& actor) {
+    const CameraData& cam = state.adventure.camera;
+    const Rectangle actorRect = GetActorScreenRect(state, actor);
+    // convert from screen to world space and center
+    Rectangle rect{};
+    rect.x = actorRect.x + cam.position.x;
+    rect.y = actorRect.y + cam.position.y;
+    rect.width = actorRect.width;
+    rect.height = actorRect.height;
+    return rect;
+}
+
 Rectangle GetActorInteractionRect(const GameState& state, const ActorInstance& actor)
 {
     Rectangle rect = GetActorScreenRect(state, actor);

@@ -98,3 +98,45 @@ bool HasControlledActor(const GameState& state)
 {
     return GetControlledActorIndex(state) >= 0;
 }
+
+const ActorInstance* FindActorInstanceByHandle(const GameState& state, ActorHandle handle) {
+    return &state.adventure.actors[handle];
+}
+
+ActorInstance* FindActorInstanceByHandle(GameState& state, ActorHandle handle) {
+    return &state.adventure.actors[handle];
+}
+
+SceneImageLayer* FindSceneImageLayerByName(GameState& state, const std::string& layerName)
+{
+    for (SceneImageLayer& layer : state.adventure.currentScene.backgroundLayers) {
+        if (layer.name == layerName) {
+            return &layer;
+        }
+    }
+
+    for (SceneImageLayer& layer : state.adventure.currentScene.foregroundLayers) {
+        if (layer.name == layerName) {
+            return &layer;
+        }
+    }
+
+    return nullptr;
+}
+
+const SceneImageLayer* FindSceneImageLayerByName(const GameState& state, const std::string& layerName)
+{
+    for (const SceneImageLayer& layer : state.adventure.currentScene.backgroundLayers) {
+        if (layer.name == layerName) {
+            return &layer;
+        }
+    }
+
+    for (const SceneImageLayer& layer : state.adventure.currentScene.foregroundLayers) {
+        if (layer.name == layerName) {
+            return &layer;
+        }
+    }
+
+    return nullptr;
+}

@@ -1295,7 +1295,7 @@ static int Lua_playMusic(lua_State* L)
         return 1;
     }
 
-    const bool ok = PlayMusicById(*gameState, std::string(id), fadeMs);
+    const bool ok = AdventureScriptPlayMusic(*gameState, std::string(id), fadeMs);
     lua_pushboolean(L, ok ? 1 : 0);
     return 1;
 }
@@ -1310,8 +1310,7 @@ static int Lua_stopMusic(lua_State* L)
     if (gameState == nullptr) {
         return 0;
     }
-
-    StopMusic(*gameState, fadeMs);
+    AdventureScriptStopMusic(*gameState, fadeMs);
     return 0;
 }
 
@@ -1405,6 +1404,282 @@ static int Lua_stopEmitter(lua_State* L)
     return 1;
 }
 
+static int Lua_setLayerVisible(lua_State* L)
+{
+    const char* layerName = luaL_checkstring(L, 1);
+    const bool visible = lua_toboolean(L, 2) != 0;
+
+    if (gameState == nullptr || layerName == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetLayerVisible(
+            *gameState,
+            std::string(layerName),
+            visible);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_layerVisible(lua_State* L)
+{
+    const char* layerName = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || layerName == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    bool visible = false;
+    const bool ok = AdventureScriptIsLayerVisible(
+            *gameState,
+            std::string(layerName),
+            visible);
+
+    if (!ok) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    lua_pushboolean(L, visible ? 1 : 0);
+    return 1;
+}
+
+static int Lua_toggleLayer(lua_State* L)
+{
+    const char* layerName = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || layerName == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    bool visible = false;
+    AdventureScriptIsLayerVisible(
+            *gameState,
+            std::string(layerName),
+            visible);
+
+    const bool ok = AdventureScriptSetLayerVisible(
+            *gameState,
+            std::string(layerName),
+            !visible);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_setLayerOpacity(lua_State* L)
+{
+    const char* layerName = luaL_checkstring(L, 1);
+    const float opacity = static_cast<float>(luaL_checknumber(L, 2));
+
+    if (gameState == nullptr || layerName == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetLayerOpacity(
+            *gameState,
+            std::string(layerName),
+            opacity);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_layerOpacity(lua_State* L)
+{
+    const char* layerName = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || layerName == nullptr) {
+        lua_pushnumber(L, 0.0);
+        return 1;
+    }
+
+    float opacity = 0.0f;
+    const bool ok = AdventureScriptGetLayerOpacity(
+            *gameState,
+            std::string(layerName),
+            opacity);
+
+    if (!ok) {
+        lua_pushnumber(L, 0.0);
+        return 1;
+    }
+
+    lua_pushnumber(L, static_cast<lua_Number>(opacity));
+    return 1;
+}
+
+static int Lua_cameraFollow(lua_State* L)
+{
+    if (gameState == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptCameraFollowControlledActor(*gameState);
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_cameraFollowActor(lua_State* L)
+{
+    const char* actorId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || actorId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptCameraFollowActor(
+            *gameState,
+            std::string(actorId));
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_setCameraPosition(lua_State* L)
+{
+    const float x = static_cast<float>(luaL_checknumber(L, 1));
+    const float y = static_cast<float>(luaL_checknumber(L, 2));
+
+    if (gameState == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetCameraPosition(*gameState, Vector2{x, y});
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_moveCameraTo(lua_State* L)
+{
+    const float x = static_cast<float>(luaL_checknumber(L, 1));
+    const float y = static_cast<float>(luaL_checknumber(L, 2));
+    const float durationMs = static_cast<float>(luaL_checknumber(L, 3));
+    const char* interpolation = luaL_checkstring(L, 4);
+
+    if (gameState == nullptr || interpolation == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptMoveCameraTo(
+            *gameState,
+            Vector2{x, y},
+            durationMs,
+            std::string(interpolation));
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_centerCameraOn(lua_State* L)
+{
+    const float x = static_cast<float>(luaL_checknumber(L, 1));
+    const float y = static_cast<float>(luaL_checknumber(L, 2));
+
+    if (gameState == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptCenterCameraOn(*gameState, Vector2{x, y});
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_moveCameraCenterTo(lua_State* L)
+{
+    const float x = static_cast<float>(luaL_checknumber(L, 1));
+    const float y = static_cast<float>(luaL_checknumber(L, 2));
+    const float durationMs = static_cast<float>(luaL_checknumber(L, 3));
+    const char* interpolation = luaL_optstring(L, 4, "accelerateDecelerate");
+
+    if (gameState == nullptr || interpolation == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptMoveCameraCenterTo(
+            *gameState,
+            Vector2{x, y},
+            durationMs,
+            std::string(interpolation));
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_panCameraToActor(lua_State* L)
+{
+    const char* actorId = luaL_checkstring(L, 1);
+    const float durationMs = static_cast<float>(luaL_checknumber(L, 2));
+    const char* interpolation = luaL_optstring(L, 3, "accelerateDecelerate");
+
+    if (gameState == nullptr || actorId == nullptr || interpolation == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptPanCameraToActor(
+            *gameState,
+            std::string(actorId),
+            durationMs,
+            std::string(interpolation));
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_panCameraToProp(lua_State* L)
+{
+    const char* propId = luaL_checkstring(L, 1);
+    const float durationMs = static_cast<float>(luaL_checknumber(L, 2));
+    const char* interpolation = luaL_optstring(L, 3, "accelerateDecelerate");
+
+    if (gameState == nullptr || propId == nullptr || interpolation == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptPanCameraToProp(
+            *gameState,
+            std::string(propId),
+            durationMs,
+            std::string(interpolation));
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_panCameraToHotspot(lua_State* L)
+{
+    const char* hotspotId = luaL_checkstring(L, 1);
+    const float durationMs = static_cast<float>(luaL_checknumber(L, 2));
+    const char* interpolation = luaL_optstring(L, 3, "accelerateDecelerate");
+
+    if (gameState == nullptr || hotspotId == nullptr || interpolation == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptPanCameraToHotspot(
+            *gameState,
+            std::string(hotspotId),
+            durationMs,
+            std::string(interpolation));
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 void RegisterLuaAPI(lua_State* L)
 {
     lua_register(L, "setFlag", Lua_setFlag);
@@ -1483,6 +1758,23 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "setSoundEmitterVolume", Lua_setSoundEmitterVolume);
     lua_register(L, "playEmitter", Lua_playEmitter);
     lua_register(L, "stopEmitter", Lua_stopEmitter);
+
+    lua_register(L, "setLayerVisible", Lua_setLayerVisible);
+    lua_register(L, "layerVisible", Lua_layerVisible);
+    lua_register(L, "toggleLayer", Lua_toggleLayer);
+    lua_register(L, "setLayerOpacity", Lua_setLayerOpacity);
+    lua_register(L, "layerOpacity", Lua_layerOpacity);
+
+    lua_register(L, "cameraFollow", Lua_cameraFollow);
+    lua_register(L, "cameraFollowActor", Lua_cameraFollowActor);
+    lua_register(L, "setCameraPosition", Lua_setCameraPosition);
+    lua_register(L, "moveCameraTo", Lua_moveCameraTo);
+
+    lua_register(L, "centerCameraOn", Lua_centerCameraOn);
+    lua_register(L, "moveCameraCenterTo", Lua_moveCameraCenterTo);
+    lua_register(L, "panCameraToActor", Lua_panCameraToActor);
+    lua_register(L, "panCameraToProp", Lua_panCameraToProp);
+    lua_register(L, "panCameraToHotspot", Lua_panCameraToHotspot);
 
     lua_register(L, "print", Lua_consolePrint);
     lua_register(L, "log", Lua_log);

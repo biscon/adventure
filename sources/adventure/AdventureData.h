@@ -8,6 +8,7 @@
 #include "resources/ResourceData.h"
 #include "adventure/AdventureActionData.h"
 #include "adventure/InventoryData.h"
+#include "utils/Interpolation.h"
 
 using ActorHandle = int;
 
@@ -85,14 +86,6 @@ struct ActorInstance {
 
 using PropHandle = int;
 
-enum class PropMoveInterpolation {
-    Linear,
-    Accelerate,
-    Decelerate,
-    AccelerateDecelerate,
-    Overshoot
-};
-
 struct PropInstance {
     PropHandle handle = -1;
     int scenePropIndex = -1;
@@ -113,7 +106,7 @@ struct PropInstance {
     Vector2 moveTargetPos{};
     float moveElapsedMs = 0.0f;
     float moveDurationMs = 0.0f;
-    PropMoveInterpolation moveInterpolation = PropMoveInterpolation::Linear;
+    MoveInterpolation moveInterpolation = MoveInterpolation::Linear;
 };
 
 using EffectSpriteHandle = int;
@@ -127,10 +120,34 @@ struct EffectSpriteInstance {
     Color tint = WHITE;
 };
 
+enum class CameraModeData
+{
+    FollowActor,
+    FollowControlledActor,
+    Scripted
+};
+
 struct CameraData {
     Vector2 position{};
     float viewportWidth = 1920.0f;
     float viewportHeight = 1080.0f;
+
+    CameraModeData mode = CameraModeData::FollowControlledActor;
+    ActorHandle followedActor = -1;
+
+    // scripted movement
+    bool moving = false;
+
+    Vector2 moveStart{};
+    Vector2 moveTarget{};
+    float moveDurationMs = 0.0f;
+    float moveElapsedMs = 0.0f;
+
+    MoveInterpolation interpolation = MoveInterpolation::AccelerateDecelerate;
+
+    float followDeadZoneWidth = 300.0f;
+    float followDeadZoneHeight = 120.0f;
+    float followSmoothing = 5.0f; // 0 = snap
 };
 
 struct PendingInteraction {

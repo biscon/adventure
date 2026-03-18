@@ -239,6 +239,7 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
         DebugConsoleAddLine(state, "  /resources", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /flags", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /items", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /layers", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /actors", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /scenes", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /hotspots", LIGHTGRAY);
@@ -895,6 +896,41 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
             DebugConsoleAddLine(state, "stopped emitter: " + args[1], SKYBLUE);
         } else {
             DebugConsoleAddLine(state, "failed stopping emitter: " + args[1], RED);
+        }
+
+        return true;
+    }
+
+    if (cmd == "/layers") {
+        if (!state.adventure.currentScene.loaded) {
+            DebugConsoleAddLine(state, "no scene loaded", RED);
+            return true;
+        }
+
+        DebugConsoleAddLine(state, "background layers:", SKYBLUE);
+
+        if (state.adventure.currentScene.backgroundLayers.empty()) {
+            DebugConsoleAddLine(state, "  <none>", LIGHTGRAY);
+        } else {
+            for (const SceneImageLayer& layer : state.adventure.currentScene.backgroundLayers) {
+                DebugConsoleAddLine(
+                        state,
+                        "  " + layer.name + "  [" + (layer.visible ? "visible" : "hidden") + "]",
+                        LIGHTGRAY);
+            }
+        }
+
+        DebugConsoleAddLine(state, "foreground layers:", SKYBLUE);
+
+        if (state.adventure.currentScene.foregroundLayers.empty()) {
+            DebugConsoleAddLine(state, "  <none>", LIGHTGRAY);
+        } else {
+            for (const SceneImageLayer& layer : state.adventure.currentScene.foregroundLayers) {
+                DebugConsoleAddLine(
+                        state,
+                        "  " + layer.name + "  [" + (layer.visible ? "visible" : "hidden") + "]",
+                        LIGHTGRAY);
+            }
         }
 
         return true;

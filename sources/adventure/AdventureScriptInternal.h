@@ -40,9 +40,3 @@ bool AdventureTryGetSpriteAnimationDurationMs(
         float& outDurationMs);
 
 int AdventureFindScenePropIndexById(const GameState& state, const std::string& propId);
-
-bool AdventureParsePropMoveInterpolation(
-        const std::string& name,
-        PropMoveInterpolation& outInterpolation);
-
-float AdventureApplyPropMoveInterpolation(PropMoveInterpolation interpolation, float t);

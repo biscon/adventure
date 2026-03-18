@@ -188,7 +188,11 @@ static void DrawDebugActors(const GameState& state)
         return;
     }
 
-    for (const ActorInstance& actor : state.adventure.actors) {
+    const int controlledActorIndex = GetControlledActorIndex(state);
+    const CameraData& cam = state.adventure.camera;
+
+    for (int i = 0; i < static_cast<int>(state.adventure.actors.size()); ++i) {
+        const ActorInstance& actor = state.adventure.actors[i];
         if (!actor.activeInScene || !actor.visible) {
             continue;
         }
@@ -211,6 +215,19 @@ static void DrawDebugActors(const GameState& state)
                 static_cast<int>(feet.y - 8.0f),
                 16,
                 RED);
+
+        if (i == controlledActorIndex &&
+            cam.followDeadZoneWidth > 0.0f &&
+            cam.followDeadZoneHeight > 0.0f) {
+            const Rectangle deadZoneRect{
+                    (cam.viewportWidth - cam.followDeadZoneWidth) * 0.5f,
+                    (cam.viewportHeight - cam.followDeadZoneHeight) * 0.5f,
+                    cam.followDeadZoneWidth,
+                    cam.followDeadZoneHeight
+            };
+
+            DrawRectangleLinesEx(deadZoneRect, 2.0f, BLUE);
+        }
     }
 }
 

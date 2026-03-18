@@ -16,6 +16,21 @@
                  "visible":true,
                  "x":0,
                  "y":0
+                },
+            
+                {
+                 "id":33,
+                 "image":"door_closed.png",
+                 "imageheight":94,
+                 "imagewidth":56,
+                 "name":"door_closed",
+                 "offsetx":418,
+                 "offsety":39,
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
                 }],
          "name":"background",
          "opacity":1,
@@ -434,7 +449,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         },
@@ -750,7 +765,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         },
@@ -1028,7 +1043,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":33,
+ "nextlayerid":34,
  "nextobjectid":43,
  "orientation":"orthogonal",
  "renderorder":"right-down",

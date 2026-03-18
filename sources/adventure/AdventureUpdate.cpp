@@ -16,6 +16,8 @@
 #include "adventure/Inventory.h"
 #include "Adventure.h"
 #include "adventure/Dialogue.h"
+#include "adventure/AdventureCamera.h"
+#include "raymath.h"
 
 
 static void HandleDebugInput(GameState& state)
@@ -467,33 +469,6 @@ static void UpdateHoverUi(GameState& state)
     }
 }
 
-static void UpdateCamera(GameState& state)
-{
-    const ActorInstance* controlledActor = GetControlledActor(state);
-    if (controlledActor == nullptr || !state.adventure.currentScene.loaded) {
-        return;
-    }
-
-    CameraData& cam = state.adventure.camera;
-    const SceneData& scene = state.adventure.currentScene;
-    const Vector2 feet = controlledActor->feetPos;
-
-    float targetX = feet.x - cam.viewportWidth * 0.5f;
-    float targetY = feet.y - cam.viewportHeight * 0.5f;
-
-    const float maxX = std::max(0.0f, scene.worldWidth - cam.viewportWidth);
-    const float maxY = std::max(0.0f, scene.worldHeight - cam.viewportHeight);
-
-    if (targetX < 0.0f) targetX = 0.0f;
-    if (targetX > maxX) targetX = maxX;
-
-    if (targetY < 0.0f) targetY = 0.0f;
-    if (targetY > maxY) targetY = maxY;
-
-    cam.position.x = targetX;
-    cam.position.y = targetY;
-}
-
 static void UpdateProps(GameState& state, float dt)
 {
     const auto& sceneProps = state.adventure.currentScene.props;
@@ -521,7 +496,7 @@ static void UpdateProps(GameState& state, float dt)
                 prop.moveElapsedMs = 0.0f;
                 prop.moveDurationMs = 0.0f;
             } else {
-                const float easedT = AdventureApplyPropMoveInterpolation(prop.moveInterpolation, t);
+                const float easedT = ApplyInterpolation(prop.moveInterpolation, t);
                 prop.feetPos.x = prop.moveStartPos.x + (prop.moveTargetPos.x - prop.moveStartPos.x) * easedT;
                 prop.feetPos.y = prop.moveStartPos.y + (prop.moveTargetPos.y - prop.moveStartPos.y) * easedT;
             }
@@ -743,7 +718,7 @@ void AdventureUpdate(GameState& state, float dt)
         UpdateActorMovement(actor, dt);
     }
 
-    UpdateCamera(state);
+    UpdateCamera(state, dt);
     UpdateHoverUi(state);
     UpdateInventoryHoverUi(state);
 

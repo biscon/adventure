@@ -71,7 +71,7 @@ bool AdventureScriptSetEffectTint(GameState& state,
                                   Color tint);
 
 bool AdventureScriptPlaySound(GameState& state, const std::string& audioId);
-bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId);
+bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId, float fadeMs = 0.0f);
 bool AdventureScriptStopMusic(GameState& state, float fadeMs = 0.0f);
 
 bool AdventureScriptSetSoundEmitterEnabled(GameState& state, const std::string& emitterId, bool enabled);
@@ -79,3 +79,35 @@ bool AdventureScriptGetSoundEmitterEnabled(const GameState& state, const std::st
 bool AdventureScriptSetSoundEmitterVolume(GameState& state, const std::string& emitterId, float volume);
 bool AdventureScriptPlayEmitter(GameState& state, const std::string& emitterId);
 bool AdventureScriptStopEmitter(GameState& state, const std::string& emitterId);
+bool AdventureScriptSetLayerVisible(GameState& state, const std::string& layerName, bool visible);
+bool AdventureScriptIsLayerVisible(const GameState& state, const std::string& layerName, bool& outVisible);
+bool AdventureScriptSetLayerOpacity(GameState& state, const std::string& layerName, float opacity);
+bool AdventureScriptGetLayerOpacity(const GameState& state, const std::string& layerName, float& outOpacity);
+bool AdventureScriptCameraFollowControlledActor(GameState& state);
+bool AdventureScriptCameraFollowActor(GameState& state, const std::string& actorId);
+bool AdventureScriptSetCameraPosition(GameState& state, Vector2 worldPos);
+bool AdventureScriptMoveCameraTo(GameState& state,
+                                 Vector2 worldPos,
+                                 float durationMs,
+                                 const std::string& interpolationName);
+
+bool AdventureScriptCenterCameraOn(GameState& state, Vector2 worldPos);
+bool AdventureScriptMoveCameraCenterTo(GameState& state,
+                                       Vector2 worldPos,
+                                       float durationMs,
+                                       const std::string& interpolationName);
+
+bool AdventureScriptPanCameraToActor(GameState& state,
+                                     const std::string& actorId,
+                                     float durationMs,
+                                     const std::string& interpolationName);
+
+bool AdventureScriptPanCameraToProp(GameState& state,
+                                    const std::string& propId,
+                                    float durationMs,
+                                    const std::string& interpolationName);
+
+bool AdventureScriptPanCameraToHotspot(GameState& state,
+                                       const std::string& hotspotId,
+                                       float durationMs,
+                                       const std::string& interpolationName);

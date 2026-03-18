@@ -11,6 +11,7 @@ bool GetActorCurrentFrameInfo(
         Vector2& outScreenFeet);
 
 Rectangle GetActorScreenRect(const GameState& state, const ActorInstance& actor);
+Rectangle GetActorWorldRect(const GameState& state, const ActorInstance& actor);
 Rectangle GetActorInteractionRect(const GameState& state, const ActorInstance& actor);
 
 Rectangle GetPropScreenRect(

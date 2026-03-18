@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "audio/Audio.h"
+#include "render/RenderHelpers.h"
 
 bool AdventureScriptSay(GameState& state, const std::string& text, int durationMs)
 {
@@ -334,8 +335,8 @@ bool AdventureScriptMovePropTo(GameState& state,
         return false;
     }
 
-    PropMoveInterpolation interpolation = PropMoveInterpolation::Linear;
-    if (!AdventureParsePropMoveInterpolation(interpolationName, interpolation)) {
+    MoveInterpolation interpolation = MoveInterpolation::Linear;
+    if (!ParseInterpolation(interpolationName, interpolation)) {
         return false;
     }
 
@@ -808,13 +809,13 @@ bool AdventureScriptPlaySound(GameState& state, const std::string& audioId)
     return PlaySoundById(state, audioId);
 }
 
-bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId)
+bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId, float fadeMs)
 {
     if (audioId.empty()) {
         return false;
     }
 
-    return PlayMusicById(state, audioId);
+    return PlayMusicById(state, audioId, fadeMs);
 }
 
 bool AdventureScriptStopMusic(GameState& state, float fadeMs)
@@ -887,4 +888,320 @@ bool AdventureScriptStopEmitter(GameState& state, const std::string& emitterId)
     }
 
     return StopSoundEmitterById(state, emitterId);
+}
+
+bool AdventureScriptSetLayerVisible(GameState& state, const std::string& layerName, bool visible)
+{
+    if (!state.adventure.currentScene.loaded || layerName.empty()) {
+        return false;
+    }
+
+    SceneImageLayer* layer = FindSceneImageLayerByName(state, layerName);
+    if (layer == nullptr) {
+        return false;
+    }
+
+    layer->visible = visible;
+    return true;
+}
+
+bool AdventureScriptIsLayerVisible(const GameState& state, const std::string& layerName, bool& outVisible)
+{
+    if (!state.adventure.currentScene.loaded || layerName.empty()) {
+        return false;
+    }
+
+    const SceneImageLayer* layer = FindSceneImageLayerByName(state, layerName);
+    if (layer == nullptr) {
+        return false;
+    }
+
+    outVisible = layer->visible;
+    return true;
+}
+
+bool AdventureScriptSetLayerOpacity(GameState& state, const std::string& layerName, float opacity)
+{
+    if (!state.adventure.currentScene.loaded || layerName.empty()) {
+        return false;
+    }
+
+    SceneImageLayer* layer = FindSceneImageLayerByName(state, layerName);
+    if (layer == nullptr) {
+        return false;
+    }
+
+    layer->opacity = Clamp(opacity, 0.0f, 1.0f);
+    return true;
+}
+
+bool AdventureScriptGetLayerOpacity(const GameState& state, const std::string& layerName, float& outOpacity)
+{
+    if (!state.adventure.currentScene.loaded || layerName.empty()) {
+        return false;
+    }
+
+    const SceneImageLayer* layer = FindSceneImageLayerByName(state, layerName);
+    if (layer == nullptr) {
+        return false;
+    }
+
+    outOpacity = layer->opacity;
+    return true;
+}
+
+bool AdventureScriptCameraFollowControlledActor(GameState& state)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    state.adventure.camera.mode = CameraModeData::FollowControlledActor;
+    state.adventure.camera.followedActor = -1;
+    state.adventure.camera.moving = false;
+    state.adventure.camera.moveElapsedMs = 0.0f;
+    state.adventure.camera.moveDurationMs = 0.0f;
+    return true;
+}
+
+bool AdventureScriptCameraFollowActor(GameState& state, const std::string& actorId)
+{
+    if (!state.adventure.currentScene.loaded || actorId.empty()) {
+        return false;
+    }
+
+    const int actorIndex = FindActorInstanceIndexById(state, actorId);
+    if (actorIndex < 0 || actorIndex >= static_cast<int>(state.adventure.actors.size())) {
+        return false;
+    }
+
+    const ActorInstance& actor = state.adventure.actors[actorIndex];
+    if (!actor.activeInScene || !actor.visible) {
+        return false;
+    }
+
+    state.adventure.camera.mode = CameraModeData::FollowActor;
+    state.adventure.camera.followedActor = actor.handle;
+    state.adventure.camera.moving = false;
+    state.adventure.camera.moveElapsedMs = 0.0f;
+    state.adventure.camera.moveDurationMs = 0.0f;
+    return true;
+}
+
+bool AdventureScriptSetCameraPosition(GameState& state, Vector2 worldPos)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    CameraData& cam = state.adventure.camera;
+    const SceneData& scene = state.adventure.currentScene;
+
+    const float maxX = std::max(0.0f, scene.worldWidth - cam.viewportWidth);
+    const float maxY = std::max(0.0f, scene.worldHeight - cam.viewportHeight);
+
+    cam.mode = CameraModeData::Scripted;
+    cam.followedActor = -1;
+    cam.moving = false;
+    cam.moveElapsedMs = 0.0f;
+    cam.moveDurationMs = 0.0f;
+
+    cam.position.x = Clamp(worldPos.x, 0.0f, maxX);
+    cam.position.y = Clamp(worldPos.y, 0.0f, maxY);
+    return true;
+}
+
+bool AdventureScriptMoveCameraTo(GameState& state,
+                                 Vector2 worldPos,
+                                 float durationMs,
+                                 const std::string& interpolationName)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    MoveInterpolation interpolation = MoveInterpolation::AccelerateDecelerate;
+    if (!ParseInterpolation(interpolationName, interpolation)) {
+        return false;
+    }
+
+    CameraData& cam = state.adventure.camera;
+    const SceneData& scene = state.adventure.currentScene;
+
+    const float maxX = std::max(0.0f, scene.worldWidth - cam.viewportWidth);
+    const float maxY = std::max(0.0f, scene.worldHeight - cam.viewportHeight);
+
+    Vector2 clampedTarget{};
+    clampedTarget.x = Clamp(worldPos.x, 0.0f, maxX);
+    clampedTarget.y = Clamp(worldPos.y, 0.0f, maxY);
+
+    cam.mode = CameraModeData::Scripted;
+    cam.followedActor = -1;
+    cam.interpolation = interpolation;
+
+    if (durationMs <= 0.0f) {
+        cam.moving = false;
+        cam.moveStart = clampedTarget;
+        cam.moveTarget = clampedTarget;
+        cam.moveElapsedMs = 0.0f;
+        cam.moveDurationMs = 0.0f;
+        cam.position = clampedTarget;
+        return true;
+    }
+
+    cam.moving = true;
+    cam.moveStart = cam.position;
+    cam.moveTarget = clampedTarget;
+    cam.moveElapsedMs = 0.0f;
+    cam.moveDurationMs = durationMs;
+    return true;
+}
+
+
+static Vector2 MakeCameraTopLeftForCenterTarget(const CameraData& cam, Vector2 centerWorldPos)
+{
+    Vector2 topLeft{};
+    topLeft.x = centerWorldPos.x - cam.viewportWidth * 0.5f;
+    topLeft.y = centerWorldPos.y - cam.viewportHeight * 0.5f;
+    return topLeft;
+}
+
+static bool GetActorCameraCenterTarget(const GameState& state,
+                                       const ActorInstance& actor,
+                                       Vector2& outCenterWorldPos)
+{
+    const CameraData& cam = state.adventure.camera;
+
+    Rectangle actorRect = GetActorScreenRect(state, actor);
+    outCenterWorldPos.x = actorRect.x + (0.5f * actorRect.width) + cam.position.x;
+    outCenterWorldPos.y = actorRect.y + (0.5f * actorRect.height) + cam.position.y;
+    return true;
+}
+
+static bool GetPropCameraCenterTarget(const GameState& state,
+                                      const ScenePropData& sceneProp,
+                                      const PropInstance& prop,
+                                      Vector2& outCenterWorldPos)
+{
+    const CameraData& cam = state.adventure.camera;
+
+    Rectangle propRect = GetPropScreenRect(state, sceneProp, prop);
+    outCenterWorldPos.x = propRect.x + (0.5f * propRect.width) + cam.position.x;
+    outCenterWorldPos.y = propRect.y + (0.5f * propRect.height) + cam.position.y;
+    return true;
+}
+
+bool AdventureScriptCenterCameraOn(GameState& state, Vector2 worldPos)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const Vector2 cameraTopLeft =
+            MakeCameraTopLeftForCenterTarget(state.adventure.camera, worldPos);
+
+    return AdventureScriptSetCameraPosition(state, cameraTopLeft);
+}
+
+bool AdventureScriptMoveCameraCenterTo(GameState& state,
+                                       Vector2 worldPos,
+                                       float durationMs,
+                                       const std::string& interpolationName)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const Vector2 cameraTopLeft =
+            MakeCameraTopLeftForCenterTarget(state.adventure.camera, worldPos);
+
+    return AdventureScriptMoveCameraTo(
+            state,
+            cameraTopLeft,
+            durationMs,
+            interpolationName);
+}
+
+bool AdventureScriptPanCameraToActor(GameState& state,
+                                     const std::string& actorId,
+                                     float durationMs,
+                                     const std::string& interpolationName)
+{
+    if (!state.adventure.currentScene.loaded || actorId.empty()) {
+        return false;
+    }
+
+    const int actorIndex = FindActorInstanceIndexById(state, actorId);
+    if (actorIndex < 0 || actorIndex >= static_cast<int>(state.adventure.actors.size())) {
+        return false;
+    }
+
+    const ActorInstance& actor = state.adventure.actors[actorIndex];
+    if (!actor.activeInScene || !actor.visible) {
+        return false;
+    }
+
+    Vector2 centerWorldPos{};
+    GetActorCameraCenterTarget(state, actor, centerWorldPos);
+
+    return AdventureScriptMoveCameraCenterTo(
+            state,
+            centerWorldPos,
+            durationMs,
+            interpolationName);
+}
+
+bool AdventureScriptPanCameraToProp(GameState& state,
+                                    const std::string& propId,
+                                    float durationMs,
+                                    const std::string& interpolationName)
+{
+    if (!state.adventure.currentScene.loaded || propId.empty()) {
+        return false;
+    }
+
+    const int scenePropIndex = AdventureFindScenePropIndexById(state, propId);
+    if (scenePropIndex < 0 ||
+        scenePropIndex >= static_cast<int>(state.adventure.currentScene.props.size()) ||
+        scenePropIndex >= static_cast<int>(state.adventure.props.size())) {
+        return false;
+    }
+
+    const ScenePropData& sceneProp = state.adventure.currentScene.props[scenePropIndex];
+    const PropInstance& prop = state.adventure.props[scenePropIndex];
+
+    if (!prop.visible) {
+        return false;
+    }
+
+    Vector2 centerWorldPos{};
+    GetPropCameraCenterTarget(state, sceneProp, prop, centerWorldPos);
+
+    return AdventureScriptMoveCameraCenterTo(
+            state,
+            centerWorldPos,
+            durationMs,
+            interpolationName);
+}
+
+bool AdventureScriptPanCameraToHotspot(GameState& state,
+                                       const std::string& hotspotId,
+                                       float durationMs,
+                                       const std::string& interpolationName)
+{
+    if (!state.adventure.currentScene.loaded || hotspotId.empty()) {
+        return false;
+    }
+
+    for (const SceneHotspot& hotspot : state.adventure.currentScene.hotspots) {
+        if (hotspot.id == hotspotId) {
+            return AdventureScriptMoveCameraCenterTo(
+                    state,
+                    hotspot.walkTo,
+                    durationMs,
+                    interpolationName);
+        }
+    }
+
+    return false;
 }
