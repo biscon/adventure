@@ -677,6 +677,15 @@ static void UpdateSpeechSkipInput(GameState& state)
     }
 }
 
+static void UpdateCursorFromAdventure(GameState& state)
+{
+    if (state.adventure.hoverUi.active) {
+        state.cursor.type = CursorType::Interact;
+    } else {
+        state.cursor.type = CursorType::Default;
+    }
+}
+
 void AdventureUpdate(GameState& state, float dt)
 {
     AdventureProcessPendingLoads(state);
@@ -719,6 +728,8 @@ void AdventureUpdate(GameState& state, float dt)
     UpdateCamera(state, dt);
     UpdateHoverUi(state);
     UpdateInventoryHoverUi(state);
+
+    UpdateCursorFromAdventure(state);
 
     for (ActorInstance& actor : state.adventure.actors) {
         if (!actor.activeInScene || !actor.visible) {

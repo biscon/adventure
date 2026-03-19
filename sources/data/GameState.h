@@ -10,6 +10,7 @@
 #include "debug/DebugData.h"
 #include "scripting/ScriptData.h"
 #include "audio/AudioData.h"
+#include "ui/CursorData.h"
 
 static constexpr int INTERNAL_WIDTH = 1920;
 static constexpr int INTERNAL_HEIGHT = 1080;
@@ -30,4 +31,5 @@ struct GameState {
     DebugData debug;
     ScriptData script;
     AudioData audio;
+    CursorData cursor;
 };

@@ -631,14 +631,3 @@ The engine is already in very good shape and has working:
 - scoped resource unloading
 - save/load slots with summaries and timestamps
 
-Important current design philosophy going into lighting
-- This is a 2D adventure game, not a fully dynamic physically-lit renderer
-- Assets will carry most of their own baked/authored lighting
-- Future “lighting” should likely be additive/art-directed rather than pretending everything is neutral/unlit
-- Tiled /.tmj scene data is the natural place to author extra lighting metadata, because that file already defines most scene content and authorial layout
-
-What I want to do next in the new chat
-- Design a lighting system appropriate for this engine and this genre
-- Likely using authored data from the Tiled scene
-- Keeping in mind that built-in asset lighting is expected and desirable
-- I will still need to paste relevant files again for implementation details

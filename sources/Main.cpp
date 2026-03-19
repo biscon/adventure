@@ -14,6 +14,7 @@
 #include "scripting/ScriptSystem.h"
 #include "adventure/DialogueChoiceAsset.h"
 #include "audio/Audio.h"
+#include "ui/Cursor.h"
 
 static bool IsMouseInInternalView()
 {
@@ -63,6 +64,7 @@ int main()
 
     InitInput(state.input);
     InitAudio(state);
+    InitCursor(state);
 
     LoadAllItemDefinitions(state);
     LoadAllDialogueChoiceSets(state);
@@ -87,6 +89,7 @@ int main()
         );
 
         UpdateInput(state.input);
+        UpdateCursor(state);
 
         FlushPendingDebugConsoleTraceLog(state);
 
@@ -128,6 +131,10 @@ int main()
         // blit 1080p to actual screen size. Settings menu make sure there are only resolutions with the same aspect ratio (eg 1080p 1440p and 4k)
         Rectangle src = GetFullscreenSrcRect(sceneTarget.texture);
         DrawTexturePro(sceneTarget.texture, src, dst, {0,0}, 0.0f, WHITE);
+
+        float scale = dst.width / INTERNAL_WIDTH;
+        RenderCursor(state, scale);
+
         if(state.settings.showFPS) DrawFPS(10, 10);
         EndDrawing();
     }
@@ -139,6 +146,7 @@ int main()
     ShutdownAudio(state);
     UnloadAllResources(state.resources);
     UnloadRenderTexture(sceneTarget);
+    ShutdownCursor(state);
     CloseWindow();
 
     return 0;
