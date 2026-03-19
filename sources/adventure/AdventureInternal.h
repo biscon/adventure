@@ -40,3 +40,5 @@ bool AdventureTryGetSpriteAnimationDurationMs(
         float& outDurationMs);
 
 int AdventureFindScenePropIndexById(const GameState& state, const std::string& propId);
+
+void AdventureQueueLoadSceneInternal(GameState& state, const char* sceneId, const char* spawnId);

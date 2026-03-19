@@ -2,9 +2,7 @@
 
 #include <cctype>
 #include <string>
-#include <cmath>
 
-#include "adventure/Adventure.h"
 #include "input/Input.h"
 #include "nav/NavMeshQuery.h"
 #include "scripting/ScriptSystem.h"

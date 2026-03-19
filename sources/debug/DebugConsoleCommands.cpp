@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "adventure/Adventure.h"
+#include "adventure/AdventureUpdate.h"
 #include "adventure/AdventureActorHelpers.h"
 #include "audio/Audio.h"
 #include "save/SaveGame.h"

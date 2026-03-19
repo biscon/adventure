@@ -3,7 +3,7 @@
 #include "menu/Menu.h"
 #include "settings/Settings.h"
 #include "input/Input.h"
-#include "adventure/Adventure.h"
+#include "adventure/AdventureUpdate.h"
 #include "render/SceneRender.h"
 #include "render/UiRender.h"
 #include "render/DebugRender.h"

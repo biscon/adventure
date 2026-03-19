@@ -5,7 +5,6 @@
 
 #include "adventure/AdventureActionSystem.h"
 #include "adventure/AdventureActorHelpers.h"
-#include "adventure/AdventureScriptInternal.h"
 #include "input/Input.h"
 #include "raylib.h"
 #include "scene/SceneHelpers.h"
@@ -14,10 +13,10 @@
 #include "render/RenderHelpers.h"
 #include "adventure/InventoryUi.h"
 #include "adventure/Inventory.h"
-#include "Adventure.h"
+#include "adventure/AdventureInternal.h"
 #include "adventure/Dialogue.h"
 #include "adventure/AdventureCamera.h"
-#include "raymath.h"
+#include "adventure/AdventureScriptCommands.h"
 
 
 static void HandleDebugInput(GameState& state)
@@ -70,11 +69,10 @@ static void HandleDebugInput(GameState& state)
     }
 }
 
+// delegate
 void AdventureQueueLoadScene(GameState& state, const char* sceneId, const char* spawnId)
 {
-    state.adventure.pendingSceneId = sceneId;
-    state.adventure.pendingSpawnId = (spawnId != nullptr) ? spawnId : "";
-    state.adventure.hasPendingSceneLoad = true;
+    AdventureQueueLoadSceneInternal(state, sceneId, spawnId);
 }
 
 void AdventureProcessPendingLoads(GameState& state)

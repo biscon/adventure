@@ -1,7 +1,6 @@
 #include "adventure/Dialogue.h"
 
 #include <cmath>
-#include <algorithm>
 
 #include "input/Input.h"
 #include "raylib.h"

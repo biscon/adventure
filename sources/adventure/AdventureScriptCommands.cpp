@@ -1,10 +1,9 @@
-#include "adventure/Adventure.h"
-#include "adventure/AdventureScriptInternal.h"
 #include "adventure/AdventureActorHelpers.h"
 #include "raylib.h"
 #include "raymath.h"
 #include "audio/Audio.h"
 #include "render/RenderHelpers.h"
+#include "AdventureInternal.h"
 
 bool AdventureScriptSay(GameState& state, const std::string& text, int durationMs)
 {
@@ -178,7 +177,7 @@ bool AdventureScriptChangeScene(GameState& state, const std::string& sceneId, co
         return false;
     }
 
-    AdventureQueueLoadScene(
+    AdventureQueueLoadSceneInternal(
             state,
             sceneId.c_str(),
             spawnId.empty() ? nullptr : spawnId.c_str());

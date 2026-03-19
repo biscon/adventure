@@ -8,12 +8,12 @@
 #include <string>
 #include <vector>
 
-#include "adventure/Adventure.h"
 #include "audio/Audio.h"
 #include "input/Input.h"
 #include "raylib.h"
 #include "save/SaveGame.h"
 #include "settings/Settings.h"
+#include "adventure/AdventureUpdate.h"
 
 static GameState* game = nullptr;
 

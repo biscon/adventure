@@ -1,14 +1,12 @@
-#include "Adventure.h"
+#include "AdventureInternal.h"
 
 #include <cmath>
 #include <algorithm>
 
 #include "adventure/AdventureActorHelpers.h"
-#include "adventure/AdventureScriptInternal.h"
 #include "nav/NavMeshQuery.h"
 #include "resources/AsepriteAsset.h"
 #include "raylib.h"
-#include "raymath.h"
 
 float AdventureLength(Vector2 v)
 {
@@ -223,5 +221,12 @@ int AdventureFindScenePropIndexById(const GameState& state, const std::string& p
         }
     }
     return -1;
+}
+
+void AdventureQueueLoadSceneInternal(GameState& state, const char* sceneId, const char* spawnId)
+{
+    state.adventure.pendingSceneId = sceneId;
+    state.adventure.pendingSpawnId = (spawnId != nullptr) ? spawnId : "";
+    state.adventure.hasPendingSceneLoad = true;
 }
 

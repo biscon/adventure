@@ -5,10 +5,10 @@
 #include "input/Input.h"
 #include "raylib.h"
 #include "scripting/ScriptSystem.h"
-#include "Adventure.h"
 #include "resources/TextureAsset.h"
 #include "Dialogue.h"
 #include "audio/Audio.h"
+#include "AdventureScriptCommands.h"
 
 static constexpr float INVENTORY_TRIGGER_HEIGHT = 24.0f;
 static constexpr float INVENTORY_PANEL_WIDTH = 1348.0f;

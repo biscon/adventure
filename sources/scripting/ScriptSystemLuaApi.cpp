@@ -1,6 +1,5 @@
 #include <sstream>
 #include "scripting/ScriptSystemInternal.h"
-#include "adventure/Adventure.h"
 #include "scripting/ScriptSystem.h"
 #include "ui/TalkColors.h"
 #include "adventure/Inventory.h"
@@ -8,6 +7,7 @@
 #include "adventure/Dialogue.h"
 #include "raymath.h"
 #include "audio/Audio.h"
+#include "adventure/AdventureScriptCommands.h"
 
 static bool ParseOptionalTalkColorAndDuration(
         lua_State* L,

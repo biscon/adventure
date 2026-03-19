@@ -1,6 +1,5 @@
 #pragma once
 
-#include "adventure/AdventureUpdate.h"
 #include "data/GameState.h"
 
 // Script commands
