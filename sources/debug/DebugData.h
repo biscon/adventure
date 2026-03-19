@@ -27,7 +27,7 @@ struct DebugConsoleData {
     float caretBlinkMs = 0.0f;
     bool caretVisible = true;
 
-    int maxLines = 100;
+    int maxLines = 2000;
     int visibleLines = 20;
     int caretIndex = 0;
 };

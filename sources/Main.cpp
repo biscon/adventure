@@ -9,6 +9,7 @@
 #include "render/DebugRender.h"
 #include "adventure/ItemDefinitionAsset.h"
 #include "debug/DebugConsole.h"
+#include "debug/DebugConsoleTraceLog.h"
 #include "resources/Resources.h"
 #include "scripting/ScriptSystem.h"
 #include "adventure/DialogueChoiceAsset.h"
@@ -47,6 +48,7 @@ static void ProcessGameModeInput(GameState& state) {
 int main()
 {
     SetConfigFlags(FLAG_VSYNC_HINT);
+    InstallDebugConsoleTraceLogHook();
     InitWindow(1920, 1080, "Adventure");
     //SetTargetFPS(60);
     SetExitKey(0);
@@ -67,6 +69,7 @@ int main()
 
     MenuInit(&state);
     DebugConsoleInit(state);
+    FlushPendingDebugConsoleTraceLog(state);
 
     while (!WindowShouldClose())
     {
@@ -83,6 +86,8 @@ int main()
                 static_cast<float>(INTERNAL_WIDTH) / dst.width,
                 static_cast<float>(INTERNAL_HEIGHT) / dst.height
         );
+
+        FlushPendingDebugConsoleTraceLog(state);
 
         ProcessGameModeInput(state);
         UpdateDebugConsole(state, dt);
@@ -125,6 +130,8 @@ int main()
         if(state.settings.showFPS) DrawFPS(10, 10);
         EndDrawing();
     }
+
+    FlushPendingDebugConsoleTraceLog(state);
 
     ScriptSystemShutdown(state.script);
     DebugConsoleShutdown();
