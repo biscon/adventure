@@ -18,6 +18,10 @@ struct DebugConsoleData {
     std::vector<std::string> history;
     int historyIndex = -1;
 
+    std::string historyDraftInput;
+    int historyDraftCaretIndex = 0;
+    bool historyBrowsing = false;
+
     int scrollOffset = 0;
 
     float caretBlinkMs = 0.0f;

@@ -22,6 +22,9 @@ static constexpr int CONSOLE_INPUT_HEIGHT = 40;
 static constexpr int CONSOLE_LINE_HEIGHT = 24;
 static constexpr int CONSOLE_TOP = 80;
 static constexpr int CONSOLE_HEIGHT = 620;
+static constexpr int CONSOLE_INPUT_INNER_PADDING_X = 10;
+static constexpr int CONSOLE_INPUT_INNER_PADDING_Y = 8;
+static constexpr int CONSOLE_MAX_VISIBLE_INPUT_LINES = 3;
 
 static Font gConsoleFont{};
 static bool gConsoleFontLoaded = false;
@@ -50,8 +53,20 @@ static void ResetCaretBlink(DebugConsoleData& console)
     console.caretVisible = true;
 }
 
+static void StopConsoleHistoryBrowsing(DebugConsoleData& console)
+{
+    console.historyBrowsing = false;
+    console.historyIndex = -1;
+    console.historyDraftInput.clear();
+    console.historyDraftCaretIndex = 0;
+}
+
 static void InsertConsoleText(DebugConsoleData& console, const std::string& text)
 {
+    if (console.historyBrowsing) {
+        StopConsoleHistoryBrowsing(console);
+    }
+
     ClampCaret(console);
     console.input.insert(static_cast<size_t>(console.caretIndex), text);
     console.caretIndex += static_cast<int>(text.size());
@@ -92,6 +107,10 @@ static std::string SanitizeClipboardTextForConsole(const char* text)
 
 static void BackspaceConsoleText(DebugConsoleData& console)
 {
+    if (console.historyBrowsing) {
+        StopConsoleHistoryBrowsing(console);
+    }
+
     ClampCaret(console);
 
     if (console.caretIndex <= 0 || console.input.empty()) {
@@ -104,6 +123,10 @@ static void BackspaceConsoleText(DebugConsoleData& console)
 
 static void DeleteConsoleText(DebugConsoleData& console)
 {
+    if (console.historyBrowsing) {
+        StopConsoleHistoryBrowsing(console);
+    }
+
     ClampCaret(console);
 
     if (console.caretIndex < 0 ||
@@ -159,21 +182,93 @@ static void ClampConsoleState(DebugConsoleData& console)
 
     if (console.history.empty()) {
         console.historyIndex = -1;
+        console.historyBrowsing = false;
     } else if (console.historyIndex < -1) {
         console.historyIndex = -1;
     } else if (console.historyIndex >= static_cast<int>(console.history.size())) {
         console.historyIndex = static_cast<int>(console.history.size()) - 1;
     }
+
+    ClampCaret(console);
+}
+
+static float MeasureConsoleTextWidth(const Font& font,
+                                     const std::string& text,
+                                     float fontSize,
+                                     float spacing)
+{
+    if (text.empty()) {
+        return 0.0f;
+    }
+
+    return MeasureTextEx(font, text.c_str(), fontSize, spacing).x;
+}
+
+static std::vector<std::string> WrapConsoleTextLines(const Font& font,
+                                                     float fontSize,
+                                                     float spacing,
+                                                     float availableWidth,
+                                                     const std::string& text,
+                                                     const std::string& firstLinePrefix = "",
+                                                     const std::string& continuationPrefix = "")
+{
+    std::vector<std::string> out;
+
+    const float clampedWidth = std::max(1.0f, availableWidth);
+
+    if (text.empty()) {
+        out.push_back(firstLinePrefix);
+        return out;
+    }
+
+    std::string currentPrefix = firstLinePrefix;
+    std::string currentText;
+
+    const int length = static_cast<int>(text.size());
+
+    for (int i = 0; i < length; ++i) {
+        const char ch = text[static_cast<size_t>(i)];
+        const std::string candidateText = currentText + ch;
+        const std::string candidateDrawText = currentPrefix + candidateText;
+        const float candidateWidth = MeasureConsoleTextWidth(font, candidateDrawText, fontSize, spacing);
+
+        if (!currentText.empty() && candidateWidth > clampedWidth) {
+            out.push_back(currentPrefix + currentText);
+            currentPrefix = continuationPrefix;
+            currentText = std::string(1, ch);
+        } else {
+            currentText.push_back(ch);
+        }
+    }
+
+    out.push_back(currentPrefix + currentText);
+    return out;
 }
 
 void DebugConsoleAddLine(GameState& state, const std::string& text, Color color)
 {
     DebugConsoleData& console = state.debug.console;
 
-    DebugConsoleLine line;
-    line.text = text;
-    line.color = color;
-    console.lines.push_back(line);
+    const Font font = gConsoleFontLoaded ? gConsoleFont : GetFontDefault();
+    const float fontSize = 22.0f;
+    const float spacing = 1.0f;
+
+    const float panelWidth = static_cast<float>(INTERNAL_WIDTH - CONSOLE_PADDING * 2);
+    const float availableWidth = panelWidth - 20.0f;
+
+    const std::vector<std::string> wrappedLines = WrapConsoleTextLines(
+            font,
+            fontSize,
+            spacing,
+            availableWidth,
+            text);
+
+    for (const std::string& wrapped : wrappedLines) {
+        DebugConsoleLine line;
+        line.text = wrapped;
+        line.color = color;
+        console.lines.push_back(line);
+    }
 
     while (static_cast<int>(console.lines.size()) > console.maxLines) {
         console.lines.erase(console.lines.begin());
@@ -940,6 +1035,7 @@ static bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line
     return true;
 }
 
+
 static void SubmitConsoleLine(GameState& state)
 {
     DebugConsoleData& console = state.debug.console;
@@ -959,6 +1055,9 @@ static void SubmitConsoleLine(GameState& state)
     console.historyIndex = -1;
     console.input.clear();
     console.caretIndex = 0;
+    console.historyDraftInput.clear();
+    console.historyDraftCaretIndex = 0;
+    console.historyBrowsing = false;
 
     if (!submitted.empty() && submitted[0] == '/') {
         ExecuteConsoleSlashCommand(state, submitted);
@@ -989,7 +1088,10 @@ static void RecallHistoryUp(DebugConsoleData& console)
         return;
     }
 
-    if (console.historyIndex < 0) {
+    if (!console.historyBrowsing) {
+        console.historyDraftInput = console.input;
+        console.historyDraftCaretIndex = console.caretIndex;
+        console.historyBrowsing = true;
         console.historyIndex = static_cast<int>(console.history.size()) - 1;
     } else if (console.historyIndex > 0) {
         console.historyIndex--;
@@ -1000,6 +1102,8 @@ static void RecallHistoryUp(DebugConsoleData& console)
         console.input = console.history[console.historyIndex];
         console.caretIndex = static_cast<int>(console.input.size());
     }
+
+    ClampCaret(console);
 }
 
 static void RecallHistoryDown(DebugConsoleData& console)
@@ -1008,7 +1112,7 @@ static void RecallHistoryDown(DebugConsoleData& console)
         return;
     }
 
-    if (console.historyIndex < 0) {
+    if (!console.historyBrowsing) {
         return;
     }
 
@@ -1017,10 +1121,15 @@ static void RecallHistoryDown(DebugConsoleData& console)
         console.input = console.history[console.historyIndex];
         console.caretIndex = static_cast<int>(console.input.size());
     } else {
+        console.input = console.historyDraftInput;
+        console.caretIndex = console.historyDraftCaretIndex;
         console.historyIndex = -1;
-        console.input.clear();
-        console.caretIndex = static_cast<int>(console.input.size());
+        console.historyBrowsing = false;
+        console.historyDraftInput.clear();
+        console.historyDraftCaretIndex = 0;
     }
+
+    ClampCaret(console);
 }
 
 static bool IsConsoleRepeatableKey(int key)
@@ -1138,6 +1247,9 @@ static bool HandleDebugConsoleKeyEvent(GameState& state,
         }
 
         case KEY_LEFT:
+            if (console.historyBrowsing) {
+                StopConsoleHistoryBrowsing(console);
+            }
             if (console.caretIndex > 0) {
                 console.caretIndex--;
                 ResetCaretBlink(console);
@@ -1146,6 +1258,9 @@ static bool HandleDebugConsoleKeyEvent(GameState& state,
             return true;
 
         case KEY_RIGHT:
+            if (console.historyBrowsing) {
+                StopConsoleHistoryBrowsing(console);
+            }
             if (console.caretIndex < static_cast<int>(console.input.size())) {
                 console.caretIndex++;
                 ResetCaretBlink(console);
@@ -1236,6 +1351,129 @@ void UpdateDebugConsole(GameState& state, float dt)
     ClampConsoleState(console);
 }
 
+struct ConsoleWrappedInputLine {
+    int startCharIndex = 0;   // inclusive, in console.input
+    int endCharIndex = 0;     // exclusive, in console.input
+    std::string prefix;       // "> " on first visual line, "" otherwise
+    std::string text;         // wrapped text for this visual line
+};
+
+struct ConsoleInputLayout {
+    std::vector<ConsoleWrappedInputLine> lines;
+    int visibleStartLine = 0;
+    int visibleLineCount = 1;
+};
+
+static int FindConsoleCaretLineIndex(const ConsoleInputLayout& layout, int caretIndex)
+{
+    if (layout.lines.empty()) {
+        return 0;
+    }
+
+    for (int i = 0; i < static_cast<int>(layout.lines.size()); ++i) {
+        const ConsoleWrappedInputLine& line = layout.lines[i];
+
+        if (caretIndex >= line.startCharIndex && caretIndex < line.endCharIndex) {
+            return i;
+        }
+
+        if (caretIndex == line.endCharIndex) {
+            return i;
+        }
+    }
+
+    return static_cast<int>(layout.lines.size()) - 1;
+}
+
+
+static ConsoleInputLayout BuildConsoleInputLayout(const Font& font,
+                                                  float fontSize,
+                                                  float spacing,
+                                                  float availableWidth,
+                                                  const DebugConsoleData& console)
+{
+    ConsoleInputLayout layout;
+    layout.lines.clear();
+
+    const float clampedWidth = std::max(1.0f, availableWidth);
+
+    ConsoleWrappedInputLine currentLine;
+    currentLine.startCharIndex = 0;
+    currentLine.endCharIndex = 0;
+    currentLine.prefix = "> ";
+    currentLine.text.clear();
+
+    const int inputLength = static_cast<int>(console.input.size());
+
+    for (int i = 0; i < inputLength; ++i) {
+        const char ch = console.input[static_cast<size_t>(i)];
+        const std::string candidateText = currentLine.text + ch;
+        const std::string candidateDrawText = currentLine.prefix + candidateText;
+        const float candidateWidth = MeasureConsoleTextWidth(font, candidateDrawText, fontSize, spacing);
+
+        if (!currentLine.text.empty() && candidateWidth > clampedWidth) {
+            currentLine.endCharIndex = i;
+            layout.lines.push_back(currentLine);
+
+            ConsoleWrappedInputLine nextLine;
+            nextLine.startCharIndex = i;
+            nextLine.endCharIndex = i;
+            nextLine.prefix.clear();
+            nextLine.text = std::string(1, ch);
+            currentLine = nextLine;
+        } else {
+            currentLine.text.push_back(ch);
+        }
+    }
+
+    currentLine.endCharIndex = inputLength;
+    layout.lines.push_back(currentLine);
+
+    if (layout.lines.empty()) {
+        layout.lines.push_back(ConsoleWrappedInputLine{});
+        layout.lines[0].prefix = "> ";
+    }
+
+    layout.visibleLineCount = std::min(
+            static_cast<int>(layout.lines.size()),
+            CONSOLE_MAX_VISIBLE_INPUT_LINES);
+
+    const int caretIndex = std::clamp(
+            console.caretIndex,
+            0,
+            static_cast<int>(console.input.size()));
+
+    const int caretLineIndex = FindConsoleCaretLineIndex(layout, caretIndex);
+    const int maxVisibleStart = std::max(
+            0,
+            static_cast<int>(layout.lines.size()) - layout.visibleLineCount);
+
+    layout.visibleStartLine = std::clamp(
+            caretLineIndex - (layout.visibleLineCount - 1),
+            0,
+            maxVisibleStart);
+
+    return layout;
+}
+
+
+static float MeasureConsoleCaretX(const Font& font,
+                                  float fontSize,
+                                  float spacing,
+                                  const ConsoleWrappedInputLine& line,
+                                  int caretIndex)
+{
+    const int clampedCaretIndex = std::clamp(caretIndex, line.startCharIndex, line.endCharIndex);
+    const int charsOnThisLine = clampedCaretIndex - line.startCharIndex;
+
+    std::string leftText = line.prefix;
+    if (charsOnThisLine > 0) {
+        leftText += line.text.substr(0, static_cast<size_t>(charsOnThisLine));
+    }
+
+    return MeasureConsoleTextWidth(font, leftText, fontSize, spacing);
+}
+
 void RenderDebugConsole(const GameState& state)
 {
     const DebugConsoleData& console = state.debug.console;
@@ -1252,18 +1490,37 @@ void RenderDebugConsole(const GameState& state)
             static_cast<float>(CONSOLE_HEIGHT)
     };
 
+    const float fontSize = 22.0f;
+    const float spacing = 1.0f;
+
+    const float inputAvailableWidth =
+            panelRect.width - static_cast<float>(CONSOLE_INPUT_INNER_PADDING_X * 2);
+
+    const ConsoleInputLayout inputLayout = BuildConsoleInputLayout(
+            font,
+            fontSize,
+            spacing,
+            inputAvailableWidth,
+            console);
+
+    const int visibleInputLineCount = std::max(1, inputLayout.visibleLineCount);
+
+    const float inputRectHeight =
+            static_cast<float>(CONSOLE_INPUT_INNER_PADDING_Y * 2) +
+            static_cast<float>(visibleInputLineCount * CONSOLE_LINE_HEIGHT);
+
     const Rectangle inputRect{
             panelRect.x,
-            panelRect.y + panelRect.height - static_cast<float>(CONSOLE_INPUT_HEIGHT),
+            panelRect.y + panelRect.height - inputRectHeight,
             panelRect.width,
-            static_cast<float>(CONSOLE_INPUT_HEIGHT)
+            inputRectHeight
     };
 
     const Rectangle linesRect{
             panelRect.x,
             panelRect.y,
             panelRect.width,
-            panelRect.height - static_cast<float>(CONSOLE_INPUT_HEIGHT) - 6.0f
+            inputRect.y - panelRect.y - 6.0f
     };
 
     DrawRectangleRounded(panelRect, 0.02f, 4, Color{20, 20, 20, 220});
@@ -1271,9 +1528,6 @@ void RenderDebugConsole(const GameState& state)
 
     DrawRectangleRec(inputRect, Color{32, 32, 32, 230});
     DrawRectangleLinesEx(inputRect, 1.0f, Color{140, 140, 140, 255});
-
-    const float fontSize = 22.0f;
-    const float spacing = 1.0f;
 
     const float topInset = 8.0f;
     const float bottomInset = 8.0f;
@@ -1301,35 +1555,53 @@ void RenderDebugConsole(const GameState& state)
         y += static_cast<float>(CONSOLE_LINE_HEIGHT);
     }
 
-    const Vector2 inputPos{ inputRect.x + 10.0f, inputRect.y + 8.0f };
+    const Vector2 inputPos{
+            inputRect.x + static_cast<float>(CONSOLE_INPUT_INNER_PADDING_X),
+            inputRect.y + static_cast<float>(CONSOLE_INPUT_INNER_PADDING_Y)
+    };
 
-    int caretIndex = console.caretIndex;
-    if (caretIndex < 0) {
-        caretIndex = 0;
+    const int caretIndex = std::clamp(
+            console.caretIndex,
+            0,
+            static_cast<int>(console.input.size()));
+
+    for (int visualLine = 0; visualLine < inputLayout.visibleLineCount; ++visualLine) {
+        const int layoutLineIndex = inputLayout.visibleStartLine + visualLine;
+        const ConsoleWrappedInputLine& line = inputLayout.lines[layoutLineIndex];
+
+        const std::string drawText = line.prefix + line.text;
+        const Vector2 linePos{
+                inputPos.x,
+                inputPos.y + static_cast<float>(visualLine * CONSOLE_LINE_HEIGHT)
+        };
+
+        DrawTextEx(
+                font,
+                drawText.c_str(),
+                linePos,
+                fontSize,
+                spacing,
+                WHITE);
     }
-    if (caretIndex > static_cast<int>(console.input.size())) {
-        caretIndex = static_cast<int>(console.input.size());
-    }
 
-    const std::string leftText =
-            "> " + console.input.substr(0, static_cast<size_t>(caretIndex));
-    const std::string rightText =
-            console.input.substr(static_cast<size_t>(caretIndex));
+    const int caretLineIndex = FindConsoleCaretLineIndex(inputLayout, caretIndex);
+    if (console.caretVisible &&
+        caretLineIndex >= inputLayout.visibleStartLine &&
+        caretLineIndex < inputLayout.visibleStartLine + inputLayout.visibleLineCount) {
 
-    DrawTextEx(
-            font,
-            leftText.c_str(),
-            inputPos,
-            fontSize,
-            spacing,
-            WHITE);
+        const ConsoleWrappedInputLine& caretLine = inputLayout.lines[caretLineIndex];
+        const int visibleCaretLine = caretLineIndex - inputLayout.visibleStartLine;
 
-    const Vector2 leftSize = MeasureTextEx(font, leftText.c_str(), fontSize, spacing);
+        const float caretX =
+                inputPos.x +
+                MeasureConsoleCaretX(font, fontSize, spacing, caretLine, caretIndex);
 
-    if (console.caretVisible) {
-        const float caretX = inputPos.x + leftSize.x;
-        const float caretTop = inputPos.y + 2.0f;
-        const float caretBottom = inputPos.y + fontSize + 2.0f;
+        const float caretTop =
+                inputPos.y +
+                static_cast<float>(visibleCaretLine * CONSOLE_LINE_HEIGHT) +
+                2.0f;
+
+        const float caretBottom = caretTop + fontSize;
 
         DrawLineEx(
                 Vector2{caretX, caretTop},
@@ -1337,19 +1609,6 @@ void RenderDebugConsole(const GameState& state)
                 2.0f,
                 WHITE);
     }
-
-    if (!rightText.empty()) {
-        DrawTextEx(
-                font,
-                rightText.c_str(),
-                Vector2{inputPos.x + leftSize.x, inputPos.y},
-                fontSize,
-                spacing,
-                WHITE);
-    }
-
-    //const std::string helpText =
-    //        "` console  |  Enter submit  |  Up/Down history  |  Left/Right move  |  Del delete  |  PgUp/PgDn scroll";
 
     const std::string helpText =
             "` console  |  Enter submit  |  Up/Down history  |  Left/Right move  |  Home/End caret  |  Ctrl+V paste  |  Ctrl+L clear  |  Del delete  |  PgUp/PgDn scroll";
