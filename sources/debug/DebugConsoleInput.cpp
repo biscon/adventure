@@ -14,6 +14,18 @@ static bool IsPrintableConsoleCodepoint(unsigned int codepoint)
     return codepoint >= 32 && codepoint != 127;
 }
 
+static bool IsPointInsideDebugConsolePanel(Vector2 p)
+{
+    const Rectangle panelRect{
+            static_cast<float>(CONSOLE_PADDING),
+            static_cast<float>(CONSOLE_TOP),
+            static_cast<float>(INTERNAL_WIDTH - CONSOLE_PADDING * 2),
+            static_cast<float>(CONSOLE_HEIGHT)
+    };
+
+    return CheckCollisionPointRec(p, panelRect);
+}
+
 void DebugConsoleClampCaret(DebugConsoleData& console)
 {
     if (console.caretIndex < 0) {
@@ -459,6 +471,14 @@ void UpdateDebugConsoleInputInternal(GameState& state, float dt)
 
     for (auto& ev : FilterEvents(state.input, true, InputEventType::KeyRepeated)) {
         HandleDebugConsoleKeyEvent(state, ev, true, suppressTextInputThisFrame);
+    }
+
+    if (console.open) {
+        for (auto& ev : FilterEvents(state.input, true, InputEventType::MouseClick)) {
+            if (IsPointInsideDebugConsolePanel(ev.mouse.pos)) {
+                ConsumeEvent(ev);
+            }
+        }
     }
 
     if (!console.open) {

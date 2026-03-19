@@ -18,7 +18,11 @@ void DebugConsoleAddLine(GameState& state, const std::string& text, Color color)
 {
     DebugConsoleData& console = state.debug.console;
 
+    const int previousLineCount = static_cast<int>(console.lines.size());
+    const bool wasAtBottom = (console.scrollOffset == 0);
+
     const std::vector<std::string> wrappedLines = WrapConsoleDisplayText(text);
+    const int addedLineCount = static_cast<int>(wrappedLines.size());
 
     for (const std::string& wrapped : wrappedLines) {
         DebugConsoleLine line;
@@ -31,7 +35,17 @@ void DebugConsoleAddLine(GameState& state, const std::string& text, Color color)
         console.lines.erase(console.lines.begin());
     }
 
-    console.scrollOffset = 0;
+    if (wasAtBottom) {
+        console.scrollOffset = 0;
+    } else {
+        const int linesActuallyAdded =
+                static_cast<int>(console.lines.size()) - previousLineCount;
+
+        if (linesActuallyAdded > 0) {
+            console.scrollOffset += linesActuallyAdded;
+        }
+    }
+
     DebugConsoleClampState(console);
 }
 
