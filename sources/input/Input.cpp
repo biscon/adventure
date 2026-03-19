@@ -9,34 +9,61 @@ void InitInput(InputData& input) {
     input.events.clear();
     input.lastClickTime = -1.0f;
     input.doubleClickThreshold = 0.3f;
+    input.keyRepeatStates = {};
+    input.keyRepeatInitialDelay = 0.45f;
+    input.keyRepeatInterval = 0.04f;
 }
 
 static void AddEvent(InputData& input, const InputEvent& evt) {
     input.events.push_back(evt);
 }
 
+static void AddKeyEvent(InputData& input, InputEventType type, int key)
+{
+    InputEvent evt;
+    evt.type = type;
+    evt.handled = false;
+    evt.key.key = key;
+    AddEvent(input, evt);
+}
+
+static void UpdateKeyRepeat(InputData& input, float dt)
+{
+    for (auto it = input.keyRepeatStates.begin(); it != input.keyRepeatStates.end(); )
+    {
+        const int key = it->first;
+        KeyRepeatState& state = it->second;
+
+        if (!IsKeyDown(key)) {
+            AddKeyEvent(input, InputEventType::KeyReleased, key);
+            it = input.keyRepeatStates.erase(it);
+            continue;
+        }
+
+        state.heldTime += dt;
+
+        while (state.heldTime >= state.nextRepeatTime) {
+            AddKeyEvent(input, InputEventType::KeyRepeated, key);
+            state.nextRepeatTime += input.keyRepeatInterval;
+        }
+
+        ++it;
+    }
+}
+
 void UpdateInput(InputData& input)
 {
     input.events.clear();
-    // 1. Remove handled events from previous frame
-    // Remove handled events (C++17 version)
-    /*
-    input.events.erase(
-            std::remove_if(input.events.begin(), input.events.end(),
-                           [](const InputEvent& e) { return e.handled; }),
-            input.events.end()
-    );
-    */
 
     Vector2 mouseScreen = GetMousePosition();
-
-    float now = (float)GetTime();
+    const float now = (float)GetTime();
+    const float dt = GetFrameTime();
 
     // ---- MOUSE CLICKS ----------------------------------------------------------------
 
     if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
 
-        bool dbl = (now - input.lastClickTime <= input.doubleClickThreshold);
+        const bool dbl = (now - input.lastClickTime <= input.doubleClickThreshold);
         input.lastClickTime = now;
 
         InputEvent evt;
@@ -52,7 +79,7 @@ void UpdateInput(InputData& input)
 
     if (IsMouseButtonReleased(MOUSE_RIGHT_BUTTON)) {
 
-        bool dbl = (now - input.lastClickTime <= input.doubleClickThreshold);
+        const bool dbl = (now - input.lastClickTime <= input.doubleClickThreshold);
         input.lastClickTime = now;
 
         InputEvent evt;
@@ -74,12 +101,17 @@ void UpdateInput(InputData& input)
             break;
         }
 
-        InputEvent evt;
-        evt.type = InputEventType::KeyPressed;
-        evt.handled = false;
-        evt.key.key = key;
-        AddEvent(input, evt);
+        AddKeyEvent(input, InputEventType::KeyPressed, key);
+
+        KeyRepeatState state;
+        state.down = true;
+        state.heldTime = 0.0f;
+        state.nextRepeatTime = input.keyRepeatInitialDelay;
+
+        input.keyRepeatStates[key] = state;
     }
+
+    UpdateKeyRepeat(input, dt);
 
     // ---- TEXT INPUT ---------------------------------------------------
 
@@ -96,8 +128,5 @@ void UpdateInput(InputData& input)
         AddEvent(input, evt);
     }
 
-    // Key release (raylib does not track releases for all keys)
-    // You can expand this if needed.
+    // KeyReleased is synthesized in UpdateKeyRepeat().
 }
-
-

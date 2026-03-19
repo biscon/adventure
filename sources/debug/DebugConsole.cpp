@@ -1023,6 +1023,175 @@ static void RecallHistoryDown(DebugConsoleData& console)
     }
 }
 
+static bool IsConsoleRepeatableKey(int key)
+{
+    switch (key) {
+        case KEY_BACKSPACE:
+        case KEY_DELETE:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_UP:
+        case KEY_DOWN:
+        case KEY_HOME:
+        case KEY_END:
+        case KEY_PAGE_UP:
+        case KEY_PAGE_DOWN:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+static bool HandleDebugConsoleKeyEvent(GameState& state,
+                                       InputEvent& ev,
+                                       bool isRepeat,
+                                       bool& suppressTextInputThisFrame)
+{
+    DebugConsoleData& console = state.debug.console;
+
+    if (!isRepeat && ev.key.key == KEY_GRAVE) {
+        console.open = !console.open;
+        console.caretBlinkMs = 0.0f;
+        console.caretVisible = true;
+        suppressTextInputThisFrame = true;
+        ConsumeEvent(ev);
+        return true;
+    }
+
+    if (!console.open) {
+        return false;
+    }
+
+    if (isRepeat && !IsConsoleRepeatableKey(ev.key.key)) {
+        return false;
+    }
+
+    switch (ev.key.key) {
+        case KEY_ENTER:
+            if (!isRepeat) {
+                SubmitConsoleLine(state);
+                ResetCaretBlink(console);
+                ConsumeEvent(ev);
+                return true;
+            }
+            break;
+
+        case KEY_BACKSPACE:
+            BackspaceConsoleText(console);
+            ResetCaretBlink(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_DELETE:
+            DeleteConsoleText(console);
+            ResetCaretBlink(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_HOME:
+            MoveConsoleCaretHome(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_END:
+            MoveConsoleCaretEnd(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_V:
+        {
+            if (isRepeat) {
+                break;
+            }
+
+            const bool ctrlDown =
+                    IsKeyDown(KEY_LEFT_CONTROL) ||
+                    IsKeyDown(KEY_RIGHT_CONTROL);
+
+            if (ctrlDown) {
+                PasteClipboardIntoConsole(console);
+                ConsumeEvent(ev);
+                return true;
+            }
+            break;
+        }
+
+        case KEY_L:
+        {
+            if (isRepeat) {
+                break;
+            }
+
+            const bool ctrlDown =
+                    IsKeyDown(KEY_LEFT_CONTROL) ||
+                    IsKeyDown(KEY_RIGHT_CONTROL);
+
+            if (ctrlDown) {
+                console.lines.clear();
+                console.scrollOffset = 0;
+                ResetCaretBlink(console);
+                ConsumeEvent(ev);
+                return true;
+            }
+            break;
+        }
+
+        case KEY_LEFT:
+            if (console.caretIndex > 0) {
+                console.caretIndex--;
+                ResetCaretBlink(console);
+            }
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_RIGHT:
+            if (console.caretIndex < static_cast<int>(console.input.size())) {
+                console.caretIndex++;
+                ResetCaretBlink(console);
+            }
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_UP:
+            RecallHistoryUp(console);
+            ResetCaretBlink(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_DOWN:
+            RecallHistoryDown(console);
+            ResetCaretBlink(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_PAGE_UP:
+            console.scrollOffset += 20;
+            ClampConsoleState(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_PAGE_DOWN:
+            console.scrollOffset -= 20;
+            ClampConsoleState(console);
+            ConsumeEvent(ev);
+            return true;
+
+        case KEY_ESCAPE:
+            if (!isRepeat) {
+                console.open = false;
+                ConsumeEvent(ev);
+                return true;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    return false;
+}
+
 void UpdateDebugConsole(GameState& state, float dt)
 {
     DebugConsoleData& console = state.debug.console;
@@ -1036,127 +1205,11 @@ void UpdateDebugConsole(GameState& state, float dt)
     bool suppressTextInputThisFrame = false;
 
     for (auto& ev : FilterEvents(state.input, true, InputEventType::KeyPressed)) {
-        if (ev.key.key == KEY_GRAVE) {
-            console.open = !console.open;
-            console.caretBlinkMs = 0.0f;
-            console.caretVisible = true;
-            suppressTextInputThisFrame = true;
-            ConsumeEvent(ev);
-            continue;
-        }
+        HandleDebugConsoleKeyEvent(state, ev, false, suppressTextInputThisFrame);
+    }
 
-        if (!console.open) {
-            continue;
-        }
-
-        switch (ev.key.key) {
-            case KEY_ENTER:
-                SubmitConsoleLine(state);
-                console.caretBlinkMs = 0.0f;
-                console.caretVisible = true;
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_BACKSPACE:
-                BackspaceConsoleText(console);
-                ResetCaretBlink(console);
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_DELETE:
-                DeleteConsoleText(console);
-                ResetCaretBlink(console);
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_HOME:
-                MoveConsoleCaretHome(console);
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_END:
-                MoveConsoleCaretEnd(console);
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_V:
-            {
-                const bool ctrlDown =
-                        IsKeyDown(KEY_LEFT_CONTROL) ||
-                        IsKeyDown(KEY_RIGHT_CONTROL);
-
-                if (ctrlDown) {
-                    PasteClipboardIntoConsole(console);
-                    ConsumeEvent(ev);
-                }
-                break;
-            }
-
-            case KEY_L:
-            {
-                const bool ctrlDown =
-                        IsKeyDown(KEY_LEFT_CONTROL) ||
-                        IsKeyDown(KEY_RIGHT_CONTROL);
-
-                if (ctrlDown) {
-                    console.lines.clear();
-                    console.scrollOffset = 0;
-                    ResetCaretBlink(console);
-                    ConsumeEvent(ev);
-                }
-                break;
-            }
-
-            case KEY_LEFT:
-                if (console.caretIndex > 0) {
-                    console.caretIndex--;
-                    ResetCaretBlink(console);
-                }
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_RIGHT:
-                if (console.caretIndex < static_cast<int>(console.input.size())) {
-                    console.caretIndex++;
-                    ResetCaretBlink(console);
-                }
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_UP:
-                RecallHistoryUp(console);
-                console.caretBlinkMs = 0.0f;
-                console.caretVisible = true;
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_DOWN:
-                RecallHistoryDown(console);
-                console.caretBlinkMs = 0.0f;
-                console.caretVisible = true;
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_PAGE_UP:
-                console.scrollOffset += 20;
-                ClampConsoleState(console);
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_PAGE_DOWN:
-                console.scrollOffset -= 20;
-                ClampConsoleState(console);
-                ConsumeEvent(ev);
-                break;
-
-            case KEY_ESCAPE:
-                console.open = false;
-                ConsumeEvent(ev);
-                break;
-
-            default:
-                break;
-        }
+    for (auto& ev : FilterEvents(state.input, true, InputEventType::KeyRepeated)) {
+        HandleDebugConsoleKeyEvent(state, ev, true, suppressTextInputThisFrame);
     }
 
     if (!console.open) {

@@ -48,6 +48,9 @@ inline void FlushEvents(InputData &input) {
     input.events.clear();
     input.lastClickTime = -1.0f;
     input.doubleClickThreshold = 0.3f;
+    input.keyRepeatStates = {};
+    input.keyRepeatInitialDelay = 0.45f;
+    input.keyRepeatInterval = 0.04f;
 }
 
 inline const std::vector<InputEvent>& PeekEvents(const InputData& input) {

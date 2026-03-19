@@ -4,12 +4,15 @@
 
 #pragma once
 #include "raylib.h"
+#include <array>
 #include <vector>
+#include <unordered_map>
 
 enum class InputEventType {
     MouseClick,
     KeyPressed,
     KeyReleased,
+    KeyRepeated,
     TextInput,
     Any
 };
@@ -39,11 +42,23 @@ struct InputEvent {
     };
 };
 
+static constexpr int INPUT_MAX_TRACKED_KEYS = 512;
+
+struct KeyRepeatState {
+    bool down = false;
+    float heldTime = 0.0f;
+    float nextRepeatTime = 0.0f;
+};
+
 struct InputData {
     std::vector<InputEvent> events;
 
     // double-click logic
     float lastClickTime = -1.0f;
     float doubleClickThreshold = 0.3f;
-};
 
+    // key repeat
+    std::unordered_map<int, KeyRepeatState> keyRepeatStates;
+    float keyRepeatInitialDelay = 0.45f;
+    float keyRepeatInterval = 0.04f;
+};
