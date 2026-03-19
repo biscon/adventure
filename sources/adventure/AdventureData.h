@@ -152,12 +152,12 @@ struct CameraData {
 
     MoveInterpolation interpolation = MoveInterpolation::AccelerateDecelerate;
 
-    float followDeadZoneWidth = 400.0f;
+    float followDeadZoneWidth = 260.0f;
     float followDeadZoneHeight = 120.0f;
     float followSmoothing = 4.0f; // 0 = snap
 
     CameraBiasLatch biasLatch = CameraBiasLatch::None;
-    float followBiasX = 340.0f;
+    float followBiasX = 240.0f;
     float currentBiasShiftX = 0.0f;
     float biasShiftSmoothing = 4.0f;
 };

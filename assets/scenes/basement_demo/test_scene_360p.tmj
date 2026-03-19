@@ -1035,6 +1035,20 @@
                  "visible":true,
                  "x":0,
                  "y":0
+                },
+            
+                {
+                 "id":34,
+                 "image":"door_shadow.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "mode":"multiply",
+                 "name":"door_shadow",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
                 }],
          "name":"effects_overlay",
          "opacity":1,
@@ -1043,7 +1057,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":34,
+ "nextlayerid":35,
  "nextobjectid":43,
  "orientation":"orthogonal",
  "renderorder":"right-down",

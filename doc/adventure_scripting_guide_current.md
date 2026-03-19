@@ -27,6 +27,8 @@ This version is based on the current `ScriptSystemLuaApi.cpp` bindings and is me
 - [Background Scripts](#background-scripts)
 - [Effects / Lighting Functions](#effects--lighting-functions)
 - [Audio Functions](#audio-functions)
+- [Layer Functions](#layer-functions)
+- [Camera Functions](#camera-functions)
 - [Logging Helpers](#logging-helpers)
 - [Return Semantics and Fallback Behavior](#return-semantics-and-fallback-behavior)
 - [Choicesets and conversation](#choice-sets)
@@ -128,6 +130,24 @@ This version is based on the current `ScriptSystemLuaApi.cpp` bindings and is me
 - `setSoundEmitterVolume(emitterId, volume)`
 - `playEmitter(emitterId)`
 - `stopEmitter(emitterId)`
+
+### Layers
+- `setLayerVisible(layerName, visible)`
+- `layerVisible(layerName)`
+- `toggleLayer(layerName)`
+- `setLayerOpacity(layerName, opacity)`
+- `layerOpacity(layerName)`
+
+### Camera
+- `cameraFollow()`
+- `cameraFollowActor(actorId)`
+- `setCameraPosition(x, y)`
+- `moveCameraTo(x, y, durationMs, interpolation)`
+- `centerCameraOn(x, y)`
+- `moveCameraCenterTo(x, y, durationMs [, interpolation])`
+- `panCameraToActor(actorId, durationMs [, interpolation])`
+- `panCameraToProp(propId, durationMs [, interpolation])`
+- `panCameraToHotspot(hotspotId, durationMs [, interpolation])`
 
 ### Logging
 - `print(...)`
@@ -961,6 +981,8 @@ Mainly useful for looping emitters.
 ```lua
 stopEmitter("furnace_hum")
 ```
+
+---
 
 ---
 
