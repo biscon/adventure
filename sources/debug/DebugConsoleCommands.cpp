@@ -59,7 +59,9 @@ bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line)
     if (cmd == "/help") {
         DebugConsoleAddLine(state, "Console commands:", SKYBLUE);
         DebugConsoleAddLine(state, "  /help", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /quit", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /clear", LIGHTGRAY);
+        DebugConsoleAddLine(state, "  /copylast [numLines]", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /goto <sceneId> [spawnId]", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /reload", LIGHTGRAY);
         DebugConsoleAddLine(state, "  /save <slot>", LIGHTGRAY);
@@ -89,6 +91,11 @@ bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line)
     if (cmd == "/clear") {
         state.debug.console.lines.clear();
         state.debug.console.scrollOffset = 0;
+        return true;
+    }
+
+    if (cmd == "/quit") {
+        state.mode = GameMode::Quit;
         return true;
     }
 
@@ -760,6 +767,59 @@ bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line)
                         "  " + layer.name + "  [" + (layer.visible ? "visible" : "hidden") + "]",
                         LIGHTGRAY);
             }
+        }
+
+        return true;
+    }
+
+    if (cmd == "/copylast") {
+        int lineCount = -1; // -1 = all
+
+        if (args.size() >= 2) {
+            try {
+                lineCount = std::stoi(args[1]);
+            } catch (...) {
+                DebugConsoleAddLine(state, "usage: /copylast [numLines]", RED);
+                return true;
+            }
+
+            if (lineCount < 0) {
+                DebugConsoleAddLine(state, "usage: /copylast [numLines]", RED);
+                return true;
+            }
+        }
+
+        const auto& lines = state.debug.console.lines;
+        const int total = static_cast<int>(lines.size());
+
+        int startIndex = 0;
+
+        if (lineCount >= 0) {
+            startIndex = std::max(0, total - lineCount);
+        }
+
+        std::string buffer;
+        buffer.reserve(4096); // avoid too many reallocs
+
+        for (int i = startIndex; i < total; ++i) {
+            buffer += lines[i].text;
+            buffer += '\n';
+        }
+
+        if (buffer.empty()) {
+            DebugConsoleAddLine(state, "nothing to copy", LIGHTGRAY);
+            return true;
+        }
+
+        SetClipboardText(buffer.c_str());
+
+        if (lineCount < 0) {
+            DebugConsoleAddLine(state, "copied entire console history to clipboard", SKYBLUE);
+        } else {
+            DebugConsoleAddLine(
+                    state,
+                    "copied last " + std::to_string(total - startIndex) + " lines to clipboard",
+                    SKYBLUE);
         }
 
         return true;

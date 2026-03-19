@@ -73,7 +73,6 @@ int main()
 
     while (!WindowShouldClose())
     {
-        UpdateInput(state.input);
         if(state.mode == GameMode::Quit) break;
 
         const float dt = GetFrameTime();
@@ -86,6 +85,8 @@ int main()
                 static_cast<float>(INTERNAL_WIDTH) / dst.width,
                 static_cast<float>(INTERNAL_HEIGHT) / dst.height
         );
+
+        UpdateInput(state.input);
 
         FlushPendingDebugConsoleTraceLog(state);
 
