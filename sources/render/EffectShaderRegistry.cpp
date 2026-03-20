@@ -1,6 +1,13 @@
 #include "render/EffectShaderRegistry.h"
 
 #include <string>
+#include <fstream>
+#include <sstream>
+#include <unordered_set>
+#include <filesystem>
+#include <cstring>
+
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -33,6 +40,141 @@ namespace
             default:
                 return nullptr;
         }
+    }
+
+    static bool ReadTextFile(const fs::path& path, std::string& outText)
+    {
+        outText.clear();
+
+        std::ifstream in(path);
+        if (!in.is_open()) {
+            return false;
+        }
+
+        std::ostringstream ss;
+        ss << in.rdbuf();
+        outText = ss.str();
+        return true;
+    }
+
+    static std::string TrimWhitespace(const std::string& text)
+    {
+        const size_t first = text.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos) {
+            return "";
+        }
+
+        const size_t last = text.find_last_not_of(" \t\r\n");
+        return text.substr(first, last - first + 1);
+    }
+
+    static bool TryParseIncludeLine(const std::string& line, std::string& outIncludePath)
+    {
+        outIncludePath.clear();
+
+        const std::string trimmed = TrimWhitespace(line);
+        static constexpr const char* prefix = "#include \"";
+
+        if (trimmed.rfind(prefix, 0) != 0) {
+            return false;
+        }
+
+        const size_t start = std::strlen(prefix);
+        const size_t end = trimmed.find('"', start);
+        if (end == std::string::npos) {
+            return false;
+        }
+
+        if (end + 1 != trimmed.size()) {
+            return false;
+        }
+
+        outIncludePath = trimmed.substr(start, end - start);
+        return !outIncludePath.empty();
+    }
+
+    static bool ExpandShaderIncludesRecursive(
+            const fs::path& shaderPath,
+            std::unordered_set<std::string>& includeStack,
+            std::string& outExpandedSource)
+    {
+        outExpandedSource.clear();
+
+        const fs::path normalizedPath = shaderPath.lexically_normal();
+        const std::string normalizedKey = normalizedPath.string();
+
+        if (includeStack.find(normalizedKey) != includeStack.end()) {
+            TraceLog(LOG_ERROR, "Circular shader include detected: %s", normalizedKey.c_str());
+            return false;
+        }
+
+        std::string source;
+        if (!ReadTextFile(normalizedPath, source)) {
+            TraceLog(LOG_ERROR, "Failed to read shader file: %s", normalizedKey.c_str());
+            return false;
+        }
+
+        includeStack.insert(normalizedKey);
+
+        std::istringstream in(source);
+        std::ostringstream out;
+        std::string line;
+        int lineNumber = 0;
+
+        while (std::getline(in, line)) {
+            ++lineNumber;
+
+            std::string includeRelPath;
+            if (!TryParseIncludeLine(line, includeRelPath)) {
+                out << line << '\n';
+                continue;
+            }
+
+            const fs::path includePath =
+                    (normalizedPath.parent_path() / includeRelPath).lexically_normal();
+
+            std::string includedSource;
+            if (!ExpandShaderIncludesRecursive(includePath, includeStack, includedSource)) {
+                TraceLog(LOG_ERROR,
+                         "Failed expanding include '%s' referenced from '%s' line %d",
+                         includeRelPath.c_str(),
+                         normalizedKey.c_str(),
+                         lineNumber);
+                includeStack.erase(normalizedKey);
+                return false;
+            }
+
+            out << "// begin include: " << includePath.string() << '\n';
+            out << includedSource;
+            out << "// end include: " << includePath.string() << '\n';
+        }
+
+        includeStack.erase(normalizedKey);
+        outExpandedSource = out.str();
+        return true;
+    }
+
+    static bool LoadFragmentShaderWithIncludes(const char* fragmentPath, Shader& outShader)
+    {
+        outShader = {};
+
+        if (fragmentPath == nullptr || fragmentPath[0] == '\0') {
+            return false;
+        }
+
+        std::unordered_set<std::string> includeStack;
+        std::string expandedSource;
+        if (!ExpandShaderIncludesRecursive(fs::path(fragmentPath), includeStack, expandedSource)) {
+            return false;
+        }
+
+        outShader = LoadShaderFromMemory(nullptr, expandedSource.c_str());
+        if (outShader.id == 0) {
+            TraceLog(LOG_ERROR, "Failed to compile expanded shader: %s", fragmentPath);
+            return false;
+        }
+
+        return true;
     }
 
     static void CacheUniformLocations(EffectShaderEntry& entry)
@@ -107,9 +249,7 @@ bool InitEffectShaderRegistry()
             continue;
         }
 
-        entry.shader = LoadShader(nullptr, fragmentPath);
-
-        if (entry.shader.id == 0) {
+        if (!LoadFragmentShaderWithIncludes(fragmentPath, entry.shader)) {
             TraceLog(LOG_ERROR,
                      "Failed to load effect shader '%s' from '%s'",
                      SceneEffectShaderTypeToString(entry.type),
