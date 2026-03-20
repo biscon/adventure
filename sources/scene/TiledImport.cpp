@@ -158,6 +158,10 @@ static bool ParseSceneEffectShaderType(const std::string& s, SceneEffectShaderTy
         outType = SceneEffectShaderType::RegionGrade;
         return true;
     }
+    if (s == "water_ripple") {
+        outType = SceneEffectShaderType::WaterRipple;
+        return true;
+    }
     return false;
 }
 
@@ -170,6 +174,8 @@ static const char* SceneEffectShaderTypeToString(SceneEffectShaderType type)
             return "heat_shimmer";
         case SceneEffectShaderType::RegionGrade:
             return "region_grade";
+        case SceneEffectShaderType::WaterRipple:
+            return "water_ripple";
         case SceneEffectShaderType::None:
         default:
             return "none";
@@ -183,6 +189,8 @@ static SceneEffectShaderCategory GetSceneEffectShaderCategory(SceneEffectShaderT
             return SceneEffectShaderCategory::SelfTexture;
         case SceneEffectShaderType::HeatShimmer:
         case SceneEffectShaderType::RegionGrade:
+            return SceneEffectShaderCategory::SceneSample;
+        case SceneEffectShaderType::WaterRipple:
             return SceneEffectShaderCategory::SceneSample;
         case SceneEffectShaderType::None:
         default:

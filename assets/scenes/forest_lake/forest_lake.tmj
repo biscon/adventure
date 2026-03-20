@@ -1,0 +1,584 @@
+{ "compressionlevel":-1,
+ "height":1,
+ "infinite":false,
+ "layers":[
+        {
+         "id":4,
+         "layers":[
+                {
+                 "id":9,
+                 "image":"forest_lake_bg.png",
+                 "imageheight":360,
+                 "imagewidth":1280,
+                 "name":"back1",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"background",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":3,
+         "layers":[],
+         "name":"foreground",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":7,
+         "name":"hotspots",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":5,
+         "name":"exits",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":6,
+         "name":"spawns",
+         "objects":[
+                {
+                 "height":0,
+                 "id":2,
+                 "name":"default",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"front"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":325.39393939394,
+                 "y":278.787878787878
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":16,
+         "name":"effect_regions",
+         "objects":[
+                {
+                 "height":59.7394891959259,
+                 "id":8,
+                 "name":"water_ripple_test",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"front"
+                        },
+                    
+                        {
+                         "name":"distortionX",
+                         "type":"float",
+                         "value":5
+                        },
+                    
+                        {
+                         "name":"distortionY",
+                         "type":"float",
+                         "value":2
+                        },
+                    
+                        {
+                         "name":"intensity",
+                         "type":"float",
+                         "value":0.25
+                        },
+                    
+                        {
+                         "name":"noiseSpeedX",
+                         "type":"float",
+                         "value":0.1
+                        },
+                    
+                        {
+                         "name":"noiseSpeedY",
+                         "type":"float",
+                         "value":0.03
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"water_ripple"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":3
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":2.2
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":398.48138773702,
+                 "x":876.443726969607,
+                 "y":161.088577102813
+                },
+            
+                {
+                 "height":60.6077957249365,
+                 "id":9,
+                 "name":"water_effect2",
+                 "opacity":0.25,
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Gabor 9 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"intensity",
+                         "type":"float",
+                         "value":0.25
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":1.6
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":-0.01
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.28
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":0.5
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":399.190365178488,
+                 "x":877.367096338156,
+                 "y":160.654423838308
+                },
+            
+                {
+                 "height":60.6079346539811,
+                 "id":10,
+                 "name":"water_effect1",
+                 "opacity":0.35,
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Gabor 10 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"intensity",
+                         "type":"float",
+                         "value":0.25
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.28
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":1.5
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":0.5
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":398.523559582777,
+                 "x":877.367165802678,
+                 "y":161.071141507711
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":2,
+         "layers":[
+                {
+                 "draworder":"topdown",
+                 "id":8,
+                 "name":"navmesh",
+                 "objects":[
+                        {
+                         "height":0,
+                         "id":7,
+                         "name":"",
+                         "opacity":1,
+                         "polygon":[
+                                {
+                                 "x":0,
+                                 "y":0
+                                },
+                            
+                                {
+                                 "x":-12,
+                                 "y":-24.6666666666667
+                                },
+                            
+                                {
+                                 "x":10.6666666666667,
+                                 "y":-42
+                                },
+                            
+                                {
+                                 "x":34.6666666666667,
+                                 "y":-59.3333333333333
+                                },
+                            
+                                {
+                                 "x":93.3333333333333,
+                                 "y":-60
+                                },
+                            
+                                {
+                                 "x":120.666666666667,
+                                 "y":-108
+                                },
+                            
+                                {
+                                 "x":165.333333333333,
+                                 "y":-106.666666666667
+                                },
+                            
+                                {
+                                 "x":172,
+                                 "y":-64
+                                },
+                            
+                                {
+                                 "x":186,
+                                 "y":-34
+                                },
+                            
+                                {
+                                 "x":247.333333333333,
+                                 "y":-16
+                                },
+                            
+                                {
+                                 "x":346.666666666667,
+                                 "y":-11.3333333333334
+                                },
+                            
+                                {
+                                 "x":349.333333333333,
+                                 "y":-26.6666666666667
+                                },
+                            
+                                {
+                                 "x":413.333333333333,
+                                 "y":-30.6666666666667
+                                },
+                            
+                                {
+                                 "x":486.666666666667,
+                                 "y":-29.3333333333334
+                                },
+                            
+                                {
+                                 "x":544,
+                                 "y":-35.3333333333334
+                                },
+                            
+                                {
+                                 "x":589.333333333333,
+                                 "y":-42.6666666666667
+                                },
+                            
+                                {
+                                 "x":650.666666666667,
+                                 "y":-42
+                                },
+                            
+                                {
+                                 "x":651.333333333333,
+                                 "y":-25.3333333333334
+                                },
+                            
+                                {
+                                 "x":679.333333333333,
+                                 "y":-10.6666666666667
+                                },
+                            
+                                {
+                                 "x":722,
+                                 "y":11.3333333333333
+                                },
+                            
+                                {
+                                 "x":810.666666666667,
+                                 "y":25.3333333333333
+                                },
+                            
+                                {
+                                 "x":805.333333333333,
+                                 "y":30.6666666666666
+                                },
+                            
+                                {
+                                 "x":788.666666666667,
+                                 "y":33.3333333333333
+                                },
+                            
+                                {
+                                 "x":756.666666666667,
+                                 "y":26
+                                },
+                            
+                                {
+                                 "x":736,
+                                 "y":30
+                                },
+                            
+                                {
+                                 "x":733.333333333333,
+                                 "y":47.3333333333333
+                                },
+                            
+                                {
+                                 "x":-3.33333333333331,
+                                 "y":48.6666666666666
+                                }],
+                         "rotation":0,
+                         "type":"",
+                         "visible":true,
+                         "width":0,
+                         "x":189.333333333333,
+                         "y":304
+                        }],
+                 "opacity":1,
+                 "type":"objectgroup",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                },
+            
+                {
+                 "draworder":"topdown",
+                 "id":11,
+                 "name":"blockers",
+                 "objects":[],
+                 "opacity":1,
+                 "type":"objectgroup",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"navigation",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":12,
+         "layers":[],
+         "name":"effects_back",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":13,
+         "layers":[],
+         "name":"effects_front",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":14,
+         "layers":[],
+         "name":"effects_overlay",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":19,
+ "nextobjectid":11,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.0",
+ "tileheight":180,
+ "tilesets":[],
+ "tilewidth":640,
+ "type":"map",
+ "version":"1.10",
+ "width":1
+}

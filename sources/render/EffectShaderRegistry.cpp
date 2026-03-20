@@ -7,7 +7,8 @@ namespace
     static EffectShaderEntry gEffectShaders[] = {
             { SceneEffectShaderType::UvScroll,    SceneEffectShaderCategory::SelfTexture, {} , false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
             { SceneEffectShaderType::HeatShimmer, SceneEffectShaderCategory::SceneSample, {} , false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
-            { SceneEffectShaderType::RegionGrade, SceneEffectShaderCategory::SceneSample, {} , false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
+            { SceneEffectShaderType::RegionGrade, SceneEffectShaderCategory::SceneSample, {} , false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
+            { SceneEffectShaderType::WaterRipple, SceneEffectShaderCategory::SceneSample, {}, false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
     };
 
     static constexpr int gEffectShaderCount =
@@ -24,6 +25,9 @@ namespace
 
             case SceneEffectShaderType::RegionGrade:
                 return ASSETS_PATH "shaders/scenesample/region_grade.fs";
+
+            case SceneEffectShaderType::WaterRipple:
+                return ASSETS_PATH "shaders/scenesample/water_ripple.fs";
 
             case SceneEffectShaderType::None:
             default:
@@ -56,11 +60,11 @@ SceneEffectShaderCategory GetEffectShaderCategory(SceneEffectShaderType type)
     switch (type) {
         case SceneEffectShaderType::UvScroll:
             return SceneEffectShaderCategory::SelfTexture;
-
         case SceneEffectShaderType::HeatShimmer:
         case SceneEffectShaderType::RegionGrade:
             return SceneEffectShaderCategory::SceneSample;
-
+        case SceneEffectShaderType::WaterRipple:
+            return SceneEffectShaderCategory::SceneSample;
         case SceneEffectShaderType::None:
         default:
             return SceneEffectShaderCategory::None;
@@ -78,6 +82,9 @@ const char* SceneEffectShaderTypeToString(SceneEffectShaderType type)
 
         case SceneEffectShaderType::RegionGrade:
             return "region_grade";
+
+        case SceneEffectShaderType::WaterRipple:
+            return "water_ripple";
 
         case SceneEffectShaderType::None:
         default:
