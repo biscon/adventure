@@ -19,7 +19,40 @@ uniform vec2 uRegionPos;
 uniform vec2 uRegionSize;
 uniform float uSoftness;
 
+uniform int uUsePolygon;
+uniform int uPolygonVertexCount;
+uniform vec2 uPolygonPoints[32];
+
 out vec4 finalColor;
+
+bool pointInPolygon(vec2 p)
+{
+    if (uUsePolygon == 0 || uPolygonVertexCount < 3) {
+        return true;
+    }
+
+    bool inside = false;
+
+    for (int i = 0, j = uPolygonVertexCount - 1; i < uPolygonVertexCount; j = i, ++i) {
+        vec2 a = uPolygonPoints[i];
+        vec2 b = uPolygonPoints[j];
+
+        float denom = b.y - a.y;
+        if (abs(denom) < 0.00001) {
+            denom = (denom < 0.0) ? -0.00001 : 0.00001;
+        }
+
+        bool intersect =
+            ((a.y > p.y) != (b.y > p.y)) &&
+            (p.x < ((b.x - a.x) * (p.y - a.y) / denom) + a.x);
+
+        if (intersect) {
+            inside = !inside;
+        }
+    }
+
+    return inside;
+}
 
 float hash(vec2 p)
 {
@@ -50,7 +83,13 @@ void main()
 
     vec4 original = texture(texture0, fragTexCoord);
 
-    if (local.x < 0.0 || local.x > 1.0 || local.y < 0.0 || local.y > 1.0) {
+    bool insideRect =
+        local.x >= 0.0 && local.x <= 1.0 &&
+        local.y >= 0.0 && local.y <= 1.0;
+
+    bool insidePoly = pointInPolygon(pixelPos);
+
+    if (!insideRect || !insidePoly) {
         finalColor = original;
         return;
     }
@@ -74,7 +113,6 @@ void main()
 
     float n1 = noise(rippleUv + vec2(0.0, 0.0));
     float n2 = noise(rippleUv + vec2(11.7, 5.3));
-    float n3 = noise(rippleUv + vec2(-7.9, 14.2));
 
     float wave1 = sin((rippleUv.x + rippleUv.y * 0.35 + uTime * 0.9 + uPhaseOffset) * 6.28318);
     float wave2 = sin((rippleUv.x * 0.6 - rippleUv.y + uTime * 0.7 + uPhaseOffset * 1.7) * 6.28318);
@@ -85,8 +123,9 @@ void main()
     offsetPixels.y =
         ((n2 * 2.0 - 1.0) * 0.55 + wave2 * 0.45) * uDistortionAmount.y;
 
-    float centerBoost = smoothstep(0.0, 0.25, local.y) *
-                        (1.0 - smoothstep(0.85, 1.0, local.y));
+    float centerBoost =
+        smoothstep(0.0, 0.25, local.y) *
+        (1.0 - smoothstep(0.85, 1.0, local.y));
 
     float rippleMask = mask * centerBoost * uIntensity;
 
@@ -95,3 +134,4 @@ void main()
 
     finalColor = texture(texture0, sampleUv);
 }
+

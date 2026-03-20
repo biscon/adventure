@@ -812,6 +812,7 @@ static void ProcessLayerRecursive(
         return;
     }
 
+
     if (type == "objectgroup" && name == "effect_regions") {
         if (!layer.contains("objects") || !layer["objects"].is_array()) {
             return;
@@ -829,11 +830,76 @@ static void ProcessLayerRecursive(
                 continue;
             }
 
-            const float width = GetFloatOrDefault(obj, "width", 0.0f);
-            const float height = GetFloatOrDefault(obj, "height", 0.0f);
-            if (width <= 0.0f || height <= 0.0f) {
-                TraceLog(LOG_ERROR, "Effect region must be a rectangle with non-zero size: %s", effect.id.c_str());
-                continue;
+            const bool hasPolygon =
+                    obj.contains("polygon") &&
+                    obj["polygon"].is_array() &&
+                    !obj["polygon"].empty();
+
+            if (hasPolygon) {
+                effect.usePolygon = true;
+                effect.polygon = BuildWorldPolygon(
+                        obj,
+                        totalOffsetX,
+                        totalOffsetY,
+                        scene.baseAssetScale);
+
+                if (effect.polygon.vertices.size() < 3) {
+                    TraceLog(LOG_ERROR,
+                             "Effect region polygon invalid (need at least 3 vertices): %s",
+                             effect.id.c_str());
+                    continue;
+                }
+
+                float minX = effect.polygon.vertices[0].x;
+                float minY = effect.polygon.vertices[0].y;
+                float maxX = effect.polygon.vertices[0].x;
+                float maxY = effect.polygon.vertices[0].y;
+
+                for (const Vector2& v : effect.polygon.vertices) {
+                    if (v.x < minX) minX = v.x;
+                    if (v.y < minY) minY = v.y;
+                    if (v.x > maxX) maxX = v.x;
+                    if (v.y > maxY) maxY = v.y;
+                }
+
+                effect.worldRect.x = minX;
+                effect.worldRect.y = minY;
+                effect.worldRect.width = maxX - minX;
+                effect.worldRect.height = maxY - minY;
+
+                if (effect.worldRect.width <= 0.0f || effect.worldRect.height <= 0.0f) {
+                    TraceLog(LOG_ERROR,
+                             "Effect region polygon has invalid bounds: %s",
+                             effect.id.c_str());
+                    continue;
+                }
+
+                if (effect.polygon.vertices.size() > 32) {
+                    TraceLog(LOG_ERROR,
+                             "Effect region polygon has too many vertices (%d > 32): %s",
+                             static_cast<int>(effect.polygon.vertices.size()),
+                             effect.id.c_str());
+                    continue;
+                }
+            } else {
+                const float width = GetFloatOrDefault(obj, "width", 0.0f);
+                const float height = GetFloatOrDefault(obj, "height", 0.0f);
+                if (width <= 0.0f || height <= 0.0f) {
+                    TraceLog(LOG_ERROR,
+                             "Effect region must be a rectangle with non-zero size, or a polygon: %s",
+                             effect.id.c_str());
+                    continue;
+                }
+
+                effect.usePolygon = false;
+                effect.worldRect.x =
+                        (totalOffsetX + GetFloatOrDefault(obj, "x", 0.0f)) *
+                        static_cast<float>(scene.baseAssetScale);
+                effect.worldRect.y =
+                        (totalOffsetY + GetFloatOrDefault(obj, "y", 0.0f)) *
+                        static_cast<float>(scene.baseAssetScale);
+                effect.worldRect.width = width * static_cast<float>(scene.baseAssetScale);
+                effect.worldRect.height = height * static_cast<float>(scene.baseAssetScale);
             }
 
             const std::string blendModeStr = GetStringPropertyOrDefault(obj, "blendMode", "normal");
@@ -906,27 +972,14 @@ static void ProcessLayerRecursive(
                 effect.textureHandle = -1;
             }
 
-            effect.worldRect.x =
-                    (totalOffsetX + GetFloatOrDefault(obj, "x", 0.0f)) *
-                    static_cast<float>(scene.baseAssetScale);
-            effect.worldRect.y =
-                    (totalOffsetY + GetFloatOrDefault(obj, "y", 0.0f)) *
-                    static_cast<float>(scene.baseAssetScale);
-            effect.worldRect.width = width * static_cast<float>(scene.baseAssetScale);
-            effect.worldRect.height = height * static_cast<float>(scene.baseAssetScale);
-
             GetFloatProperty(obj, "scrollSpeedX", effect.shaderParams.scrollSpeed.x);
             GetFloatProperty(obj, "scrollSpeedY", effect.shaderParams.scrollSpeed.y);
-
             GetFloatProperty(obj, "uvScaleX", effect.shaderParams.uvScale.x);
             GetFloatProperty(obj, "uvScaleY", effect.shaderParams.uvScale.y);
-
             GetFloatProperty(obj, "distortionX", effect.shaderParams.distortionAmount.x);
             GetFloatProperty(obj, "distortionY", effect.shaderParams.distortionAmount.y);
-
             GetFloatProperty(obj, "noiseSpeedX", effect.shaderParams.noiseScrollSpeed.x);
             GetFloatProperty(obj, "noiseSpeedY", effect.shaderParams.noiseScrollSpeed.y);
-
             GetFloatProperty(obj, "intensity", effect.shaderParams.intensity);
             GetFloatProperty(obj, "phaseOffset", effect.shaderParams.phaseOffset);
             GetFloatProperty(obj, "brightness", effect.shaderParams.brightness);
@@ -941,6 +994,7 @@ static void ProcessLayerRecursive(
         }
         return;
     }
+
 
     if (type == "objectgroup" && name == "sound_emitters") {
         if (!layer.contains("objects") || !layer["objects"].is_array()) {

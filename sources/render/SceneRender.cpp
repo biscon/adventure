@@ -75,6 +75,89 @@ static Rectangle GetRenderTargetDestRect(const Texture2D& tex)
     };
 }
 
+static Rectangle BuildPolygonBounds(const ScenePolygon& polygon)
+{
+    Rectangle r{};
+
+    if (polygon.vertices.empty()) {
+        return r;
+    }
+
+    float minX = polygon.vertices[0].x;
+    float minY = polygon.vertices[0].y;
+    float maxX = polygon.vertices[0].x;
+    float maxY = polygon.vertices[0].y;
+
+    for (const Vector2& v : polygon.vertices) {
+        if (v.x < minX) minX = v.x;
+        if (v.y < minY) minY = v.y;
+        if (v.x > maxX) maxX = v.x;
+        if (v.y > maxY) maxY = v.y;
+    }
+
+    r.x = minX;
+    r.y = minY;
+    r.width = maxX - minX;
+    r.height = maxY - minY;
+    return r;
+}
+
+static float GetPolygonMaxY(const ScenePolygon& polygon)
+{
+    if (polygon.vertices.empty()) {
+        return 0.0f;
+    }
+
+    float maxY = polygon.vertices[0].y;
+    for (const Vector2& v : polygon.vertices) {
+        if (v.y > maxY) {
+            maxY = v.y;
+        }
+    }
+    return maxY;
+}
+
+static void SetShaderIntIfValid(const Shader& shader, int loc, int value)
+{
+    if (loc < 0) {
+        return;
+    }
+
+    SetShaderValue(shader, loc, &value, SHADER_UNIFORM_INT);
+}
+
+static void SetShaderPolygonIfValid(
+        const Shader& shader,
+        int usePolygonLoc,
+        int polygonVertexCountLoc,
+        int polygonPointsLoc,
+        const SceneEffectRegionData& sceneEffect,
+        const Vector2& cam)
+{
+    const int usePolygon = sceneEffect.usePolygon ? 1 : 0;
+    SetShaderIntIfValid(shader, usePolygonLoc, usePolygon);
+
+    if (!sceneEffect.usePolygon) {
+        SetShaderIntIfValid(shader, polygonVertexCountLoc, 0);
+        return;
+    }
+
+    const int vertexCount = static_cast<int>(sceneEffect.polygon.vertices.size());
+    SetShaderIntIfValid(shader, polygonVertexCountLoc, vertexCount);
+
+    if (polygonPointsLoc < 0 || vertexCount <= 0) {
+        return;
+    }
+
+    float points[32 * 2] = {};
+    for (int i = 0; i < vertexCount && i < 32; ++i) {
+        points[i * 2 + 0] = sceneEffect.polygon.vertices[i].x - cam.x;
+        points[i * 2 + 1] = sceneEffect.polygon.vertices[i].y - cam.y;
+    }
+
+    SetShaderValueV(shader, polygonPointsLoc, points, SHADER_UNIFORM_VEC2, vertexCount);
+}
+
 static void DrawSceneImageLayer(const GameState& state, const SceneImageLayer& layer)
 {
     if (!layer.visible || layer.textureHandle < 0) {
@@ -174,35 +257,47 @@ static void DrawSceneEffectRegion(
         const SceneEffectRegionData& sceneEffect,
         const EffectRegionInstance& effect)
 {
-    if (!effect.visible || sceneEffect.textureHandle < 0) {
+    if (!effect.visible) {
         return;
     }
 
-    const TextureResource* texRes = FindTextureResource(state.resources, sceneEffect.textureHandle);
-    if (texRes == nullptr || !texRes->loaded) {
+    const SceneEffectShaderCategory shaderCategory = GetEffectShaderCategory(effect.shaderType);
+    if (shaderCategory == SceneEffectShaderCategory::SelfTexture && sceneEffect.textureHandle < 0) {
         return;
+    }
+
+    const TextureResource* texRes = nullptr;
+    if (sceneEffect.textureHandle >= 0) {
+        texRes = FindTextureResource(state.resources, sceneEffect.textureHandle);
+        if (texRes == nullptr || !texRes->loaded) {
+            return;
+        }
     }
 
     const Vector2 cam = state.adventure.camera.position;
 
+    const Rectangle effectBounds = sceneEffect.usePolygon
+                                   ? BuildPolygonBounds(sceneEffect.polygon)
+                                   : sceneEffect.worldRect;
+
     Rectangle src{};
-    src.x = 0.0f;
-    src.y = 0.0f;
-    src.width = static_cast<float>(texRes->texture.width);
-    src.height = static_cast<float>(texRes->texture.height);
+    if (texRes != nullptr) {
+        src.x = 0.0f;
+        src.y = 0.0f;
+        src.width = static_cast<float>(texRes->texture.width);
+        src.height = static_cast<float>(texRes->texture.height);
+    }
 
     Rectangle dst{};
-    dst.x = sceneEffect.worldRect.x - cam.x;
-    dst.y = sceneEffect.worldRect.y - cam.y;
-    dst.width = sceneEffect.worldRect.width;
-    dst.height = sceneEffect.worldRect.height;
+    dst.x = effectBounds.x - cam.x;
+    dst.y = effectBounds.y - cam.y;
+    dst.width = effectBounds.width;
+    dst.height = effectBounds.height;
 
     Color drawColor = effect.tint;
     drawColor.a = MultiplyU8(
             drawColor.a,
             static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity))));
-
-    const SceneEffectShaderCategory shaderCategory = GetEffectShaderCategory(effect.shaderType);
 
     EndBlendMode();
     BeginBlendMode(GetRaylibBlendMode(sceneEffect.blendMode));
@@ -211,20 +306,10 @@ static void DrawSceneEffectRegion(
         const EffectShaderEntry* shaderEntry = FindEffectShaderEntry(effect.shaderType);
         if (shaderEntry != nullptr) {
             const float timeSeconds = static_cast<float>(GetTime());
-            const Vector2 sceneSize{
-                    1920.0f,
-                    1080.0f
-            };
+            const Vector2 sceneSize{ 1920.0f, 1080.0f };
 
-            const Vector2 regionPos{
-                    sceneEffect.worldRect.x - state.adventure.camera.position.x,
-                    sceneEffect.worldRect.y - state.adventure.camera.position.y
-            };
-
-            const Vector2 regionSize{
-                    sceneEffect.worldRect.width,
-                    sceneEffect.worldRect.height
-            };
+            const Vector2 regionPos{ dst.x, dst.y };
+            const Vector2 regionSize{ dst.width, dst.height };
 
             BeginShaderMode(shaderEntry->shader);
 
@@ -241,6 +326,14 @@ static void DrawSceneEffectRegion(
             SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->regionSizeLoc, regionSize);
             SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->softnessLoc, effect.shaderParams.softness);
 
+            SetShaderPolygonIfValid(
+                    shaderEntry->shader,
+                    shaderEntry->usePolygonLoc,
+                    shaderEntry->polygonVertexCountLoc,
+                    shaderEntry->polygonPointsLoc,
+                    sceneEffect,
+                    cam);
+
             DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
 
             EndShaderMode();
@@ -248,7 +341,7 @@ static void DrawSceneEffectRegion(
             DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
         }
     } else {
-        DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
+        // scene-sample shaders are applied in the post pass, not here
     }
 
     EndBlendMode();
@@ -708,14 +801,18 @@ bool ApplySceneSampleEffectRegionPass(
 
     const Vector2 cam = state.adventure.camera.position;
 
+    const Rectangle effectBounds = sceneEffect.usePolygon
+                                   ? BuildPolygonBounds(sceneEffect.polygon)
+                                   : sceneEffect.worldRect;
+
     Vector2 regionPos{
-            sceneEffect.worldRect.x - cam.x,
-            sceneEffect.worldRect.y - cam.y
+            effectBounds.x - cam.x,
+            effectBounds.y - cam.y
     };
 
     Vector2 regionSize{
-            sceneEffect.worldRect.width,
-            sceneEffect.worldRect.height
+            effectBounds.width,
+            effectBounds.height
     };
 
     const float timeSeconds = static_cast<float>(GetTime());
@@ -753,6 +850,14 @@ bool ApplySceneSampleEffectRegionPass(
     }
 
     SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->softnessLoc, effect.shaderParams.softness);
+
+    SetShaderPolygonIfValid(
+            shaderEntry->shader,
+            shaderEntry->usePolygonLoc,
+            shaderEntry->polygonVertexCountLoc,
+            shaderEntry->polygonPointsLoc,
+            sceneEffect,
+            cam);
 
     DrawTexturePro(
             sourceTarget.texture,
@@ -881,7 +986,10 @@ void RenderAdventureScene(const GameState& state)
         }
 
         WorldDrawItem item;
-        item.sortY = sceneEffect.worldRect.y + sceneEffect.worldRect.height;
+
+        item.sortY = sceneEffect.usePolygon
+                     ? GetPolygonMaxY(sceneEffect.polygon)
+                     : (sceneEffect.worldRect.y + sceneEffect.worldRect.height);
         item.type = WorldDrawItemType::EffectRegion;
         item.effectRegionIndex = i;
         drawItems.push_back(item);

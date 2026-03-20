@@ -144,6 +144,8 @@ struct SceneEffectRegionData {
     TextureHandle textureHandle = -1;
 
     Rectangle worldRect{};
+    bool usePolygon = false;
+    ScenePolygon polygon{};
 
     bool visible = true;
     float opacity = 1.0f;

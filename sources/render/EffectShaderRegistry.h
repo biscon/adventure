@@ -27,6 +27,10 @@ struct EffectShaderEntry {
     int saturationLoc = -1;
     int tintLoc = -1;
     int softnessLoc = -1;
+
+    int usePolygonLoc = -1;
+    int polygonVertexCountLoc = -1;
+    int polygonPointsLoc = -1;
 };
 
 bool InitEffectShaderRegistry();

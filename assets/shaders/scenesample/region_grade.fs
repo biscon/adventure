@@ -16,7 +16,40 @@ uniform float uSaturation;
 uniform vec3 uTint;
 uniform float uSoftness;
 
+uniform int uUsePolygon;
+uniform int uPolygonVertexCount;
+uniform vec2 uPolygonPoints[32];
+
 out vec4 finalColor;
+
+bool pointInPolygon(vec2 p)
+{
+    if (uUsePolygon == 0 || uPolygonVertexCount < 3) {
+        return true;
+    }
+
+    bool inside = false;
+
+    for (int i = 0, j = uPolygonVertexCount - 1; i < uPolygonVertexCount; j = i, ++i) {
+        vec2 a = uPolygonPoints[i];
+        vec2 b = uPolygonPoints[j];
+
+        float denom = b.y - a.y;
+        if (abs(denom) < 0.00001) {
+            denom = (denom < 0.0) ? -0.00001 : 0.00001;
+        }
+
+        bool intersect =
+            ((a.y > p.y) != (b.y > p.y)) &&
+            (p.x < ((b.x - a.x) * (p.y - a.y) / denom) + a.x);
+
+        if (intersect) {
+            inside = !inside;
+        }
+    }
+
+    return inside;
+}
 
 vec3 applySaturation(vec3 color, float saturation)
 {
@@ -31,18 +64,26 @@ void main()
 
     vec4 original = texture(texture0, fragTexCoord);
 
-    if (local.x < 0.0 || local.x > 1.0 || local.y < 0.0 || local.y > 1.0) {
+    bool insideRect =
+        local.x >= 0.0 && local.x <= 1.0 &&
+        local.y >= 0.0 && local.y <= 1.0;
+
+    bool insidePoly = pointInPolygon(pixelPos);
+
+    if (!insideRect || !insidePoly) {
         finalColor = original;
         return;
     }
 
     float s = clamp(uSoftness, 0.0001, 0.49);
 
-    float fadeLeftRight = smoothstep(0.0, s, local.x) *
-                          (1.0 - smoothstep(1.0 - s, 1.0, local.x));
+    float fadeLeftRight =
+        smoothstep(0.0, s, local.x) *
+        (1.0 - smoothstep(1.0 - s, 1.0, local.x));
 
-    float fadeTopBottom = smoothstep(0.0, s, local.y) *
-                          (1.0 - smoothstep(1.0 - s, 1.0, local.y));
+    float fadeTopBottom =
+        smoothstep(0.0, s, local.y) *
+        (1.0 - smoothstep(1.0 - s, 1.0, local.y));
 
     float mask = fadeLeftRight * fadeTopBottom;
 
@@ -52,7 +93,6 @@ void main()
     graded = ((graded - 0.5) * uContrast) + 0.5;
     graded = applySaturation(graded, uSaturation);
     graded *= uTint;
-
     graded = clamp(graded, 0.0, 1.0);
 
     finalColor = vec4(mix(original.rgb, graded, mask), original.a);

@@ -18,7 +18,40 @@ uniform vec2 uSceneSize;
 uniform vec2 uRegionPos;
 uniform vec2 uRegionSize;
 
+uniform int uUsePolygon;
+uniform int uPolygonVertexCount;
+uniform vec2 uPolygonPoints[32];
+
 out vec4 finalColor;
+
+bool pointInPolygon(vec2 p)
+{
+    if (uUsePolygon == 0 || uPolygonVertexCount < 3) {
+        return true;
+    }
+
+    bool inside = false;
+
+    for (int i = 0, j = uPolygonVertexCount - 1; i < uPolygonVertexCount; j = i, ++i) {
+        vec2 a = uPolygonPoints[i];
+        vec2 b = uPolygonPoints[j];
+
+        float denom = b.y - a.y;
+        if (abs(denom) < 0.00001) {
+            denom = (denom < 0.0) ? -0.00001 : 0.00001;
+        }
+
+        bool intersect =
+            ((a.y > p.y) != (b.y > p.y)) &&
+            (p.x < ((b.x - a.x) * (p.y - a.y) / denom) + a.x);
+
+        if (intersect) {
+            inside = !inside;
+        }
+    }
+
+    return inside;
+}
 
 float hash(vec2 p)
 {
@@ -47,7 +80,13 @@ void main()
     vec2 pixelPos = vec2(gl_FragCoord.x, uSceneSize.y - gl_FragCoord.y);
     vec2 local = (pixelPos - uRegionPos) / uRegionSize;
 
-    if (local.x < 0.0 || local.x > 1.0 || local.y < 0.0 || local.y > 1.0) {
+    bool insideRect =
+        local.x >= 0.0 && local.x <= 1.0 &&
+        local.y >= 0.0 && local.y <= 1.0;
+
+    bool insideShape = insideRect && pointInPolygon(pixelPos);
+
+    if (!insideShape) {
         finalColor = texture(texture0, fragTexCoord);
         return;
     }
@@ -65,15 +104,15 @@ void main()
         (n2 * 2.0 - 1.0) * uDistortionAmount.y
     );
 
-    float fadeLeftRight = smoothstep(0.0, 0.22, local.x) *
-                          (1.0 - smoothstep(0.78, 1.0, local.x));
+    float fadeLeftRight =
+        smoothstep(0.0, 0.22, local.x) *
+        (1.0 - smoothstep(0.78, 1.0, local.x));
 
-    float fadeTopBottom = smoothstep(0.0, 0.10, local.y) *
-                          (1.0 - smoothstep(0.70, 1.0, local.y));
+    float fadeTopBottom =
+        smoothstep(0.0, 0.10, local.y) *
+        (1.0 - smoothstep(0.70, 1.0, local.y));
 
-    // less distortion at the bottom
     float centerBias = smoothstep(0.1, 0.6, local.y);
-    //float centerBias = smoothstep(0.0, 0.35, local.y);
 
     float shimmerMask = fadeLeftRight * fadeTopBottom * centerBias;
 
@@ -81,16 +120,4 @@ void main()
     vec2 sampleUv = fragTexCoord + offsetUv;
 
     finalColor = texture(texture0, sampleUv);
-}
-
-void mainDebug()
-{
-    vec2 pixelPos = vec2(gl_FragCoord.x, uSceneSize.y - gl_FragCoord.y);
-    vec2 local = (pixelPos - uRegionPos) / uRegionSize;
-
-    if (local.x >= 0.0 && local.x <= 1.0 && local.y >= 0.0 && local.y <= 1.0) {
-        finalColor = vec4(1.0, 0.0, 0.0, 1.0);
-    } else {
-        finalColor = texture(texture0, fragTexCoord);
-    }
 }

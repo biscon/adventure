@@ -5,10 +5,10 @@
 namespace
 {
     static EffectShaderEntry gEffectShaders[] = {
-            { SceneEffectShaderType::UvScroll,    SceneEffectShaderCategory::SelfTexture, {} , false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
-            { SceneEffectShaderType::HeatShimmer, SceneEffectShaderCategory::SceneSample, {} , false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
-            { SceneEffectShaderType::RegionGrade, SceneEffectShaderCategory::SceneSample, {} , false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 },
-            { SceneEffectShaderType::WaterRipple, SceneEffectShaderCategory::SceneSample, {}, false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
+            { SceneEffectShaderType::UvScroll,    SceneEffectShaderCategory::SelfTexture },
+            { SceneEffectShaderType::HeatShimmer, SceneEffectShaderCategory::SceneSample },
+            { SceneEffectShaderType::RegionGrade, SceneEffectShaderCategory::SceneSample },
+            { SceneEffectShaderType::WaterRipple, SceneEffectShaderCategory::SceneSample }
     };
 
     static constexpr int gEffectShaderCount =
@@ -52,6 +52,9 @@ namespace
         entry.saturationLoc = GetShaderLocation(entry.shader, "uSaturation");
         entry.tintLoc = GetShaderLocation(entry.shader, "uTint");
         entry.softnessLoc = GetShaderLocation(entry.shader, "uSoftness");
+        entry.usePolygonLoc = GetShaderLocation(entry.shader, "uUsePolygon");
+        entry.polygonVertexCountLoc = GetShaderLocation(entry.shader, "uPolygonVertexCount");
+        entry.polygonPointsLoc = GetShaderLocation(entry.shader, "uPolygonPoints");
     }
 }
 
@@ -154,6 +157,9 @@ void ShutdownEffectShaderRegistry()
         entry.saturationLoc = -1;
         entry.tintLoc = -1;
         entry.softnessLoc = -1;
+        entry.usePolygonLoc = -1;
+        entry.polygonVertexCountLoc = -1;
+        entry.polygonPointsLoc = -1;
     }
 }
 
