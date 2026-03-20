@@ -997,7 +997,7 @@
                 },
             
                 {
-                 "height":192,
+                 "height":244,
                  "id":45,
                  "name":"furnace_heat",
                  "opacity":1,
@@ -1023,7 +1023,7 @@
                         {
                          "name":"distortionY",
                          "type":"float",
-                         "value":2.2
+                         "value":1.4
                         },
                     
                         {
@@ -1035,13 +1035,13 @@
                         {
                          "name":"noiseSpeedX",
                          "type":"float",
-                         "value":0.2
+                         "value":0.8
                         },
                     
                         {
                          "name":"noiseSpeedY",
                          "type":"float",
-                         "value":-0.8
+                         "value":-1.4
                         },
                     
                         {
@@ -1059,20 +1059,20 @@
                         {
                          "name":"uvScaleX",
                          "type":"float",
-                         "value":18
+                         "value":26
                         },
                     
                         {
                          "name":"uvScaleY",
                          "type":"float",
-                         "value":14
+                         "value":18
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
                  "width":136,
                  "x":245.25,
-                 "y":68
+                 "y":16
                 },
             
                 {
@@ -1155,7 +1155,7 @@
                 },
             
                 {
-                 "height":185.5,
+                 "height":208.833333333333,
                  "id":47,
                  "name":"furnace_warmth",
                  "opacity":1,
@@ -1228,9 +1228,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":208.5,
-                 "x":210.25,
-                 "y":152.25
+                 "width":296.5,
+                 "x":167.583333333333,
+                 "y":128.916666666667
                 },
             
                 {
