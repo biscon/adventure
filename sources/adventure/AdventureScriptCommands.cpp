@@ -1208,3 +1208,82 @@ bool AdventureScriptPanCameraToHotspot(GameState& state,
 
     return false;
 }
+
+static int FindEffectRegionIndexById(const GameState& state, const std::string& effectRegionId)
+{
+    const int count = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < count; ++i) {
+        if (state.adventure.currentScene.effectRegions[i].id == effectRegionId) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+bool AdventureScriptSetEffectRegionVisible(GameState& state, const std::string& effectRegionId, bool visible)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectRegionIndex = FindEffectRegionIndexById(state, effectRegionId);
+    if (effectRegionIndex < 0 ||
+        effectRegionIndex >= static_cast<int>(state.adventure.effectRegions.size())) {
+        return false;
+    }
+
+    state.adventure.effectRegions[effectRegionIndex].visible = visible;
+    return true;
+}
+
+bool AdventureScriptIsEffectRegionVisible(const GameState& state, const std::string& effectRegionId, bool& outVisible)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectRegionIndex = FindEffectRegionIndexById(state, effectRegionId);
+    if (effectRegionIndex < 0 ||
+        effectRegionIndex >= static_cast<int>(state.adventure.effectRegions.size())) {
+        return false;
+    }
+
+    outVisible = state.adventure.effectRegions[effectRegionIndex].visible;
+    return true;
+}
+
+bool AdventureScriptSetEffectRegionOpacity(GameState& state, const std::string& effectRegionId, float opacity)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectRegionIndex = FindEffectRegionIndexById(state, effectRegionId);
+    if (effectRegionIndex < 0 ||
+        effectRegionIndex >= static_cast<int>(state.adventure.effectRegions.size())) {
+        return false;
+    }
+
+    state.adventure.effectRegions[effectRegionIndex].opacity = Clamp(opacity, 0.0f, 1.0f);
+    return true;
+}
+
+bool AdventureScriptGetEffectRegionOpacity(const GameState& state, const std::string& effectRegionId, float& outOpacity)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectRegionIndex = FindEffectRegionIndexById(state, effectRegionId);
+    if (effectRegionIndex < 0 ||
+        effectRegionIndex >= static_cast<int>(state.adventure.effectRegions.size())) {
+        return false;
+    }
+
+    outOpacity = state.adventure.effectRegions[effectRegionIndex].opacity;
+    return true;
+}

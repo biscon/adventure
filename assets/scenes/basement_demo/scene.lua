@@ -12,7 +12,7 @@ function Scene_onEnter()
     -- Restore door state
     setLayerVisible("door_closed", flag("door_closed"))
 
-    startScript("FlickerLightBulbLoop")
+    --startScript("FlickerLightBulbLoop")
     startScript("FurnaceGlowLoopFancy")
     startScript("FurnaceGlowCoreLoop")
 end

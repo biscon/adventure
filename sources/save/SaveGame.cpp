@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 namespace
 {
-    static constexpr int SAVE_VERSION = 1;
+    static constexpr int SAVE_VERSION = 2;
 
     struct SavedInventoryData {
         std::string actorId;
@@ -53,6 +53,12 @@ namespace
         bool visible = true;
         float opacity = 1.0f;
         Color tint = WHITE;
+    };
+
+    struct SavedEffectRegionState {
+        std::string id;
+        bool visible = true;
+        float opacity = 1.0f;
     };
 
     struct SavedSoundEmitterState {
@@ -91,6 +97,7 @@ namespace
         std::vector<SavedActorState> actors;
         std::vector<SavedPropState> props;
         std::vector<SavedEffectSpriteState> effectSprites;
+        std::vector<SavedEffectRegionState> effectRegions;
         std::vector<SavedSoundEmitterState> soundEmitters;
         SavedAudioState audio;
     };
@@ -325,6 +332,26 @@ namespace
         }
     }
 
+    static void SerializeEffectRegions(const GameState& state, json& outRoot)
+    {
+        outRoot["effectRegions"] = json::array();
+
+        const int count = std::min(
+                static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+                static_cast<int>(state.adventure.effectRegions.size()));
+
+        for (int i = 0; i < count; ++i) {
+            const SceneEffectRegionData& sceneEffectRegion = state.adventure.currentScene.effectRegions[i];
+            const EffectRegionInstance& effectRegion = state.adventure.effectRegions[i];
+
+            json j;
+            j["id"] = sceneEffectRegion.id;
+            j["visible"] = effectRegion.visible;
+            j["opacity"] = effectRegion.opacity;
+            outRoot["effectRegions"].push_back(j);
+        }
+    }
+
     static void SerializeSoundEmitters(const GameState& state, json& outRoot)
     {
         outRoot["soundEmitters"] = json::array();
@@ -526,6 +553,19 @@ namespace
             }
         }
 
+        if (root.contains("effectRegions") && root["effectRegions"].is_array()) {
+            for (const json& j : root["effectRegions"]) {
+                SavedEffectRegionState effectRegion;
+                effectRegion.id = j.value("id", "");
+                effectRegion.visible = j.value("visible", true);
+                effectRegion.opacity = j.value("opacity", 1.0f);
+
+                if (!effectRegion.id.empty()) {
+                    outData.effectRegions.push_back(effectRegion);
+                }
+            }
+        }
+
         if (root.contains("soundEmitters") && root["soundEmitters"].is_array()) {
             for (const json& j : root["soundEmitters"]) {
                 SavedSoundEmitterState emitter;
@@ -658,6 +698,16 @@ namespace
         return -1;
     }
 
+    static int FindSceneEffectRegionIndexById(const GameState& state, const std::string& effectRegionId)
+    {
+        for (int i = 0; i < static_cast<int>(state.adventure.currentScene.effectRegions.size()); ++i) {
+            if (state.adventure.currentScene.effectRegions[i].id == effectRegionId) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     static void RestoreProps(GameState& state, const SaveRestoreData& data)
     {
         for (const SavedPropState& saved : data.props) {
@@ -700,6 +750,21 @@ namespace
             effect.visible = saved.visible;
             effect.opacity = saved.opacity;
             effect.tint = saved.tint;
+        }
+    }
+
+    static void RestoreEffectRegions(GameState& state, const SaveRestoreData& data)
+    {
+        for (const SavedEffectRegionState& saved : data.effectRegions) {
+            const int effectRegionIndex = FindSceneEffectRegionIndexById(state, saved.id);
+            if (effectRegionIndex < 0 ||
+                effectRegionIndex >= static_cast<int>(state.adventure.effectRegions.size())) {
+                continue;
+            }
+
+            EffectRegionInstance& effectRegion = state.adventure.effectRegions[effectRegionIndex];
+            effectRegion.visible = saved.visible;
+            effectRegion.opacity = saved.opacity;
         }
     }
 
@@ -826,6 +891,7 @@ namespace
         RestoreActors(state, data);
         RestoreProps(state, data);
         RestoreEffectSprites(state, data);
+        RestoreEffectRegions(state, data);
         RestoreSoundEmitters(state, data);
         RestoreAudioState(state, data);
         RestoreControlledActor(state, data);
@@ -871,6 +937,7 @@ bool SaveGameToSlot(GameState& state, int slotIndex)
     SerializeActors(state, root);
     SerializeProps(state, root);
     SerializeEffectSprites(state, root);
+    SerializeEffectRegions(state, root);
     SerializeSoundEmitters(state, root);
     SerializeAudioState(state, root);
 

@@ -1680,6 +1680,92 @@ static int Lua_panCameraToHotspot(lua_State* L)
     return 1;
 }
 
+static int Lua_setEffectRegionVisible(lua_State* L)
+{
+    const char* effectRegionId = luaL_checkstring(L, 1);
+    const bool visible = lua_toboolean(L, 2) != 0;
+
+    if (gameState == nullptr || effectRegionId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetEffectRegionVisible(
+            *gameState,
+            std::string(effectRegionId),
+            visible);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_effectRegionVisible(lua_State* L)
+{
+    const char* effectRegionId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || effectRegionId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    bool visible = false;
+    const bool ok = AdventureScriptIsEffectRegionVisible(
+            *gameState,
+            std::string(effectRegionId),
+            visible);
+
+    if (!ok) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    lua_pushboolean(L, visible ? 1 : 0);
+    return 1;
+}
+
+static int Lua_setEffectRegionOpacity(lua_State* L)
+{
+    const char* effectRegionId = luaL_checkstring(L, 1);
+    const float opacity = static_cast<float>(luaL_checknumber(L, 2));
+
+    if (gameState == nullptr || effectRegionId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptSetEffectRegionOpacity(
+            *gameState,
+            std::string(effectRegionId),
+            opacity);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_effectRegionOpacity(lua_State* L)
+{
+    const char* effectRegionId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || effectRegionId == nullptr) {
+        lua_pushnumber(L, 0.0);
+        return 1;
+    }
+
+    float opacity = 0.0f;
+    const bool ok = AdventureScriptGetEffectRegionOpacity(
+            *gameState,
+            std::string(effectRegionId),
+            opacity);
+
+    if (!ok) {
+        lua_pushnumber(L, 0.0);
+        return 1;
+    }
+
+    lua_pushnumber(L, static_cast<lua_Number>(opacity));
+    return 1;
+}
+
 void RegisterLuaAPI(lua_State* L)
 {
     lua_register(L, "setFlag", Lua_setFlag);
@@ -1748,6 +1834,11 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "effectVisible", Lua_effectVisible);
     lua_register(L, "setEffectOpacity", Lua_setEffectOpacity);
     lua_register(L, "setEffectTint", Lua_setEffectTint);
+
+    lua_register(L, "setEffectRegionVisible", Lua_setEffectRegionVisible);
+    lua_register(L, "effectRegionVisible", Lua_effectRegionVisible);
+    lua_register(L, "setEffectRegionOpacity", Lua_setEffectRegionOpacity);
+    lua_register(L, "effectRegionOpacity", Lua_effectRegionOpacity);
 
     lua_register(L, "playSound", Lua_playSound);
     lua_register(L, "playMusic", Lua_playMusic);
