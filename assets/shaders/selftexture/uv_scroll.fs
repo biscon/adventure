@@ -54,30 +54,39 @@ bool pointInPolygon(vec2 p)
     return inside;
 }
 
-void main()
+float distanceToSegment(vec2 p, vec2 a, vec2 b)
 {
-    vec2 pixelPos = vec2(gl_FragCoord.x, uSceneSize.y - gl_FragCoord.y);
-    vec2 local = (pixelPos - uRegionPos) / uRegionSize;
-
-    bool insideRect =
-        local.x >= 0.0 && local.x <= 1.0 &&
-        local.y >= 0.0 && local.y <= 1.0;
-
-    bool insidePoly = pointInPolygon(pixelPos);
-
-    if (!insideRect || !insidePoly) {
-        discard;
+    vec2 ab = b - a;
+    float abLenSq = dot(ab, ab);
+    if (abLenSq <= 0.00001) {
+        return length(p - a);
     }
 
-    vec2 safeUvScale = max(uUvScale, vec2(0.0001));
-    vec2 uv = fragTexCoord;
-    uv *= safeUvScale;
-    uv += uScrollSpeed * uTime;
-    uv += vec2(uPhaseOffset, uPhaseOffset);
+    float t = clamp(dot(p - a, ab) / abLenSq, 0.0, 1.0);
+    vec2 closest = a + ab * t;
+    return length(p - closest);
+}
 
-    vec4 texel = texture(texture0, uv);
+float polygonEdgeFade(vec2 pixelPos, float softnessPixels)
+{
+    if (uUsePolygon == 0 || uPolygonVertexCount < 3) {
+        return 1.0;
+    }
 
-    float s = clamp(uSoftness, 0.0001, 0.49);
+    float minDist = 1e20;
+
+    for (int i = 0; i < uPolygonVertexCount; ++i) {
+        int j = (i + 1) % uPolygonVertexCount;
+        float d = distanceToSegment(pixelPos, uPolygonPoints[i], uPolygonPoints[j]);
+        minDist = min(minDist, d);
+    }
+
+    return clamp(minDist / max(softnessPixels, 0.0001), 0.0, 1.0);
+}
+
+float rectEdgeFade(vec2 local, float softness)
+{
+    float s = clamp(softness, 0.0001, 0.49);
 
     float fadeX =
         smoothstep(0.0, s, local.x) *
@@ -87,7 +96,43 @@ void main()
         smoothstep(0.0, s, local.y) *
         (1.0 - smoothstep(1.0 - s, 1.0, local.y));
 
-    float mask = fadeX * fadeY;
+    return fadeX * fadeY;
+}
+
+float regionMask(vec2 pixelPos, vec2 local, float softness)
+{
+    if (uUsePolygon != 0 && uPolygonVertexCount >= 3) {
+        if (!pointInPolygon(pixelPos)) {
+            return 0.0;
+        }
+
+        float softnessPixels = max(uRegionSize.x, uRegionSize.y) * clamp(softness, 0.0001, 1.0);
+        return polygonEdgeFade(pixelPos, softnessPixels);
+    }
+
+    if (local.x < 0.0 || local.x > 1.0 || local.y < 0.0 || local.y > 1.0) {
+        return 0.0;
+    }
+
+    return rectEdgeFade(local, softness);
+}
+
+void main()
+{
+    vec2 pixelPos = vec2(gl_FragCoord.x, uSceneSize.y - gl_FragCoord.y);
+    vec2 local = (pixelPos - uRegionPos) / uRegionSize;
+
+    float mask = regionMask(pixelPos, local, uSoftness);
+    if (mask <= 0.0001) {
+        discard;
+    }
+
+    vec2 safeUvScale = max(uUvScale, vec2(0.0001));
+    vec2 uv = fragTexCoord * safeUvScale;
+    uv += uScrollSpeed * uTime;
+    uv += vec2(uPhaseOffset, uPhaseOffset);
+
+    vec4 texel = texture(texture0, uv);
 
     texel.a *= mask;
 
