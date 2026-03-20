@@ -15,6 +15,7 @@
 #include "adventure/DialogueChoiceAsset.h"
 #include "audio/Audio.h"
 #include "ui/Cursor.h"
+#include "render/EffectShaderRegistry.h"
 
 static bool IsMouseInInternalView()
 {
@@ -34,6 +35,22 @@ static Rectangle GetFullscreenSrcRect(const Texture2D& tex)
     };
 }
 
+static void BlitRenderTarget(
+        const RenderTexture2D& source,
+        RenderTexture2D& dest)
+{
+    BeginTextureMode(dest);
+    ClearBackground(BLACK);
+    DrawTexturePro(
+            source.texture,
+            GetFullscreenSrcRect(source.texture),
+            Rectangle{0.0f, 0.0f, static_cast<float>(dest.texture.width), static_cast<float>(dest.texture.height)},
+            Vector2{0.0f, 0.0f},
+            0.0f,
+            WHITE);
+    EndTextureMode();
+}
+
 static void ProcessGameModeInput(GameState& state) {
     for (auto& ev : FilterEvents(state.input, true, InputEventType::KeyPressed)) {
         if(ev.key.key == KEY_ESCAPE) {
@@ -51,11 +68,20 @@ int main()
     SetConfigFlags(FLAG_VSYNC_HINT);
     InstallDebugConsoleTraceLogHook();
     InitWindow(1920, 1080, "Adventure");
-    //SetTargetFPS(60);
     SetExitKey(0);
+
+    if (!InitEffectShaderRegistry()) {
+        TraceLog(LOG_WARNING, "One or more effect shaders failed to load");
+    }
+
+    RenderTexture2D worldTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
+    SetTextureFilter(worldTarget.texture, TEXTURE_FILTER_BILINEAR);
 
     RenderTexture2D sceneTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
     SetTextureFilter(sceneTarget.texture, TEXTURE_FILTER_BILINEAR);
+
+    RenderTexture2D sceneSampleTempTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
+    SetTextureFilter(sceneSampleTempTarget.texture, TEXTURE_FILTER_BILINEAR);
 
     GameState state;
 
@@ -109,20 +135,63 @@ int main()
 
         UpdateAudio(state, dt);
 
-        BeginTextureMode(sceneTarget);
-        ClearBackground(BLACK);
+
         if (state.mode == GameMode::Game) {
+            BeginTextureMode(worldTarget);
+            ClearBackground(BLACK);
             RenderAdventureScene(state);
+            EndTextureMode();
+
+            BlitRenderTarget(worldTarget, sceneTarget);
+
+            RenderTexture2D* currentSource = &sceneTarget;
+            RenderTexture2D* currentDest = &sceneSampleTempTarget;
+
+            const int effectRegionCount = std::min(
+                    static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+                    static_cast<int>(state.adventure.effectRegions.size()));
+
+            for (int i = 0; i < effectRegionCount; ++i) {
+                const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+                if (!effect.visible) {
+                    continue;
+                }
+
+                if (GetEffectShaderCategory(effect.shaderType) != SceneEffectShaderCategory::SceneSample) {
+                    continue;
+                }
+
+                if (ApplySceneSampleEffectRegionPass(state, i, *currentSource, *currentDest)) {
+                    std::swap(currentSource, currentDest);
+                }
+            }
+
+            if (currentSource != &sceneTarget) {
+                BlitRenderTarget(*currentSource, sceneTarget);
+            }
+
+            BeginTextureMode(sceneTarget);
             RenderAdventureUi(state);
             RenderAdventureDebug(state);
+            EndTextureMode();
+        } else {
+            BeginTextureMode(sceneTarget);
+            ClearBackground(BLACK);
+            EndTextureMode();
         }
 
-        if(state.mode == GameMode::Menu) MenuRenderUi(state);
+        BeginTextureMode(sceneTarget);
+
+        if (state.mode == GameMode::Menu) {
+            MenuRenderUi(state);
+        }
 
         MenuRenderOverlay();
         RenderDebugConsole(state);
 
         EndTextureMode();
+
+
 
         // render sceneTarget to screen
         BeginDrawing();
@@ -145,7 +214,10 @@ int main()
     DebugConsoleShutdown();
     ShutdownAudio(state);
     UnloadAllResources(state.resources);
+    UnloadRenderTexture(worldTarget);
     UnloadRenderTexture(sceneTarget);
+    UnloadRenderTexture(sceneSampleTempTarget);
+    ShutdownEffectShaderRegistry();
     ShutdownCursor(state);
     CloseWindow();
 

@@ -8,6 +8,7 @@
 #include "raylib.h"
 #include "scene/SceneHelpers.h"
 #include "adventure/AdventureActorHelpers.h"
+#include "render/EffectShaderRegistry.h"
 
 static unsigned char MultiplyU8(unsigned char a, unsigned char b)
 {
@@ -33,6 +34,45 @@ static int GetRaylibBlendMode(SceneEffectBlendMode mode)
         default:
             return BLEND_ALPHA_PREMULTIPLY;
     }
+}
+
+static void SetShaderFloatIfValid(const Shader& shader, int loc, float value)
+{
+    if (loc < 0) {
+        return;
+    }
+
+    SetShaderValue(shader, loc, &value, SHADER_UNIFORM_FLOAT);
+}
+
+static void SetShaderVec2IfValid(const Shader& shader, int loc, Vector2 value)
+{
+    if (loc < 0) {
+        return;
+    }
+
+    const float v[2] = { value.x, value.y };
+    SetShaderValue(shader, loc, v, SHADER_UNIFORM_VEC2);
+}
+
+static Rectangle GetRenderTargetSourceRect(const Texture2D& tex)
+{
+    return Rectangle{
+            0.0f,
+            0.0f,
+            static_cast<float>(tex.width),
+            -static_cast<float>(tex.height)
+    };
+}
+
+static Rectangle GetRenderTargetDestRect(const Texture2D& tex)
+{
+    return Rectangle{
+            0.0f,
+            0.0f,
+            static_cast<float>(tex.width),
+            static_cast<float>(tex.height)
+    };
 }
 
 static void DrawSceneImageLayer(const GameState& state, const SceneImageLayer& layer)
@@ -94,9 +134,123 @@ static void DrawSceneEffectSprite(
     dst.width = sceneEffect.worldSize.x;
     dst.height = sceneEffect.worldSize.y;
 
+    const Color drawColor = BuildEffectSpriteDrawColor(effect);
+    const SceneEffectShaderCategory shaderCategory = GetEffectShaderCategory(effect.shaderType);
+
     EndBlendMode();
     BeginBlendMode(GetRaylibBlendMode(sceneEffect.blendMode));
-    DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, BuildEffectSpriteDrawColor(effect));
+
+    if (shaderCategory == SceneEffectShaderCategory::SelfTexture) {
+        const EffectShaderEntry* shaderEntry = FindEffectShaderEntry(effect.shaderType);
+        if (shaderEntry != nullptr) {
+            const float timeSeconds = static_cast<float>(GetTime());
+
+            BeginShaderMode(shaderEntry->shader);
+
+            SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->timeLoc, timeSeconds);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->scrollSpeedLoc, effect.shaderParams.scrollSpeed);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->uvScaleLoc, effect.shaderParams.uvScale);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->distortionAmountLoc, effect.shaderParams.distortionAmount);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->noiseScrollSpeedLoc, effect.shaderParams.noiseScrollSpeed);
+            SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->intensityLoc, effect.shaderParams.intensity);
+            SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->phaseOffsetLoc, effect.shaderParams.phaseOffset);
+
+            DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
+
+            EndShaderMode();
+        } else {
+            DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
+        }
+    } else {
+        DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
+    }
+
+    EndBlendMode();
+    BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
+}
+
+static void DrawSceneEffectRegion(
+        const GameState& state,
+        const SceneEffectRegionData& sceneEffect,
+        const EffectRegionInstance& effect)
+{
+    if (!effect.visible || sceneEffect.textureHandle < 0) {
+        return;
+    }
+
+    const TextureResource* texRes = FindTextureResource(state.resources, sceneEffect.textureHandle);
+    if (texRes == nullptr || !texRes->loaded) {
+        return;
+    }
+
+    const Vector2 cam = state.adventure.camera.position;
+
+    Rectangle src{};
+    src.x = 0.0f;
+    src.y = 0.0f;
+    src.width = static_cast<float>(texRes->texture.width);
+    src.height = static_cast<float>(texRes->texture.height);
+
+    Rectangle dst{};
+    dst.x = sceneEffect.worldRect.x - cam.x;
+    dst.y = sceneEffect.worldRect.y - cam.y;
+    dst.width = sceneEffect.worldRect.width;
+    dst.height = sceneEffect.worldRect.height;
+
+    Color drawColor = effect.tint;
+    drawColor.a = MultiplyU8(
+            drawColor.a,
+            static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity))));
+
+    const SceneEffectShaderCategory shaderCategory = GetEffectShaderCategory(effect.shaderType);
+
+    EndBlendMode();
+    BeginBlendMode(GetRaylibBlendMode(sceneEffect.blendMode));
+
+    if (shaderCategory == SceneEffectShaderCategory::SelfTexture) {
+        const EffectShaderEntry* shaderEntry = FindEffectShaderEntry(effect.shaderType);
+        if (shaderEntry != nullptr) {
+            const float timeSeconds = static_cast<float>(GetTime());
+            const Vector2 sceneSize{
+                    1920.0f,
+                    1080.0f
+            };
+
+            const Vector2 regionPos{
+                    sceneEffect.worldRect.x - state.adventure.camera.position.x,
+                    sceneEffect.worldRect.y - state.adventure.camera.position.y
+            };
+
+            const Vector2 regionSize{
+                    sceneEffect.worldRect.width,
+                    sceneEffect.worldRect.height
+            };
+
+            BeginShaderMode(shaderEntry->shader);
+
+            SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->timeLoc, timeSeconds);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->scrollSpeedLoc, effect.shaderParams.scrollSpeed);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->uvScaleLoc, effect.shaderParams.uvScale);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->distortionAmountLoc, effect.shaderParams.distortionAmount);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->noiseScrollSpeedLoc, effect.shaderParams.noiseScrollSpeed);
+            SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->intensityLoc, effect.shaderParams.intensity);
+            SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->phaseOffsetLoc, effect.shaderParams.phaseOffset);
+
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->sceneSizeLoc, sceneSize);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->regionPosLoc, regionPos);
+            SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->regionSizeLoc, regionSize);
+            SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->softnessLoc, effect.shaderParams.softness);
+
+            DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
+
+            EndShaderMode();
+        } else {
+            DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
+        }
+    } else {
+        DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
+    }
+
     EndBlendMode();
     BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
 }
@@ -454,6 +608,166 @@ static void DrawOverlayEffectSprites(const GameState& state)
     }
 }
 
+static void DrawBackEffectRegions(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::Back) {
+            continue;
+        }
+
+        DrawSceneEffectRegion(state, sceneEffect, effect);
+    }
+}
+
+static void DrawFrontEffectRegions(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::Front) {
+            continue;
+        }
+
+        if (sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
+        DrawSceneEffectRegion(state, sceneEffect, effect);
+    }
+}
+
+static void DrawOverlayEffectRegions(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (!sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
+        DrawSceneEffectRegion(state, sceneEffect, effect);
+    }
+}
+
+bool ApplySceneSampleEffectRegionPass(
+        const GameState& state,
+        int effectRegionIndex,
+        const RenderTexture2D& sourceTarget,
+        RenderTexture2D& destTarget)
+{
+    if (effectRegionIndex < 0 ||
+        effectRegionIndex >= static_cast<int>(state.adventure.currentScene.effectRegions.size()) ||
+        effectRegionIndex >= static_cast<int>(state.adventure.effectRegions.size())) {
+        return false;
+    }
+
+    const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[effectRegionIndex];
+    const EffectRegionInstance& effect = state.adventure.effectRegions[effectRegionIndex];
+
+    if (!effect.visible) {
+        return false;
+    }
+
+    if (GetEffectShaderCategory(effect.shaderType) != SceneEffectShaderCategory::SceneSample) {
+        return false;
+    }
+
+    const EffectShaderEntry* shaderEntry = FindEffectShaderEntry(effect.shaderType);
+    if (shaderEntry == nullptr) {
+        return false;
+    }
+
+    const Vector2 cam = state.adventure.camera.position;
+
+    Vector2 regionPos{
+            sceneEffect.worldRect.x - cam.x,
+            sceneEffect.worldRect.y - cam.y
+    };
+
+    Vector2 regionSize{
+            sceneEffect.worldRect.width,
+            sceneEffect.worldRect.height
+    };
+
+    const float timeSeconds = static_cast<float>(GetTime());
+    const Vector2 sceneSize{
+            static_cast<float>(sourceTarget.texture.width),
+            static_cast<float>(sourceTarget.texture.height)
+    };
+
+    BeginTextureMode(destTarget);
+    ClearBackground(BLACK);
+
+    BeginShaderMode(shaderEntry->shader);
+
+    SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->timeLoc, timeSeconds);
+    SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->scrollSpeedLoc, effect.shaderParams.scrollSpeed);
+    SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->uvScaleLoc, effect.shaderParams.uvScale);
+    SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->distortionAmountLoc, effect.shaderParams.distortionAmount);
+    SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->noiseScrollSpeedLoc, effect.shaderParams.noiseScrollSpeed);
+    SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->intensityLoc, effect.shaderParams.intensity);
+    SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->phaseOffsetLoc, effect.shaderParams.phaseOffset);
+    SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->sceneSizeLoc, sceneSize);
+    SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->regionPosLoc, regionPos);
+    SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->regionSizeLoc, regionSize);
+    SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->brightnessLoc, effect.shaderParams.brightness);
+    SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->contrastLoc, effect.shaderParams.contrast);
+    SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->saturationLoc, effect.shaderParams.saturation);
+
+    if (shaderEntry->tintLoc >= 0) {
+        const float tint[3] = {
+                effect.shaderParams.tintR,
+                effect.shaderParams.tintG,
+                effect.shaderParams.tintB
+        };
+        SetShaderValue(shaderEntry->shader, shaderEntry->tintLoc, tint, SHADER_UNIFORM_VEC3);
+    }
+
+    SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->softnessLoc, effect.shaderParams.softness);
+
+    DrawTexturePro(
+            sourceTarget.texture,
+            GetRenderTargetSourceRect(sourceTarget.texture),
+            GetRenderTargetDestRect(destTarget.texture),
+            Vector2{0.0f, 0.0f},
+            0.0f,
+            WHITE);
+
+    EndShaderMode();
+    EndTextureMode();
+
+    return true;
+}
+
 void RenderAdventureScene(const GameState& state)
 {
     if (!state.adventure.currentScene.loaded) {
@@ -468,11 +782,13 @@ void RenderAdventureScene(const GameState& state)
 
     DrawBackProps(state);
     DrawBackEffectSprites(state);
+    DrawBackEffectRegions(state);
 
     enum class WorldDrawItemType {
         Actor,
         Prop,
-        EffectSprite
+        EffectSprite,
+        EffectRegion
     };
 
     struct WorldDrawItem {
@@ -481,6 +797,7 @@ void RenderAdventureScene(const GameState& state)
         int actorIndex = -1;
         int propIndex = -1;
         int effectIndex = -1;
+        int effectRegionIndex = -1;
     };
 
     std::vector<WorldDrawItem> drawItems;
@@ -542,6 +859,34 @@ void RenderAdventureScene(const GameState& state)
         drawItems.push_back(item);
     }
 
+
+    // collect effect regions
+    const int effectRegionCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectRegionCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::DepthSorted) {
+            continue;
+        }
+
+        if (sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
+        WorldDrawItem item;
+        item.sortY = sceneEffect.worldRect.y + sceneEffect.worldRect.height;
+        item.type = WorldDrawItemType::EffectRegion;
+        item.effectRegionIndex = i;
+        drawItems.push_back(item);
+    }
+
     std::sort(drawItems.begin(), drawItems.end(),
               [](const WorldDrawItem& a, const WorldDrawItem& b) {
                   if (a.sortY != b.sortY) {
@@ -561,6 +906,9 @@ void RenderAdventureScene(const GameState& state)
 
                       case WorldDrawItemType::EffectSprite:
                           return a.effectIndex < b.effectIndex;
+
+                      case WorldDrawItemType::EffectRegion:
+                          return a.effectRegionIndex < b.effectRegionIndex;
 
                       default:
                           return false;
@@ -598,6 +946,17 @@ void RenderAdventureScene(const GameState& state)
                 }
                 break;
 
+            case WorldDrawItemType::EffectRegion:
+                if (item.effectRegionIndex >= 0 &&
+                    item.effectRegionIndex < static_cast<int>(state.adventure.currentScene.effectRegions.size()) &&
+                    item.effectRegionIndex < static_cast<int>(state.adventure.effectRegions.size())) {
+                    DrawSceneEffectRegion(
+                            state,
+                            state.adventure.currentScene.effectRegions[item.effectRegionIndex],
+                            state.adventure.effectRegions[item.effectRegionIndex]);
+                }
+                break;
+
             default:
                 break;
         }
@@ -605,12 +964,14 @@ void RenderAdventureScene(const GameState& state)
 
     DrawFrontProps(state);
     DrawFrontEffectSprites(state);
+    DrawFrontEffectRegions(state);
 
     for (const SceneImageLayer& layer : state.adventure.currentScene.foregroundLayers) {
         DrawSceneImageLayer(state, layer);
     }
 
     DrawOverlayEffectSprites(state);
+    DrawOverlayEffectRegions(state);
 
     EndBlendMode();
 }

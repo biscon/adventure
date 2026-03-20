@@ -11,6 +11,7 @@
 #include "adventure/AdventureActorHelpers.h"
 #include "audio/Audio.h"
 #include "save/SaveGame.h"
+#include "resources/TextureAsset.h"
 
 static std::vector<std::string> SplitConsoleWords(const std::string& text)
 {
@@ -203,6 +204,26 @@ bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line)
     }
 
     if (cmd == "/resources") {
+        auto TextureFilterModeToText = [](TextureFilterMode mode) -> const char* {
+            switch (mode) {
+                case TextureFilterMode::Bilinear:
+                    return "bilinear";
+                case TextureFilterMode::Point:
+                default:
+                    return "point";
+            }
+        };
+
+        auto TextureWrapModeToText = [](TextureWrapMode mode) -> const char* {
+            switch (mode) {
+                case TextureWrapMode::Repeat:
+                    return "repeat";
+                case TextureWrapMode::Clamp:
+                default:
+                    return "clamp";
+            }
+        };
+
         DebugConsoleAddLine(
                 state,
                 TextFormat("textures: %d", static_cast<int>(state.resources.textures.size())),
@@ -213,6 +234,17 @@ bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line)
                     state,
                     TextFormat("  [tex %d] %s", tex.handle, tex.path.c_str()),
                     LIGHTGRAY);
+
+            DebugConsoleAddLine(
+                    state,
+                    TextFormat("      pma=%s filter=%s wrap=%s size=%dx%d scope=%s",
+                               tex.premultiplyAlpha ? "true" : "false",
+                               TextureFilterModeToText(tex.filterMode),
+                               TextureWrapModeToText(tex.wrapMode),
+                               tex.texture.width,
+                               tex.texture.height,
+                               tex.scope == ResourceScope::Global ? "global" : "scene"),
+                    GRAY);
         }
 
         DebugConsoleAddLine(

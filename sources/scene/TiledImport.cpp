@@ -140,6 +140,56 @@ static bool ParseSceneEffectBlendMode(const std::string& s, SceneEffectBlendMode
     return false;
 }
 
+static bool ParseSceneEffectShaderType(const std::string& s, SceneEffectShaderType& outType)
+{
+    if (s.empty() || s == "none") {
+        outType = SceneEffectShaderType::None;
+        return true;
+    }
+    if (s == "uv_scroll") {
+        outType = SceneEffectShaderType::UvScroll;
+        return true;
+    }
+    if (s == "heat_shimmer") {
+        outType = SceneEffectShaderType::HeatShimmer;
+        return true;
+    }
+    if (s == "region_grade") {
+        outType = SceneEffectShaderType::RegionGrade;
+        return true;
+    }
+    return false;
+}
+
+static const char* SceneEffectShaderTypeToString(SceneEffectShaderType type)
+{
+    switch (type) {
+        case SceneEffectShaderType::UvScroll:
+            return "uv_scroll";
+        case SceneEffectShaderType::HeatShimmer:
+            return "heat_shimmer";
+        case SceneEffectShaderType::RegionGrade:
+            return "region_grade";
+        case SceneEffectShaderType::None:
+        default:
+            return "none";
+    }
+}
+
+static SceneEffectShaderCategory GetSceneEffectShaderCategory(SceneEffectShaderType type)
+{
+    switch (type) {
+        case SceneEffectShaderType::UvScroll:
+            return SceneEffectShaderCategory::SelfTexture;
+        case SceneEffectShaderType::HeatShimmer:
+        case SceneEffectShaderType::RegionGrade:
+            return SceneEffectShaderCategory::SceneSample;
+        case SceneEffectShaderType::None:
+        default:
+            return SceneEffectShaderCategory::None;
+    }
+}
+
 static bool TryGetEffectGroupInfoFromGroupName(const std::string& groupName,
                                                ScenePropDepthMode& outMode,
                                                bool& outRenderAsOverlay)
@@ -412,9 +462,25 @@ static void ProcessLayerRecursive(
             effect.tint = WHITE;
         }
 
+        effect.shaderIdString = GetStringPropertyOrDefault(layer, "shaderId", "");
+        if (!ParseSceneEffectShaderType(effect.shaderIdString, effect.shaderType)) {
+            TraceLog(LOG_WARNING,
+                     "Unsupported effect shaderId '%s' on effect '%s', falling back to none",
+                     effect.shaderIdString.c_str(),
+                     effect.id.c_str());
+            effect.shaderType = SceneEffectShaderType::None;
+            effect.shaderIdString.clear();
+        }
+
+        TextureLoadSettings textureSettings{};
+        if (effect.shaderType == SceneEffectShaderType::UvScroll) {
+            textureSettings.filter = TextureFilterMode::Bilinear;
+            textureSettings.wrap = TextureWrapMode::Repeat;
+        }
+
         const fs::path imagePath = (tiledDir / imageRel).lexically_normal();
         effect.imagePath = NormalizePath(imagePath);
-        effect.textureHandle = LoadTextureAsset(resources, effect.imagePath.c_str());
+        effect.textureHandle = LoadTextureAsset(resources, effect.imagePath.c_str(), textureSettings);
         if (effect.textureHandle < 0) {
             TraceLog(LOG_ERROR,
                      "Failed loading effect image for '%s': %s",
@@ -431,6 +497,24 @@ static void ProcessLayerRecursive(
 
         effect.worldSize.x = effect.sourceSize.x * static_cast<float>(scene.baseAssetScale);
         effect.worldSize.y = effect.sourceSize.y * static_cast<float>(scene.baseAssetScale);
+
+        GetFloatProperty(layer, "scrollSpeedX", effect.shaderParams.scrollSpeed.x);
+        GetFloatProperty(layer, "scrollSpeedY", effect.shaderParams.scrollSpeed.y);
+        GetFloatProperty(layer, "uvScaleX", effect.shaderParams.uvScale.x);
+        GetFloatProperty(layer, "uvScaleY", effect.shaderParams.uvScale.y);
+        GetFloatProperty(layer, "distortionX", effect.shaderParams.distortionAmount.x);
+        GetFloatProperty(layer, "distortionY", effect.shaderParams.distortionAmount.y);
+        GetFloatProperty(layer, "noiseSpeedX", effect.shaderParams.noiseScrollSpeed.x);
+        GetFloatProperty(layer, "noiseSpeedY", effect.shaderParams.noiseScrollSpeed.y);
+        GetFloatProperty(layer, "intensity", effect.shaderParams.intensity);
+        GetFloatProperty(layer, "phaseOffset", effect.shaderParams.phaseOffset);
+        GetFloatProperty(layer, "brightness", effect.shaderParams.brightness);
+        GetFloatProperty(layer, "contrast", effect.shaderParams.contrast);
+        GetFloatProperty(layer, "saturation", effect.shaderParams.saturation);
+        GetFloatProperty(layer, "tintR", effect.shaderParams.tintR);
+        GetFloatProperty(layer, "tintG", effect.shaderParams.tintG);
+        GetFloatProperty(layer, "tintB", effect.shaderParams.tintB);
+        GetFloatProperty(layer, "softness", effect.shaderParams.softness);
 
         scene.effectSprites.push_back(effect);
         return;
@@ -720,6 +804,136 @@ static void ProcessLayerRecursive(
         return;
     }
 
+    if (type == "objectgroup" && name == "effect_regions") {
+        if (!layer.contains("objects") || !layer["objects"].is_array()) {
+            return;
+        }
+
+        for (const auto& obj : layer["objects"]) {
+            if (!obj.value("visible", true)) {
+                continue;
+            }
+
+            SceneEffectRegionData effect;
+            effect.id = obj.value("name", "");
+            if (effect.id.empty()) {
+                TraceLog(LOG_ERROR, "Effect region missing name");
+                continue;
+            }
+
+            const float width = GetFloatOrDefault(obj, "width", 0.0f);
+            const float height = GetFloatOrDefault(obj, "height", 0.0f);
+            if (width <= 0.0f || height <= 0.0f) {
+                TraceLog(LOG_ERROR, "Effect region must be a rectangle with non-zero size: %s", effect.id.c_str());
+                continue;
+            }
+
+            const std::string blendModeStr = GetStringPropertyOrDefault(obj, "blendMode", "normal");
+            if (!ParseSceneEffectBlendMode(blendModeStr, effect.blendMode)) {
+                TraceLog(LOG_WARNING,
+                         "Unsupported blendMode '%s' on effect region '%s', falling back to normal",
+                         blendModeStr.c_str(),
+                         effect.id.c_str());
+                effect.blendMode = SceneEffectBlendMode::Normal;
+            }
+
+            const std::string depthModeStr = GetStringPropertyOrDefault(obj, "depthMode", "depthSorted");
+            if (!ParseScenePropDepthMode(depthModeStr, effect.depthMode)) {
+                TraceLog(LOG_WARNING,
+                         "Unsupported depthMode '%s' on effect region '%s', falling back to depthSorted",
+                         depthModeStr.c_str(),
+                         effect.id.c_str());
+                effect.depthMode = ScenePropDepthMode::DepthSorted;
+            }
+
+            bool renderAsOverlay = false;
+            if (GetBoolProperty(obj, "overlay", renderAsOverlay)) {
+                effect.renderAsOverlay = renderAsOverlay;
+            }
+
+            effect.opacity = GetFloatOrDefault(obj, "opacity", 1.0f);
+            effect.visible = obj.value("visible", true);
+
+            effect.shaderIdString = GetStringPropertyOrDefault(obj, "shaderId", "");
+            if (!ParseSceneEffectShaderType(effect.shaderIdString, effect.shaderType)) {
+                TraceLog(LOG_WARNING,
+                         "Unsupported effect shaderId '%s' on effect region '%s', falling back to none",
+                         effect.shaderIdString.c_str(),
+                         effect.id.c_str());
+                effect.shaderType = SceneEffectShaderType::None;
+                effect.shaderIdString.clear();
+            }
+
+            const SceneEffectShaderCategory shaderCategory =
+                    GetSceneEffectShaderCategory(effect.shaderType);
+
+            const std::string assetRel = GetStringPropertyOrDefault(obj, "asset", "");
+            if (shaderCategory == SceneEffectShaderCategory::SelfTexture && assetRel.empty()) {
+                TraceLog(LOG_ERROR,
+                         "Effect region missing asset property for self-texture shader: %s",
+                         effect.id.c_str());
+                continue;
+            }
+
+            TextureLoadSettings textureSettings{};
+
+            if (effect.shaderType == SceneEffectShaderType::UvScroll) {
+                textureSettings.filter = TextureFilterMode::Bilinear;
+                textureSettings.wrap = TextureWrapMode::Repeat;
+            }
+
+            if (!assetRel.empty()) {
+                const fs::path assetPath = (tiledDir / assetRel).lexically_normal();
+                effect.imagePath = NormalizePath(assetPath);
+                effect.textureHandle = LoadTextureAsset(resources, effect.imagePath.c_str(), textureSettings);
+                if (effect.textureHandle < 0) {
+                    TraceLog(LOG_ERROR,
+                             "Failed loading effect region image for '%s': %s",
+                             effect.id.c_str(),
+                             effect.imagePath.c_str());
+                    continue;
+                }
+            } else {
+                effect.imagePath.clear();
+                effect.textureHandle = -1;
+            }
+
+            effect.worldRect.x =
+                    (totalOffsetX + GetFloatOrDefault(obj, "x", 0.0f)) *
+                    static_cast<float>(scene.baseAssetScale);
+            effect.worldRect.y =
+                    (totalOffsetY + GetFloatOrDefault(obj, "y", 0.0f)) *
+                    static_cast<float>(scene.baseAssetScale);
+            effect.worldRect.width = width * static_cast<float>(scene.baseAssetScale);
+            effect.worldRect.height = height * static_cast<float>(scene.baseAssetScale);
+
+            GetFloatProperty(obj, "scrollSpeedX", effect.shaderParams.scrollSpeed.x);
+            GetFloatProperty(obj, "scrollSpeedY", effect.shaderParams.scrollSpeed.y);
+
+            GetFloatProperty(obj, "uvScaleX", effect.shaderParams.uvScale.x);
+            GetFloatProperty(obj, "uvScaleY", effect.shaderParams.uvScale.y);
+
+            GetFloatProperty(obj, "distortionX", effect.shaderParams.distortionAmount.x);
+            GetFloatProperty(obj, "distortionY", effect.shaderParams.distortionAmount.y);
+
+            GetFloatProperty(obj, "noiseSpeedX", effect.shaderParams.noiseScrollSpeed.x);
+            GetFloatProperty(obj, "noiseSpeedY", effect.shaderParams.noiseScrollSpeed.y);
+
+            GetFloatProperty(obj, "intensity", effect.shaderParams.intensity);
+            GetFloatProperty(obj, "phaseOffset", effect.shaderParams.phaseOffset);
+            GetFloatProperty(obj, "brightness", effect.shaderParams.brightness);
+            GetFloatProperty(obj, "contrast", effect.shaderParams.contrast);
+            GetFloatProperty(obj, "saturation", effect.shaderParams.saturation);
+            GetFloatProperty(obj, "tintR", effect.shaderParams.tintR);
+            GetFloatProperty(obj, "tintG", effect.shaderParams.tintG);
+            GetFloatProperty(obj, "tintB", effect.shaderParams.tintB);
+            GetFloatProperty(obj, "softness", effect.shaderParams.softness);
+
+            scene.effectRegions.push_back(effect);
+        }
+        return;
+    }
+
     if (type == "objectgroup" && name == "sound_emitters") {
         if (!layer.contains("objects") || !layer["objects"].is_array()) {
             return;
@@ -786,6 +1000,7 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
     scene.backgroundLayers.clear();
     scene.foregroundLayers.clear();
     scene.effectSprites.clear();
+    scene.effectRegions.clear();
     scene.navMesh = {};
     scene.spawns.clear();
     scene.hotspots.clear();
@@ -828,11 +1043,12 @@ bool ImportTiledSceneIntoSceneData(SceneData& scene, ResourceData& resources, co
     }
 
     TraceLog(LOG_INFO,
-             "Imported Tiled scene: %s (bg=%d fg=%d effects=%d navPolys=%d spawns=%d hotspots=%d exits=%d props=%d actors=%d emitters=%d)",
+             "Imported Tiled scene: %s (bg=%d fg=%d effects=%d effectRegions=%d navPolys=%d spawns=%d hotspots=%d exits=%d props=%d actors=%d emitters=%d)",
              scene.tiledFilePath.c_str(),
              static_cast<int>(scene.backgroundLayers.size()),
              static_cast<int>(scene.foregroundLayers.size()),
              static_cast<int>(scene.effectSprites.size()),
+             static_cast<int>(scene.effectRegions.size()),
              static_cast<int>(scene.navMesh.sourcePolygons.size()),
              static_cast<int>(scene.spawns.size()),
              static_cast<int>(scene.hotspots.size()),

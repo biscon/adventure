@@ -1,6 +1,7 @@
 #include "TextureAsset.h"
 
 #include <filesystem>
+#include <sstream>
 #include "raylib.h"
 
 static std::string NormalizePath(const char* filePath)
@@ -8,7 +9,45 @@ static std::string NormalizePath(const char* filePath)
     return std::filesystem::path(filePath).lexically_normal().string();
 }
 
-static Texture2D LoadTexturePreMultiplied(const char* fileName)
+static int ToRaylibTextureFilter(TextureFilterMode mode)
+{
+    switch (mode) {
+        case TextureFilterMode::Bilinear:
+            return TEXTURE_FILTER_BILINEAR;
+
+        case TextureFilterMode::Point:
+        default:
+            return TEXTURE_FILTER_POINT;
+    }
+}
+
+static int ToRaylibTextureWrap(TextureWrapMode mode)
+{
+    switch (mode) {
+        case TextureWrapMode::Repeat:
+            return TEXTURE_WRAP_REPEAT;
+
+        case TextureWrapMode::Clamp:
+        default:
+            return TEXTURE_WRAP_CLAMP;
+    }
+}
+
+static std::string BuildTextureCacheKey(
+        const std::string& normalizedPath,
+        const TextureLoadSettings& settings)
+{
+    std::ostringstream out;
+    out << normalizedPath
+        << "|pma=" << (settings.premultiplyAlpha ? 1 : 0)
+        << "|filter=" << static_cast<int>(settings.filter)
+        << "|wrap=" << static_cast<int>(settings.wrap);
+    return out.str();
+}
+
+static Texture2D LoadTextureWithSettings(
+        const char* fileName,
+        const TextureLoadSettings& settings)
 {
     Image img = LoadImage(fileName);
     if (img.data == nullptr) {
@@ -16,12 +55,16 @@ static Texture2D LoadTexturePreMultiplied(const char* fileName)
         return Texture2D{};
     }
 
-    ImageAlphaPremultiply(&img);
+    if (settings.premultiplyAlpha) {
+        ImageAlphaPremultiply(&img);
+    }
+
     Texture2D tex = LoadTextureFromImage(img);
     UnloadImage(img);
 
     if (tex.id != 0) {
-        SetTextureFilter(tex, TEXTURE_FILTER_POINT);
+        SetTextureFilter(tex, ToRaylibTextureFilter(settings.filter));
+        SetTextureWrap(tex, ToRaylibTextureWrap(settings.wrap));
     }
 
     return tex;
@@ -32,14 +75,25 @@ TextureHandle LoadTextureAsset(
         const char* filePath,
         ResourceScope scope)
 {
-    const std::string normPath = NormalizePath(filePath);
+    const TextureLoadSettings defaultSettings{};
+    return LoadTextureAsset(resources, filePath, defaultSettings, scope);
+}
 
-    auto existing = resources.textureHandleByPath.find(normPath);
+TextureHandle LoadTextureAsset(
+        ResourceData& resources,
+        const char* filePath,
+        const TextureLoadSettings& settings,
+        ResourceScope scope)
+{
+    const std::string normPath = NormalizePath(filePath);
+    const std::string cacheKey = BuildTextureCacheKey(normPath, settings);
+
+    auto existing = resources.textureHandleByPath.find(cacheKey);
     if (existing != resources.textureHandleByPath.end()) {
         return existing->second;
     }
 
-    Texture2D tex = LoadTexturePreMultiplied(normPath.c_str());
+    Texture2D tex = LoadTextureWithSettings(normPath.c_str(), settings);
     if (tex.id == 0) {
         return -1;
     }
@@ -50,11 +104,14 @@ TextureHandle LoadTextureAsset(
     res.texture = tex;
     res.loaded = true;
     res.scope = scope;
+    res.premultiplyAlpha = settings.premultiplyAlpha;
+    res.filterMode = settings.filter;
+    res.wrapMode = settings.wrap;
 
     const size_t index = resources.textures.size();
     resources.textures.push_back(res);
     resources.textureIndexByHandle[res.handle] = index;
-    resources.textureHandleByPath[normPath] = res.handle;
+    resources.textureHandleByPath[cacheKey] = res.handle;
 
     TraceLog(LOG_INFO, "Loaded texture: %s", normPath.c_str());
     return res.handle;

@@ -118,6 +118,23 @@ struct EffectSpriteInstance {
     bool visible = true;
     float opacity = 1.0f;
     Color tint = WHITE;
+
+    SceneEffectShaderType shaderType = SceneEffectShaderType::None;
+    EffectShaderParams shaderParams{};
+};
+
+using EffectRegionHandle = int;
+
+struct EffectRegionInstance {
+    EffectRegionHandle handle = -1;
+    int sceneEffectRegionIndex = -1;
+
+    bool visible = true;
+    float opacity = 1.0f;
+    Color tint = WHITE;
+
+    SceneEffectShaderType shaderType = SceneEffectShaderType::None;
+    EffectShaderParams shaderParams{};
 };
 
 enum class CameraModeData
@@ -236,6 +253,9 @@ struct AdventureData {
 
     std::vector<EffectSpriteInstance> effectSprites;
     int nextEffectSpriteHandle = 1;
+
+    std::vector<EffectRegionInstance> effectRegions;
+    int nextEffectRegionHandle = 1;
 
     std::vector<ItemDefinitionData> itemDefinitions;
     std::vector<ActorInventoryData> actorInventories;

@@ -96,6 +96,7 @@ void UnloadCurrentScene(GameState& state)
     state.adventure.currentScene = {};
     state.adventure.props.clear();
     state.adventure.effectSprites.clear();
+    state.adventure.effectRegions.clear();
     state.adventure.camera = {};
     state.adventure.pendingInteraction = {};
     state.adventure.debugTrianglePath.clear();
@@ -248,8 +249,28 @@ bool LoadSceneById(GameState& state, const char* sceneId, SceneLoadMode loadMode
         effect.visible = sceneEffect.visible;
         effect.opacity = sceneEffect.opacity;
         effect.tint = sceneEffect.tint;
+        effect.shaderType = sceneEffect.shaderType;
+        effect.shaderParams = sceneEffect.shaderParams;
 
         state.adventure.effectSprites.push_back(effect);
+    }
+
+    state.adventure.effectRegions.clear();
+    state.adventure.effectRegions.reserve(state.adventure.currentScene.effectRegions.size());
+
+    for (int i = 0; i < static_cast<int>(state.adventure.currentScene.effectRegions.size()); ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+
+        EffectRegionInstance effect;
+        effect.handle = state.adventure.nextEffectRegionHandle++;
+        effect.sceneEffectRegionIndex = i;
+        effect.visible = sceneEffect.visible;
+        effect.opacity = sceneEffect.opacity;
+        effect.tint = sceneEffect.tint;
+        effect.shaderType = sceneEffect.shaderType;
+        effect.shaderParams = sceneEffect.shaderParams;
+
+        state.adventure.effectRegions.push_back(effect);
     }
 
     state.adventure.actors.clear();

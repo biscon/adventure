@@ -83,6 +83,36 @@ enum class SceneEffectBlendMode {
     Multiply
 };
 
+enum class SceneEffectShaderType {
+    None,
+    UvScroll,
+    HeatShimmer,
+    RegionGrade
+};
+
+enum class SceneEffectShaderCategory {
+    None,
+    SelfTexture,
+    SceneSample
+};
+
+struct EffectShaderParams {
+    Vector2 scrollSpeed{0.0f, 0.0f};
+    Vector2 uvScale{1.0f, 1.0f};
+    Vector2 distortionAmount{0.0f, 0.0f};
+    Vector2 noiseScrollSpeed{0.0f, 0.0f};
+    float intensity = 1.0f;
+    float phaseOffset = 0.0f;
+
+    float brightness = 0.0f;
+    float contrast = 1.0f;
+    float saturation = 1.0f;
+    float tintR = 1.0f;
+    float tintG = 1.0f;
+    float tintB = 1.0f;
+    float softness = 0.2f;
+};
+
 struct SceneEffectSpriteData {
     std::string id;
     std::string imagePath;
@@ -100,6 +130,31 @@ struct SceneEffectSpriteData {
     ScenePropDepthMode depthMode = ScenePropDepthMode::DepthSorted;
     SceneEffectBlendMode blendMode = SceneEffectBlendMode::Normal;
     bool renderAsOverlay = false;
+
+    SceneEffectShaderType shaderType = SceneEffectShaderType::None;
+    std::string shaderIdString;
+    EffectShaderParams shaderParams{};
+};
+
+struct SceneEffectRegionData {
+    std::string id;
+    std::string imagePath;
+
+    TextureHandle textureHandle = -1;
+
+    Rectangle worldRect{};
+
+    bool visible = true;
+    float opacity = 1.0f;
+    Color tint = WHITE;
+
+    ScenePropDepthMode depthMode = ScenePropDepthMode::DepthSorted;
+    SceneEffectBlendMode blendMode = SceneEffectBlendMode::Normal;
+    bool renderAsOverlay = false;
+
+    SceneEffectShaderType shaderType = SceneEffectShaderType::None;
+    std::string shaderIdString;
+    EffectShaderParams shaderParams{};
 };
 
 struct ScenePropData {
@@ -168,6 +223,7 @@ struct SceneData {
     std::vector<SceneImageLayer> backgroundLayers;
     std::vector<SceneImageLayer> foregroundLayers;
     std::vector<SceneEffectSpriteData> effectSprites;
+    std::vector<SceneEffectRegionData> effectRegions;
 
     NavMeshData navMesh;
 

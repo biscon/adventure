@@ -21,12 +21,33 @@ enum class AnimationPlaybackDirection {
     PingPong
 };
 
+enum class TextureFilterMode {
+    Point,
+    Bilinear
+};
+
+enum class TextureWrapMode {
+    Clamp,
+    Repeat
+};
+
+struct TextureLoadSettings {
+    bool premultiplyAlpha = true;
+    TextureFilterMode filter = TextureFilterMode::Point;
+    TextureWrapMode wrap = TextureWrapMode::Clamp;
+};
+
+
 struct TextureResource {
     TextureHandle handle = -1;
     std::string path;
     Texture2D texture{};
     bool loaded = false;
     ResourceScope scope = ResourceScope::Scene;
+
+    bool premultiplyAlpha = true;
+    TextureFilterMode filterMode = TextureFilterMode::Point;
+    TextureWrapMode wrapMode = TextureWrapMode::Clamp;
 };
 
 struct SpriteFrame {

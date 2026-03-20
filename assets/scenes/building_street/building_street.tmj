@@ -57,6 +57,7 @@
                  "height":0,
                  "id":4,
                  "name":"to_first_floor",
+                 "opacity":1,
                  "polygon":[
                         {
                          "x":-3.5,
@@ -142,6 +143,7 @@
                  "height":0,
                  "id":2,
                  "name":"default",
+                 "opacity":1,
                  "point":true,
                  "properties":[
                         {
@@ -161,6 +163,7 @@
                  "height":0,
                  "id":3,
                  "name":"doors",
+                 "opacity":1,
                  "point":true,
                  "properties":[
                         {
@@ -194,6 +197,7 @@
                          "height":0,
                          "id":1,
                          "name":"",
+                         "opacity":1,
                          "polygon":[
                                 {
                                  "x":-1.75,
@@ -277,6 +281,7 @@
                          "height":0,
                          "id":5,
                          "name":"",
+                         "opacity":1,
                          "polygon":[
                                 {
                                  "x":0,
@@ -316,12 +321,45 @@
          "visible":true,
          "x":0,
          "y":0
+        },
+    
+        {
+         "id":12,
+         "layers":[],
+         "name":"effects_back",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":13,
+         "layers":[],
+         "name":"effects_front",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":14,
+         "layers":[],
+         "name":"effects_overlay",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":12,
+ "nextlayerid":16,
  "nextobjectid":7,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.11.2",
+ "tiledversion":"1.12.0",
  "tileheight":180,
  "tilesets":[],
  "tilewidth":640,
