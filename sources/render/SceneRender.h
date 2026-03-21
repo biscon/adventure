@@ -2,8 +2,6 @@
 
 #include "data/GameState.h"
 
-void RenderAdventureScene(const GameState& state);
-
 bool ApplySceneSampleEffectRegionPass(
         const GameState& state,
         int effectRegionIndex,
