@@ -3,12 +3,8 @@
 #include "platform/MacFullscreenBridge.h"
 
 #include <raylib.h>
-
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
 #import <Cocoa/Cocoa.h>
+#import <dispatch/dispatch.h>
 
 static NSWindow* GetMacWindow()
 {
@@ -18,14 +14,21 @@ static NSWindow* GetMacWindow()
         return nil;
     }
 
-    GLFWwindow* glfwWindow = static_cast<GLFWwindow*>(handle);
-    NSWindow* nsWindow = glfwGetCocoaWindow(glfwWindow);
-
-    if (nsWindow == nil) {
-        TraceLog(LOG_WARNING, "MacFullscreenBridge: glfwGetCocoaWindow returned nil");
+    id cocoaObject = (__bridge id)handle;
+    if (cocoaObject == nil) {
+        TraceLog(LOG_WARNING, "MacFullscreenBridge: bridged Cocoa object was nil");
+        return nil;
     }
 
-    return nsWindow;
+    if ([cocoaObject isKindOfClass:[NSWindow class]]) {
+        return (NSWindow*)cocoaObject;
+    }
+
+    TraceLog(LOG_WARNING,
+             "MacFullscreenBridge: window handle is not NSWindow, class=%s",
+             class_getName([cocoaObject class]));
+
+    return nil;
 }
 
 bool IsMacNativeFullscreenSupported()
@@ -51,9 +54,10 @@ void ToggleMacNativeFullscreen()
         return;
     }
 
+    const bool active = (window.styleMask & NSWindowStyleMaskFullScreen) != 0;
     TraceLog(LOG_INFO,
              "MacFullscreenBridge: toggling native fullscreen (active=%s)",
-             (window.styleMask & NSWindowStyleMaskFullScreen) ? "true" : "false");
+             active ? "true" : "false");
 
     dispatch_async(dispatch_get_main_queue(), ^{
         [window toggleFullScreen:nil];
