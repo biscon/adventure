@@ -156,6 +156,7 @@ struct SceneEffectRegionData {
     ScenePropDepthMode depthMode = ScenePropDepthMode::DepthSorted;
     SceneEffectBlendMode blendMode = SceneEffectBlendMode::Normal;
     bool renderAsOverlay = false;
+    int sortOrder = 0;
 
     SceneEffectShaderType shaderType = SceneEffectShaderType::None;
     std::string shaderIdString;

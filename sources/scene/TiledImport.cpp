@@ -93,6 +93,29 @@ static bool GetBoolProperty(const json& obj, const char* name, bool& outValue)
     return false;
 }
 
+static bool GetIntProperty(const json& obj, const char* name, int& outValue)
+{
+    const json* prop = FindProperty(obj, name);
+    if (prop == nullptr) {
+        return false;
+    }
+
+    if (prop->contains("value")) {
+        const auto& v = (*prop)["value"];
+        if (v.is_number_integer()) {
+            outValue = v.get<int>();
+            return true;
+        }
+
+        if (v.is_number_float()) {
+            outValue = static_cast<int>(v.get<float>());
+            return true;
+        }
+    }
+
+    return false;
+}
+
 static bool ParseScenePropVisualType(const std::string& s, ScenePropVisualType& outType)
 {
     if (s == "sprite") {
@@ -837,9 +860,11 @@ static void ProcessLayerRecursive(
         }
 
         for (const auto& obj : layer["objects"]) {
+            /* Do not skip loading of invisible ones, just set the flag and let the engine hide them
             if (!obj.value("visible", true)) {
                 continue;
             }
+            */
 
             SceneEffectRegionData effect;
             effect.id = obj.value("name", "");
@@ -945,6 +970,7 @@ static void ProcessLayerRecursive(
 
             effect.opacity = GetFloatOrDefault(obj, "opacity", 1.0f);
             effect.visible = obj.value("visible", true);
+            GetIntProperty(obj, "sortOrder", effect.sortOrder);
 
             effect.shaderIdString = GetStringPropertyOrDefault(obj, "shaderId", "");
             if (!ParseSceneEffectShaderType(effect.shaderIdString, effect.shaderType)) {

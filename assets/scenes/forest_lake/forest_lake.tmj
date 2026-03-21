@@ -161,7 +161,7 @@
                         {
                          "name":"depthMode",
                          "type":"string",
-                         "value":"front"
+                         "value":"back"
                         },
                     
                         {

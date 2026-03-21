@@ -158,6 +158,34 @@ static void SetShaderPolygonIfValid(
     SetShaderValueV(shader, polygonPointsLoc, points, SHADER_UNIFORM_VEC2, vertexCount);
 }
 
+static void BeginWorldTarget(RenderTexture2D& target)
+{
+    BeginTextureMode(target);
+    BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
+}
+
+static void EndWorldTarget()
+{
+    EndBlendMode();
+    EndTextureMode();
+}
+
+static void BlitRenderTargetFull(
+        const RenderTexture2D& source,
+        RenderTexture2D& dest)
+{
+    BeginTextureMode(dest);
+    ClearBackground(BLACK);
+    DrawTexturePro(
+            source.texture,
+            GetRenderTargetSourceRect(source.texture),
+            GetRenderTargetDestRect(dest.texture),
+            Vector2{0.0f, 0.0f},
+            0.0f,
+            WHITE);
+    EndTextureMode();
+}
+
 static void DrawSceneImageLayer(const GameState& state, const SceneImageLayer& layer)
 {
     if (!layer.visible || layer.textureHandle < 0) {
@@ -799,6 +827,88 @@ static void DrawOverlayEffectRegions(const GameState& state)
     }
 }
 
+static void DrawBackEffectRegionsSelfTextureOnly(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::Back) {
+            continue;
+        }
+
+        if (GetEffectShaderCategory(effect.shaderType) == SceneEffectShaderCategory::SceneSample) {
+            continue;
+        }
+
+        DrawSceneEffectRegion(state, sceneEffect, effect);
+    }
+}
+
+static void DrawFrontEffectRegionsSelfTextureOnly(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::Front) {
+            continue;
+        }
+
+        if (sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
+        if (GetEffectShaderCategory(effect.shaderType) == SceneEffectShaderCategory::SceneSample) {
+            continue;
+        }
+
+        DrawSceneEffectRegion(state, sceneEffect, effect);
+    }
+}
+
+static void DrawOverlayEffectRegionsSelfTextureOnly(const GameState& state)
+{
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (!sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
+        if (GetEffectShaderCategory(effect.shaderType) == SceneEffectShaderCategory::SceneSample) {
+            continue;
+        }
+
+        DrawSceneEffectRegion(state, sceneEffect, effect);
+    }
+}
+
 bool ApplySceneSampleEffectRegionPass(
         const GameState& state,
         int effectRegionIndex,
@@ -899,6 +1009,59 @@ bool ApplySceneSampleEffectRegionPass(
     EndTextureMode();
 
     return true;
+}
+
+static void ApplySceneSampleEffectsForBucket(
+        const GameState& state,
+        ScenePropDepthMode depthMode,
+        bool overlayOnly,
+        RenderTexture2D*& currentSource,
+        RenderTexture2D*& currentDest)
+{
+    const int effectRegionCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    std::vector<int> sortedIndices;
+    sortedIndices.reserve(effectRegionCount);
+
+    for (int i = 0; i < effectRegionCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (GetEffectShaderCategory(effect.shaderType) != SceneEffectShaderCategory::SceneSample) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != depthMode) {
+            continue;
+        }
+
+        if (sceneEffect.renderAsOverlay != overlayOnly) {
+            continue;
+        }
+
+        sortedIndices.push_back(i);
+    }
+
+    std::stable_sort(
+            sortedIndices.begin(),
+            sortedIndices.end(),
+            [&](int a, int b) {
+                const SceneEffectRegionData& sceneA = state.adventure.currentScene.effectRegions[a];
+                const SceneEffectRegionData& sceneB = state.adventure.currentScene.effectRegions[b];
+                return sceneA.sortOrder < sceneB.sortOrder;
+            });
+
+    for (int effectRegionIndex : sortedIndices) {
+        if (ApplySceneSampleEffectRegionPass(state, effectRegionIndex, *currentSource, *currentDest)) {
+            std::swap(currentSource, currentDest);
+        }
+    }
 }
 
 void RenderAdventureScene(const GameState& state)
@@ -1110,4 +1273,279 @@ void RenderAdventureScene(const GameState& state)
     DrawOverlayEffectRegions(state);
 
     EndBlendMode();
+}
+
+void RenderAdventureSceneComposited(
+        const GameState& state,
+        RenderTexture2D& worldTarget,
+        RenderTexture2D& tempTarget)
+{
+    if (!state.adventure.currentScene.loaded) {
+        BeginTextureMode(worldTarget);
+        ClearBackground(BLACK);
+        EndTextureMode();
+        return;
+    }
+
+    RenderTexture2D* currentSource = &worldTarget;
+    RenderTexture2D* currentDest = &tempTarget;
+
+    BeginWorldTarget(*currentSource);
+    ClearBackground(BLACK);
+
+    for (const SceneImageLayer& layer : state.adventure.currentScene.backgroundLayers) {
+        DrawSceneImageLayer(state, layer);
+    }
+
+    DrawBackProps(state);
+    DrawBackEffectSprites(state);
+    DrawBackEffectRegionsSelfTextureOnly(state);
+
+    EndWorldTarget();
+
+    ApplySceneSampleEffectsForBucket(
+            state,
+            ScenePropDepthMode::Back,
+            false,
+            currentSource,
+            currentDest);
+
+    enum class WorldDrawItemType {
+        Actor,
+        Prop,
+        EffectSprite,
+        EffectRegion
+    };
+
+    struct WorldDrawItem {
+        float sortY = 0.0f;
+        int sortOrder = 0;
+        WorldDrawItemType type = WorldDrawItemType::Actor;
+        int actorIndex = -1;
+        int propIndex = -1;
+        int effectIndex = -1;
+        int effectRegionIndex = -1;
+    };
+
+    std::vector<WorldDrawItem> drawItems;
+
+    for (int i = 0; i < static_cast<int>(state.adventure.actors.size()); ++i) {
+        const ActorInstance& actor = state.adventure.actors[i];
+        if (!actor.activeInScene || !actor.visible) {
+            continue;
+        }
+
+        WorldDrawItem item;
+        item.sortY = actor.feetPos.y;
+        item.sortOrder = 0;
+        item.type = WorldDrawItemType::Actor;
+        item.actorIndex = i;
+        drawItems.push_back(item);
+    }
+
+    const int propCount = std::min(
+            static_cast<int>(state.adventure.currentScene.props.size()),
+            static_cast<int>(state.adventure.props.size()));
+
+    for (int i = 0; i < propCount; ++i) {
+        const ScenePropData& sceneProp = state.adventure.currentScene.props[i];
+        const PropInstance& prop = state.adventure.props[i];
+        if (!prop.visible) {
+            continue;
+        }
+
+        if (sceneProp.depthMode != ScenePropDepthMode::DepthSorted) {
+            continue;
+        }
+
+        WorldDrawItem item;
+        item.sortY = prop.feetPos.y;
+        item.sortOrder = 0;
+        item.type = WorldDrawItemType::Prop;
+        item.propIndex = i;
+        drawItems.push_back(item);
+    }
+
+    const int effectCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectSprites.size()),
+            static_cast<int>(state.adventure.effectSprites.size()));
+
+    for (int i = 0; i < effectCount; ++i) {
+        const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+        const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::DepthSorted) {
+            continue;
+        }
+
+        WorldDrawItem item;
+        item.sortY = sceneEffect.worldPos.y + sceneEffect.worldSize.y;
+        item.sortOrder = 0;
+        item.type = WorldDrawItemType::EffectSprite;
+        item.effectIndex = i;
+        drawItems.push_back(item);
+    }
+
+    const int effectRegionCount = std::min(
+            static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    for (int i = 0; i < effectRegionCount; ++i) {
+        const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+        if (!effect.visible) {
+            continue;
+        }
+
+        if (sceneEffect.depthMode != ScenePropDepthMode::DepthSorted) {
+            continue;
+        }
+
+        if (sceneEffect.renderAsOverlay) {
+            continue;
+        }
+
+        WorldDrawItem item;
+        item.sortY = sceneEffect.usePolygon
+                     ? GetPolygonMaxY(sceneEffect.polygon)
+                     : (sceneEffect.worldRect.y + sceneEffect.worldRect.height);
+        item.sortOrder = sceneEffect.sortOrder;
+        item.type = WorldDrawItemType::EffectRegion;
+        item.effectRegionIndex = i;
+        drawItems.push_back(item);
+    }
+
+    std::sort(drawItems.begin(), drawItems.end(),
+              [](const WorldDrawItem& a, const WorldDrawItem& b) {
+                  if (a.sortY != b.sortY) {
+                      return a.sortY < b.sortY;
+                  }
+
+                  if (a.sortOrder != b.sortOrder) {
+                      return a.sortOrder < b.sortOrder;
+                  }
+
+                  if (a.type != b.type) {
+                      return static_cast<int>(a.type) < static_cast<int>(b.type);
+                  }
+
+                  switch (a.type) {
+                      case WorldDrawItemType::Actor:
+                          return a.actorIndex < b.actorIndex;
+                      case WorldDrawItemType::Prop:
+                          return a.propIndex < b.propIndex;
+                      case WorldDrawItemType::EffectSprite:
+                          return a.effectIndex < b.effectIndex;
+                      case WorldDrawItemType::EffectRegion:
+                          return a.effectRegionIndex < b.effectRegionIndex;
+                      default:
+                          return false;
+                  }
+              });
+
+    BeginWorldTarget(*currentSource);
+
+    for (const WorldDrawItem& item : drawItems) {
+        switch (item.type) {
+            case WorldDrawItemType::Actor:
+                if (item.actorIndex >= 0 &&
+                    item.actorIndex < static_cast<int>(state.adventure.actors.size())) {
+                    DrawActor(state, state.adventure.actors[item.actorIndex]);
+                }
+                break;
+
+            case WorldDrawItemType::Prop:
+                if (item.propIndex >= 0 &&
+                    item.propIndex < static_cast<int>(state.adventure.currentScene.props.size()) &&
+                    item.propIndex < static_cast<int>(state.adventure.props.size())) {
+                    DrawProp(
+                            state,
+                            state.adventure.currentScene.props[item.propIndex],
+                            state.adventure.props[item.propIndex]);
+                }
+                break;
+
+            case WorldDrawItemType::EffectSprite:
+                if (item.effectIndex >= 0 &&
+                    item.effectIndex < static_cast<int>(state.adventure.currentScene.effectSprites.size()) &&
+                    item.effectIndex < static_cast<int>(state.adventure.effectSprites.size())) {
+                    DrawSceneEffectSprite(
+                            state,
+                            state.adventure.currentScene.effectSprites[item.effectIndex],
+                            state.adventure.effectSprites[item.effectIndex]);
+                }
+                break;
+
+            case WorldDrawItemType::EffectRegion:
+                if (item.effectRegionIndex >= 0 &&
+                    item.effectRegionIndex < static_cast<int>(state.adventure.currentScene.effectRegions.size()) &&
+                    item.effectRegionIndex < static_cast<int>(state.adventure.effectRegions.size())) {
+                    const EffectRegionInstance& effect = state.adventure.effectRegions[item.effectRegionIndex];
+
+                    if (GetEffectShaderCategory(effect.shaderType) == SceneEffectShaderCategory::SceneSample) {
+                        EndWorldTarget();
+
+                        if (ApplySceneSampleEffectRegionPass(
+                                state,
+                                item.effectRegionIndex,
+                                *currentSource,
+                                *currentDest)) {
+                            std::swap(currentSource, currentDest);
+                        }
+
+                        BeginWorldTarget(*currentSource);
+                    } else {
+                        DrawSceneEffectRegion(
+                                state,
+                                state.adventure.currentScene.effectRegions[item.effectRegionIndex],
+                                state.adventure.effectRegions[item.effectRegionIndex]);
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    EndWorldTarget();
+
+    BeginWorldTarget(*currentSource);
+    DrawFrontProps(state);
+    DrawFrontEffectSprites(state);
+    DrawFrontEffectRegionsSelfTextureOnly(state);
+    EndWorldTarget();
+
+    ApplySceneSampleEffectsForBucket(
+            state,
+            ScenePropDepthMode::Front,
+            false,
+            currentSource,
+            currentDest);
+
+
+    BeginWorldTarget(*currentSource);
+
+    for (const SceneImageLayer& layer : state.adventure.currentScene.foregroundLayers) {
+        DrawSceneImageLayer(state, layer);
+    }
+
+    DrawOverlayEffectSprites(state);
+    DrawOverlayEffectRegionsSelfTextureOnly(state);
+
+    EndWorldTarget();
+
+    ApplySceneSampleEffectsForBucket(
+            state,
+            ScenePropDepthMode::Front,
+            true,
+            currentSource,
+            currentDest);
+
+    if (currentSource != &worldTarget) {
+        BlitRenderTargetFull(*currentSource, worldTarget);
+    }
 }

@@ -77,11 +77,11 @@ int main()
     RenderTexture2D worldTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
     SetTextureFilter(worldTarget.texture, TEXTURE_FILTER_BILINEAR);
 
-    RenderTexture2D sceneTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
-    SetTextureFilter(sceneTarget.texture, TEXTURE_FILTER_BILINEAR);
+    RenderTexture2D worldSampleTempTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
+    SetTextureFilter(worldSampleTempTarget.texture, TEXTURE_FILTER_BILINEAR);
 
-    RenderTexture2D sceneSampleTempTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
-    SetTextureFilter(sceneSampleTempTarget.texture, TEXTURE_FILTER_BILINEAR);
+    RenderTexture2D uiTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
+    SetTextureFilter(uiTarget.texture, TEXTURE_FILTER_BILINEAR);
 
     GameState state;
 
@@ -135,52 +135,28 @@ int main()
 
         UpdateAudio(state, dt);
 
-
         if (state.mode == GameMode::Game) {
+            RenderAdventureSceneComposited(state, worldTarget, worldSampleTempTarget);
+
             BeginTextureMode(worldTarget);
-            ClearBackground(BLACK);
-            RenderAdventureScene(state);
-            EndTextureMode();
-
-            BlitRenderTarget(worldTarget, sceneTarget);
-
-            RenderTexture2D* currentSource = &sceneTarget;
-            RenderTexture2D* currentDest = &sceneSampleTempTarget;
-
-            const int effectRegionCount = std::min(
-                    static_cast<int>(state.adventure.currentScene.effectRegions.size()),
-                    static_cast<int>(state.adventure.effectRegions.size()));
-
-            for (int i = 0; i < effectRegionCount; ++i) {
-                const EffectRegionInstance& effect = state.adventure.effectRegions[i];
-                if (!effect.visible) {
-                    continue;
-                }
-
-                if (GetEffectShaderCategory(effect.shaderType) != SceneEffectShaderCategory::SceneSample) {
-                    continue;
-                }
-
-                if (ApplySceneSampleEffectRegionPass(state, i, *currentSource, *currentDest)) {
-                    std::swap(currentSource, currentDest);
-                }
-            }
-
-            if (currentSource != &sceneTarget) {
-                BlitRenderTarget(*currentSource, sceneTarget);
-            }
-
-            BeginTextureMode(sceneTarget);
-            RenderAdventureUi(state);
             RenderAdventureDebug(state);
             EndTextureMode();
+
+            BeginTextureMode(uiTarget);
+            ClearBackground(BLANK);
+            RenderAdventureUi(state);
+            EndTextureMode();
         } else {
-            BeginTextureMode(sceneTarget);
+            BeginTextureMode(worldTarget);
             ClearBackground(BLACK);
+            EndTextureMode();
+
+            BeginTextureMode(uiTarget);
+            ClearBackground(BLANK);
             EndTextureMode();
         }
 
-        BeginTextureMode(sceneTarget);
+        BeginTextureMode(uiTarget);
 
         if (state.mode == GameMode::Menu) {
             MenuRenderUi(state);
@@ -198,8 +174,11 @@ int main()
         ClearBackground(BLACK);
 
         // blit 1080p to actual screen size. Settings menu make sure there are only resolutions with the same aspect ratio (eg 1080p 1440p and 4k)
-        Rectangle src = GetFullscreenSrcRect(sceneTarget.texture);
-        DrawTexturePro(sceneTarget.texture, src, dst, {0,0}, 0.0f, WHITE);
+        Rectangle worldSrc = GetFullscreenSrcRect(worldTarget.texture);
+        DrawTexturePro(worldTarget.texture, worldSrc, dst, {0,0}, 0.0f, WHITE);
+
+        Rectangle uiSrc = GetFullscreenSrcRect(uiTarget.texture);
+        DrawTexturePro(uiTarget.texture, uiSrc, dst, {0,0}, 0.0f, WHITE);
 
         float scale = dst.width / INTERNAL_WIDTH;
         RenderCursor(state, scale);
@@ -215,8 +194,8 @@ int main()
     ShutdownAudio(state);
     UnloadAllResources(state.resources);
     UnloadRenderTexture(worldTarget);
-    UnloadRenderTexture(sceneTarget);
-    UnloadRenderTexture(sceneSampleTempTarget);
+    UnloadRenderTexture(worldSampleTempTarget);
+    UnloadRenderTexture(uiTarget);
     ShutdownEffectShaderRegistry();
     ShutdownCursor(state);
     CloseWindow();
