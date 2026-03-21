@@ -25,19 +25,19 @@ if(UNIX AND NOT APPLE)
 endif()
 
 # -------------------------------
-# macOS: let Cursor.cpp compile as OBJC++
+# macOS native fullscreen bridge
 # -------------------------------
 if(APPLE)
+    enable_language(OBJCXX)
+
     target_link_libraries(${PROJECT_NAME}
             PRIVATE
             "-framework Cocoa"
             "-framework CoreFoundation"
     )
 
-    enable_language(OBJCXX)
-    set_source_files_properties(
-            sources/graphics/Cursor.cpp
-            PROPERTIES LANGUAGE OBJCXX
+    target_sources(${PROJECT_NAME} PRIVATE
+            sources/platform/MacFullscreenBridge.mm
     )
 endif()
 
