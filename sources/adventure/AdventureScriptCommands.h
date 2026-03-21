@@ -111,6 +111,12 @@ bool AdventureScriptPanCameraToHotspot(GameState& state,
                                        float durationMs,
                                        const std::string& interpolationName);
 
+bool AdventureScriptShakeScreen(GameState& state,
+                                float durationMs,
+                                float strengthPx,
+                                float frequencyHz = 30.0f,
+                                bool smooth = false);
+
 bool AdventureScriptSetEffectRegionVisible(GameState& state, const std::string& effectRegionId, bool visible);
 bool AdventureScriptIsEffectRegionVisible(const GameState& state, const std::string& effectRegionId, bool& outVisible);
 bool AdventureScriptSetEffectRegionOpacity(GameState& state, const std::string& effectRegionId, float opacity);

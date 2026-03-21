@@ -1680,6 +1680,29 @@ static int Lua_panCameraToHotspot(lua_State* L)
     return 1;
 }
 
+static int Lua_shakeScreen(lua_State* L)
+{
+    const float durationMs = static_cast<float>(luaL_checknumber(L, 1));
+    const float strengthPx = static_cast<float>(luaL_checknumber(L, 2));
+    const float frequencyHz = static_cast<float>(luaL_optnumber(L, 3, 30.0));
+    const bool smooth = lua_toboolean(L, 4) != 0;
+
+    if (gameState == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptShakeScreen(
+            *gameState,
+            durationMs,
+            strengthPx,
+            frequencyHz,
+            smooth);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 static int Lua_setEffectRegionVisible(lua_State* L)
 {
     const char* effectRegionId = luaL_checkstring(L, 1);
@@ -1866,6 +1889,7 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "panCameraToActor", Lua_panCameraToActor);
     lua_register(L, "panCameraToProp", Lua_panCameraToProp);
     lua_register(L, "panCameraToHotspot", Lua_panCameraToHotspot);
+    lua_register(L, "shakeScreen", Lua_shakeScreen);
 
     lua_register(L, "print", Lua_consolePrint);
     lua_register(L, "log", Lua_log);

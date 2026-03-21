@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <cmath>
 #include "data/GameState.h"
 #include "menu/Menu.h"
 #include "settings/Settings.h"
@@ -25,6 +26,39 @@ static Rectangle GetFullscreenSrcRect(const Texture2D& tex)
             (float)tex.width  - 1.0f,
             -(float)tex.height + 1.0f
     };
+}
+
+static Rectangle BuildShakenWorldDestRect(const GameState& state, const Rectangle& baseDst)
+{
+    Rectangle dst = baseDst;
+
+    const ScreenShakeState& shake = state.adventure.screenShake;
+    if (!shake.active) {
+        return dst;
+    }
+
+    const float scaleX = baseDst.width / static_cast<float>(INTERNAL_WIDTH);
+    const float scaleY = baseDst.height / static_cast<float>(INTERNAL_HEIGHT);
+
+    const float remaining01 = 1.0f - (shake.elapsedMs / std::max(shake.durationMs, 0.001f));
+    const float fadedStrengthX = shake.strengthX * remaining01;
+    const float fadedStrengthY = shake.strengthY * remaining01;
+
+    const float offsetX = shake.currentOffset.x * scaleX;
+    const float offsetY = shake.currentOffset.y * scaleY;
+
+    const float padX = std::ceil(std::abs(fadedStrengthX) * scaleX);
+    const float padY = std::ceil(std::abs(fadedStrengthY) * scaleY);
+
+    dst.x -= padX;
+    dst.y -= padY;
+    dst.width += padX * 2.0f;
+    dst.height += padY * 2.0f;
+
+    dst.x += offsetX;
+    dst.y += offsetY;
+
+    return dst;
 }
 
 static void ProcessGameModeInput(GameState& state) {
@@ -151,7 +185,8 @@ int main()
 
         // blit 1080p to actual screen size. Settings menu make sure there are only resolutions with the same aspect ratio (eg 1080p 1440p and 4k)
         Rectangle worldSrc = GetFullscreenSrcRect(worldTarget.texture);
-        DrawTexturePro(worldTarget.texture, worldSrc, dst, {0,0}, 0.0f, WHITE);
+        Rectangle shakenWorldDst = BuildShakenWorldDestRect(state, dst);
+        DrawTexturePro(worldTarget.texture, worldSrc, shakenWorldDst, {0,0}, 0.0f, WHITE);
 
         Rectangle uiSrc = GetFullscreenSrcRect(uiTarget.texture);
         DrawTexturePro(uiTarget.texture, uiSrc, dst, {0,0}, 0.0f, WHITE);

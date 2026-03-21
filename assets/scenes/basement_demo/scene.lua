@@ -31,6 +31,8 @@ function Scene_use_to_first_floor()
         setLayerVisible("door_closed", true)
         setEffectVisible("door_shadow", true)
         playEmitter("door_close")
+        delay(200)
+        shakeScreen(180, 14, 45)
     else
         setLayerVisible("door_closed", false)
         setEffectVisible("door_shadow", false)

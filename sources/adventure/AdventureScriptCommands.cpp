@@ -1209,6 +1209,57 @@ bool AdventureScriptPanCameraToHotspot(GameState& state,
     return false;
 }
 
+bool AdventureScriptShakeScreen(GameState& state,
+                                float durationMs,
+                                float strengthPx,
+                                float frequencyHz,
+                                bool smooth)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    if (durationMs <= 0.0f) {
+        return false;
+    }
+
+    if (strengthPx <= 0.0f) {
+        return false;
+    }
+
+    if (frequencyHz <= 0.0f) {
+        frequencyHz = 30.0f;
+    }
+
+    ScreenShakeState& shake = state.adventure.screenShake;
+
+    if (!shake.active) {
+        shake.active = true;
+        shake.durationMs = durationMs;
+        shake.elapsedMs = 0.0f;
+        shake.strengthX = strengthPx;
+        shake.strengthY = strengthPx;
+        shake.frequencyHz = frequencyHz;
+        shake.sampleTimerMs = 0.0f;
+        shake.smooth = smooth;
+        shake.previousOffset = Vector2{0.0f, 0.0f};
+        shake.sampledOffset = Vector2{0.0f, 0.0f};
+        shake.currentOffset = Vector2{0.0f, 0.0f};
+        return true;
+    }
+
+    shake.active = true;
+    shake.durationMs = durationMs;
+    shake.elapsedMs = 0.0f;
+    shake.strengthX = std::max(shake.strengthX, strengthPx);
+    shake.strengthY = std::max(shake.strengthY, strengthPx);
+    shake.frequencyHz = std::max(shake.frequencyHz, frequencyHz);
+    shake.sampleTimerMs = 0.0f;
+    shake.smooth = smooth;
+
+    return true;
+}
+
 static int FindEffectRegionIndexById(const GameState& state, const std::string& effectRegionId)
 {
     const int count = std::min(

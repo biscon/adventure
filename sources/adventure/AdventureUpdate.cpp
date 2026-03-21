@@ -17,6 +17,7 @@
 #include "adventure/Dialogue.h"
 #include "adventure/AdventureCamera.h"
 #include "adventure/AdventureScriptCommands.h"
+#include "raymath.h"
 
 
 static void HandleDebugInput(GameState& state)
@@ -686,6 +687,57 @@ static void UpdateCursorFromAdventure(GameState& state)
     }
 }
 
+static void UpdateScreenShake(GameState& state, float dt)
+{
+    ScreenShakeState& shake = state.adventure.screenShake;
+    if (!shake.active) {
+        shake.previousOffset = Vector2{0.0f, 0.0f};
+        shake.sampledOffset = Vector2{0.0f, 0.0f};
+        shake.currentOffset = Vector2{0.0f, 0.0f};
+        return;
+    }
+
+    shake.elapsedMs += dt * 1000.0f;
+    if (shake.elapsedMs >= shake.durationMs) {
+        shake.active = false;
+        shake.elapsedMs = 0.0f;
+        shake.sampleTimerMs = 0.0f;
+        shake.previousOffset = Vector2{0.0f, 0.0f};
+        shake.sampledOffset = Vector2{0.0f, 0.0f};
+        shake.currentOffset = Vector2{0.0f, 0.0f};
+        return;
+    }
+
+    const float remaining01 = 1.0f - (shake.elapsedMs / shake.durationMs);
+    const float intervalMs = 1000.0f / std::max(shake.frequencyHz, 0.001f);
+
+    shake.sampleTimerMs += dt * 1000.0f;
+    if (shake.sampleTimerMs >= intervalMs) {
+        shake.sampleTimerMs = 0.0f;
+
+        shake.previousOffset = shake.sampledOffset;
+
+        shake.sampledOffset.x = static_cast<float>(GetRandomValue(
+                static_cast<int>(std::round(-shake.strengthX)),
+                static_cast<int>(std::round( shake.strengthX))));
+
+        shake.sampledOffset.y = static_cast<float>(GetRandomValue(
+                static_cast<int>(std::round(-shake.strengthY)),
+                static_cast<int>(std::round( shake.strengthY))));
+    }
+
+    Vector2 baseOffset = shake.sampledOffset;
+
+    if (shake.smooth) {
+        float sampleAlpha = shake.sampleTimerMs / intervalMs;
+        sampleAlpha = Clamp(sampleAlpha, 0.0f, 1.0f);
+        baseOffset = Vector2Lerp(shake.previousOffset, shake.sampledOffset, sampleAlpha);
+    }
+
+    shake.currentOffset.x = baseOffset.x * remaining01;
+    shake.currentOffset.y = baseOffset.y * remaining01;
+}
+
 void AdventureUpdate(GameState& state, float dt)
 {
     AdventureProcessPendingLoads(state);
@@ -761,5 +813,6 @@ void AdventureUpdate(GameState& state, float dt)
     }
     UpdateInventoryPickupPopup(state, dt);
     UpdateProps(state, dt);
+    UpdateScreenShake(state, dt);
     ScriptSystemUpdate(state, dt);
 }

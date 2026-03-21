@@ -233,6 +233,24 @@ struct DialogueUiState {
     std::unordered_set<std::string> hiddenOptionIds;
 };
 
+struct ScreenShakeState {
+    bool active = false;
+
+    float durationMs = 0.0f;
+    float elapsedMs = 0.0f;
+
+    float strengthX = 0.0f;
+    float strengthY = 0.0f;
+
+    float frequencyHz = 30.0f;
+    float sampleTimerMs = 0.0f;
+
+    bool smooth = false;
+    Vector2 previousOffset{};
+    Vector2 sampledOffset{};
+    Vector2 currentOffset{};
+};
+
 struct AdventureData {
     std::string pendingSceneId;
     std::string pendingSpawnId;
@@ -277,5 +295,6 @@ struct AdventureData {
     SpeechUiState speechUi{};
     HoverUiState hoverUi{};
     AdventureActionQueue actionQueue{};
+    ScreenShakeState screenShake{};
     bool controlsEnabled = true;
 };

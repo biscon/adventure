@@ -1023,13 +1023,13 @@
                         {
                          "name":"depthMode",
                          "type":"string",
-                         "value":"back"
+                         "value":"depthSorted"
                         },
                     
                         {
                          "name":"distortionX",
                          "type":"float",
-                         "value":0.7
+                         "value":1
                         },
                     
                         {
@@ -1083,8 +1083,8 @@
                  "type":"",
                  "visible":true,
                  "width":136,
-                 "x":245.25,
-                 "y":16
+                 "x":247.75,
+                 "y":51
                 },
             
                 {
