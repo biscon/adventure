@@ -4,10 +4,24 @@
 
 #include <fstream>
 #include "Settings.h"
-//#include "raygui.h"
 #include "raylib.h"
 #include "utils/json.hpp"
 #include "data/GameState.h"
+
+static int GetSafeMonitorIndex()
+{
+    const int monitorCount = GetMonitorCount();
+    if (monitorCount <= 0) {
+        return 0;
+    }
+
+    int monitor = GetCurrentMonitor();
+    if (monitor < 0 || monitor >= monitorCount) {
+        monitor = 0;
+    }
+
+    return monitor;
+}
 
 void ApplySettings(SettingsData& settings)
 {
@@ -25,20 +39,18 @@ void ApplySettings(SettingsData& settings)
     }
 
     const Resolution res = settings.availableResolutions[settings.selectedResolutionIndex];
-    settings.monitor = GetCurrentMonitor();
+    settings.monitor = GetSafeMonitorIndex();
 
     switch (settings.displayMode) {
         case DisplayMode::Windowed: {
             ClearWindowState(FLAG_FULLSCREEN_MODE);
             ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-            SetWindowMonitor(settings.monitor);
             SetWindowSize(res.width, res.height);
             break;
         }
 
         case DisplayMode::Borderless: {
             ClearWindowState(FLAG_FULLSCREEN_MODE);
-            SetWindowMonitor(settings.monitor);
             SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
             SetWindowSize(GetMonitorWidth(settings.monitor), GetMonitorHeight(settings.monitor));
             break;
@@ -76,7 +88,8 @@ void SaveSettings(const SettingsData& settings) {
 
 void RefreshResolutions(SettingsData& data)
 {
-    const int monitor = GetCurrentMonitor();
+    const int monitorCount = GetMonitorCount();
+    const int monitor = (monitorCount > 0) ? 0 : 0;
     data.monitor = monitor;
     data.availableResolutions.clear();
 
@@ -105,29 +118,27 @@ void RefreshResolutions(SettingsData& data)
 
 void InitSettings(SettingsData& data, const std::string &filename) {
     data.filename = filename;
-    int monitor = GetCurrentMonitor();
+    data.monitor = 0;
 
-    // Load from JSON
     std::ifstream file(filename);
     if (file) {
         nlohmann::json j;
         file >> j;
 
         data.selectedResolutionIndex = j.value("resolutionIndex", 0);
+
         const int savedDisplayMode = j.value("displayMode", 0);
         if (savedDisplayMode == 1 || savedDisplayMode == 2) {
             data.displayMode = DisplayMode::Borderless;
         } else {
             data.displayMode = DisplayMode::Windowed;
         }
-        if(j["showFPS"] != nullptr) {
+
+        if (j.contains("showFPS")) {
             j["showFPS"].get_to(data.showFPS);
         }
-        if(j.contains("lockFPS")) {
+        if (j.contains("lockFPS")) {
             j["lockFPS"].get_to(data.fpsLock);
-        }
-        if(j.contains("monitor")) {
-            j["monitor"].get_to(data.monitor);
         }
         if (j.contains("vsync")) {
             j["vsync"].get_to(data.vsync);

@@ -72,10 +72,16 @@ void ToggleMacNativeFullscreen()
         behavior |= NSWindowCollectionBehaviorFullScreenPrimary;
         [window setCollectionBehavior:behavior];
 
+        [NSApp activateIgnoringOtherApps:YES];
+        [window makeKeyAndOrderFront:nil];
+
         TraceLog(LOG_INFO,
-         "MacFullscreenBridge: styleMask=0x%llx collectionBehavior=0x%llx",
-         (unsigned long long)[window styleMask],
-         (unsigned long long)[window collectionBehavior]);
+                 "MacFullscreenBridge: styleMask=0x%llx collectionBehavior=0x%llx key=%s main=%s visible=%s",
+                 (unsigned long long)[window styleMask],
+                 (unsigned long long)[window collectionBehavior],
+                 [window isKeyWindow] ? "true" : "false",
+                 [window isMainWindow] ? "true" : "false",
+                 [window isVisible] ? "true" : "false");
 
         [window toggleFullScreen:nil];
     });
