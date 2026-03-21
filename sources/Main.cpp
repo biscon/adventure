@@ -17,14 +17,6 @@
 #include "ui/Cursor.h"
 #include "render/EffectShaderRegistry.h"
 
-static bool IsMouseInInternalView()
-{
-    const Vector2 m = GetMousePosition();
-    return m.x >= 0.0f && m.y >= 0.0f &&
-           m.x < static_cast<float>(INTERNAL_WIDTH) &&
-           m.y < static_cast<float>(INTERNAL_HEIGHT);
-}
-
 static Rectangle GetFullscreenSrcRect(const Texture2D& tex)
 {
     return Rectangle{
@@ -33,22 +25,6 @@ static Rectangle GetFullscreenSrcRect(const Texture2D& tex)
             (float)tex.width  - 1.0f,
             -(float)tex.height + 1.0f
     };
-}
-
-static void BlitRenderTarget(
-        const RenderTexture2D& source,
-        RenderTexture2D& dest)
-{
-    BeginTextureMode(dest);
-    ClearBackground(BLACK);
-    DrawTexturePro(
-            source.texture,
-            GetFullscreenSrcRect(source.texture),
-            Rectangle{0.0f, 0.0f, static_cast<float>(dest.texture.width), static_cast<float>(dest.texture.height)},
-            Vector2{0.0f, 0.0f},
-            0.0f,
-            WHITE);
-    EndTextureMode();
 }
 
 static void ProcessGameModeInput(GameState& state) {
