@@ -51,27 +51,6 @@ static Rectangle BuildPresentationRect(float backbufferWidth, float backbufferHe
     return dst;
 }
 
-static Vector2 GetDrawableSize()
-{
-    const int screenW = GetScreenWidth();
-    const int screenH = GetScreenHeight();
-    const Vector2 dpiScale = GetWindowScaleDPI();
-
-    Vector2 drawableSize{};
-    drawableSize.x = std::round(static_cast<float>(screenW) * dpiScale.x);
-    drawableSize.y = std::round(static_cast<float>(screenH) * dpiScale.y);
-
-    if (drawableSize.x <= 0.0f) {
-        drawableSize.x = static_cast<float>(screenW);
-    }
-
-    if (drawableSize.y <= 0.0f) {
-        drawableSize.y = static_cast<float>(screenH);
-    }
-
-    return drawableSize;
-}
-
 static Rectangle BuildShakenWorldDestRect(const GameState& state, const Rectangle& baseDst)
 {
     Rectangle dst = baseDst;
@@ -133,6 +112,26 @@ int main()
 
     InstallDebugConsoleTraceLogHook();
     InitWindow(1920, 1080, "Adventure");
+
+    {
+        const int screenW = GetScreenWidth();
+        const int screenH = GetScreenHeight();
+        const int renderW = GetRenderWidth();
+        const int renderH = GetRenderHeight();
+        const Vector2 dpi = GetWindowScaleDPI();
+        const int monitor = GetCurrentMonitor();
+
+        TraceLog(LOG_INFO, "==== DISPLAY INFO ====");
+        TraceLog(LOG_INFO, "Monitor: %d", monitor);
+        TraceLog(LOG_INFO, "Screen (logical): %d x %d", screenW, screenH);
+        TraceLog(LOG_INFO, "Render (framebuffer): %d x %d", renderW, renderH);
+        TraceLog(LOG_INFO, "DPI scale: %.2f x %.2f", dpi.x, dpi.y);
+        TraceLog(LOG_INFO, "Monitor size: %d x %d",
+                 GetMonitorWidth(monitor),
+                 GetMonitorHeight(monitor));
+        TraceLog(LOG_INFO, "======================");
+    }
+
     SetExitKey(0);
 
     if (!InitEffectShaderRegistry()) {
@@ -166,25 +165,23 @@ int main()
         if(state.mode == GameMode::Quit) break;
 
         const float dt = GetFrameTime();
+        const int screenW = GetScreenWidth();
+        const int screenH = GetScreenHeight();
 
-        const Vector2 drawableSize = GetDrawableSize();
         const Rectangle dst = BuildPresentationRect(
                 static_cast<float>(INTERNAL_WIDTH),
                 static_cast<float>(INTERNAL_HEIGHT),
-                drawableSize.x,
-                drawableSize.y);
-
-        const Vector2 dpiScale = GetWindowScaleDPI();
-        const float safeDpiX = (dpiScale.x > 0.0f) ? dpiScale.x : 1.0f;
-        const float safeDpiY = (dpiScale.y > 0.0f) ? dpiScale.y : 1.0f;
+                static_cast<float>(screenW),
+                static_cast<float>(screenH)
+        );
 
         SetMouseOffset(
-                -static_cast<int>(std::round(dst.x / safeDpiX)),
-                -static_cast<int>(std::round(dst.y / safeDpiY)));
+                -static_cast<int>(dst.x),
+                -static_cast<int>(dst.y));
 
         SetMouseScale(
-                static_cast<float>(INTERNAL_WIDTH) / (dst.width / safeDpiX),
-                static_cast<float>(INTERNAL_HEIGHT) / (dst.height / safeDpiY)
+                static_cast<float>(INTERNAL_WIDTH) / dst.width,
+                static_cast<float>(INTERNAL_HEIGHT) / dst.height
         );
 
         UpdateInput(state.input);
