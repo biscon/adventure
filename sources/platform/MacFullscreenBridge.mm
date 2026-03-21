@@ -5,6 +5,7 @@
 #include <raylib.h>
 #import <Cocoa/Cocoa.h>
 #import <dispatch/dispatch.h>
+#import <objc/runtime.h>
 
 static NSWindow* GetMacWindow()
 {
