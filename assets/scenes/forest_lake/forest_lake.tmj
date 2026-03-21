@@ -81,8 +81,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":325.39393939394,
-                 "y":278.787878787878
+                 "x":327.39393939394,
+                 "y":287.787878787878
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -97,10 +97,60 @@
          "name":"effect_regions",
          "objects":[
                 {
-                 "height":59.7394891959259,
+                 "height":68.7394891959259,
                  "id":8,
-                 "name":"water_ripple_test",
+                 "name":"water_ripple_upper",
                  "opacity":1,
+                 "polygon":[
+                        {
+                         "x":-268.333333333333,
+                         "y":45.6666666666667
+                        },
+                    
+                        {
+                         "x":-268.443726969607,
+                         "y":36
+                        },
+                    
+                        {
+                         "x":0.201128062038606,
+                         "y":38.0665184586032
+                        },
+                    
+                        {
+                         "x":243.48138773702,
+                         "y":45.6666666666667
+                        },
+                    
+                        {
+                         "x":243.148054403687,
+                         "y":112.072822529259
+                        },
+                    
+                        {
+                         "x":-73,
+                         "y":109.739489195926
+                        },
+                    
+                        {
+                         "x":-107.659126579408,
+                         "y":105.9014265959
+                        },
+                    
+                        {
+                         "x":-194.446479473536,
+                         "y":71.9233108302204
+                        },
+                    
+                        {
+                         "x":-231.173829256007,
+                         "y":77.3031241375803
+                        },
+                    
+                        {
+                         "x":-231.820929285119,
+                         "y":63.0300663243379
+                        }],
                  "properties":[
                         {
                          "name":"blendMode",
@@ -117,13 +167,13 @@
                         {
                          "name":"distortionX",
                          "type":"float",
-                         "value":5
+                         "value":6
                         },
                     
                         {
                          "name":"distortionY",
                          "type":"float",
-                         "value":2
+                         "value":3
                         },
                     
                         {
@@ -159,7 +209,7 @@
                         {
                          "name":"softness",
                          "type":"float",
-                         "value":0.1
+                         "value":0.05
                         },
                     
                         {
@@ -176,101 +226,16 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":398.48138773702,
-                 "x":876.443726969607,
-                 "y":17.75524376948
-                },
-            
-                {
-                 "height":60.6077957249365,
-                 "id":9,
-                 "name":"water_effect2",
-                 "opacity":0.25,
-                 "properties":[
-                        {
-                         "name":"asset",
-                         "type":"file",
-                         "value":"..\/..\/effects\/noise\/Alpha\/Gabor 9 - 256x256.png"
-                        },
-                    
-                        {
-                         "name":"blendMode",
-                         "type":"string",
-                         "value":"add"
-                        },
-                    
-                        {
-                         "name":"depthMode",
-                         "type":"string",
-                         "value":"back"
-                        },
-                    
-                        {
-                         "name":"intensity",
-                         "type":"float",
-                         "value":0.25
-                        },
-                    
-                        {
-                         "name":"overlay",
-                         "type":"bool",
-                         "value":false
-                        },
-                    
-                        {
-                         "name":"phaseOffset",
-                         "type":"float",
-                         "value":1.6
-                        },
-                    
-                        {
-                         "name":"scrollSpeedX",
-                         "type":"float",
-                         "value":0.02
-                        },
-                    
-                        {
-                         "name":"scrollSpeedY",
-                         "type":"float",
-                         "value":-0.01
-                        },
-                    
-                        {
-                         "name":"shaderId",
-                         "type":"string",
-                         "value":"uv_scroll"
-                        },
-                    
-                        {
-                         "name":"softness",
-                         "type":"float",
-                         "value":0.28
-                        },
-                    
-                        {
-                         "name":"uvScaleX",
-                         "type":"float",
-                         "value":1
-                        },
-                    
-                        {
-                         "name":"uvScaleY",
-                         "type":"float",
-                         "value":0.5
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":399.190365178488,
-                 "x":560.033763004822,
-                 "y":100.654423838308
+                 "width":102.48138773702,
+                 "x":1035.77706030294,
+                 "y":117.088577102813
                 },
             
                 {
                  "height":60.6079346539811,
                  "id":10,
-                 "name":"water_effect1",
-                 "opacity":1,
+                 "name":"water_waves",
+                 "opacity":0.36,
                  "polygon":[
                         {
                          "x":46.6666666666666,
@@ -283,18 +248,28 @@
                         },
                     
                         {
-                         "x":427.85689291611,
-                         "y":2.33333333333334
+                         "x":104.263540538399,
+                         "y":-14.6135736014424
                         },
                     
                         {
-                         "x":424.815823293161,
-                         "y":138.059907763541
+                         "x":430.85689291611,
+                         "y":-12.6666666666667
                         },
                     
                         {
-                         "x":341.227174426934,
-                         "y":137.00029603977
+                         "x":430.815823293161,
+                         "y":143.726574430207
+                        },
+                    
+                        {
+                         "x":265.227174426934,
+                         "y":143.333629373103
+                        },
+                    
+                        {
+                         "x":217.882406920709,
+                         "y":128.707038258639
                         },
                     
                         {
@@ -313,13 +288,18 @@
                         },
                     
                         {
-                         "x":71.366168709213,
-                         "y":90.8264328751447
+                         "x":70.366168709213,
+                         "y":90.4930995418114
                         },
                     
                         {
                          "x":2.97748520018445,
                          "y":56.5152131484089
+                        },
+                    
+                        {
+                         "x":20.3207114026818,
+                         "y":42.873540027967
                         }],
                  "properties":[
                         {
@@ -331,7 +311,7 @@
                         {
                          "name":"blendMode",
                          "type":"string",
-                         "value":"normal"
+                         "value":"add"
                         },
                     
                         {
@@ -383,6 +363,354 @@
                         },
                     
                         {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.15
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":0.95
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":0.85
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":2.5
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":398.523559582777,
+                 "x":848.033832469345,
+                 "y":215.737808174378
+                },
+            
+                {
+                 "height":60.6079,
+                 "id":11,
+                 "name":"deepwater_movement",
+                 "opacity":0.6,
+                 "polygon":[
+                        {
+                         "x":46.6667,
+                         "y":33
+                        },
+                    
+                        {
+                         "x":113.355,
+                         "y":23.1831
+                        },
+                    
+                        {
+                         "x":104.263333333333,
+                         "y":-14.6136
+                        },
+                    
+                        {
+                         "x":430.857333333333,
+                         "y":-12.6667
+                        },
+                    
+                        {
+                         "x":430.816,
+                         "y":143.727
+                        },
+                    
+                        {
+                         "x":265.227,
+                         "y":143.334
+                        },
+                    
+                        {
+                         "x":217.882,
+                         "y":128.707
+                        },
+                    
+                        {
+                         "x":254.741,
+                         "y":115.777
+                        },
+                    
+                        {
+                         "x":234.19,
+                         "y":97.6079
+                        },
+                    
+                        {
+                         "x":158.667,
+                         "y":103.275
+                        },
+                    
+                        {
+                         "x":70.3662,
+                         "y":90.4931
+                        },
+                    
+                        {
+                         "x":2.97749,
+                         "y":56.5152
+                        },
+                    
+                        {
+                         "x":20.3207,
+                         "y":42.8735
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Perlin 7 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"multiply"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.2
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":0.85
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":0.6
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":3
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":3
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":398.524,
+                 "x":848.071333333333,
+                 "y":216.029383333333
+                },
+            
+                {
+                 "height":60.6079,
+                 "id":14,
+                 "name":"water_waves2",
+                 "opacity":0.44,
+                 "polygon":[
+                        {
+                         "x":46.6667,
+                         "y":33
+                        },
+                    
+                        {
+                         "x":113.355,
+                         "y":23.1831
+                        },
+                    
+                        {
+                         "x":104.263333333333,
+                         "y":-14.6136
+                        },
+                    
+                        {
+                         "x":430.857333333333,
+                         "y":-12.6667
+                        },
+                    
+                        {
+                         "x":430.816,
+                         "y":143.727
+                        },
+                    
+                        {
+                         "x":265.227,
+                         "y":143.334
+                        },
+                    
+                        {
+                         "x":217.882,
+                         "y":128.707
+                        },
+                    
+                        {
+                         "x":254.741,
+                         "y":115.777
+                        },
+                    
+                        {
+                         "x":234.19,
+                         "y":97.6079
+                        },
+                    
+                        {
+                         "x":158.667,
+                         "y":103.275
+                        },
+                    
+                        {
+                         "x":70.3662,
+                         "y":90.4931
+                        },
+                    
+                        {
+                         "x":2.97749,
+                         "y":56.5152
+                        },
+                    
+                        {
+                         "x":20.3207,
+                         "y":42.8735
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Gabor 10 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"intensity",
+                         "type":"float",
+                         "value":0.25
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":1.6
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.01
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":-0.01
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.15
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":0.95
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":0.85
+                        },
+                    
+                        {
                          "name":"uvScaleX",
                          "type":"float",
                          "value":1.5
@@ -391,14 +719,549 @@
                         {
                          "name":"uvScaleY",
                          "type":"float",
-                         "value":0.5
+                         "value":1
                         }],
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":398.523559582777,
-                 "x":848.033832469345,
-                 "y":215.737808174378
+                 "width":398.524,
+                 "x":848.071333333333,
+                 "y":215.362716666667
+                },
+            
+                {
+                 "height":60.6079,
+                 "id":16,
+                 "name":"water_ripple",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":46.6667,
+                         "y":33
+                        },
+                    
+                        {
+                         "x":113.355,
+                         "y":23.1831
+                        },
+                    
+                        {
+                         "x":113.93,
+                         "y":12.3864
+                        },
+                    
+                        {
+                         "x":431.524,
+                         "y":12.3333
+                        },
+                    
+                        {
+                         "x":430.816,
+                         "y":143.727
+                        },
+                    
+                        {
+                         "x":265.227,
+                         "y":143.334
+                        },
+                    
+                        {
+                         "x":217.882,
+                         "y":128.707
+                        },
+                    
+                        {
+                         "x":254.741,
+                         "y":115.777
+                        },
+                    
+                        {
+                         "x":234.19,
+                         "y":97.6079
+                        },
+                    
+                        {
+                         "x":158.667,
+                         "y":103.275
+                        },
+                    
+                        {
+                         "x":70.3662,
+                         "y":90.4931
+                        },
+                    
+                        {
+                         "x":2.97749,
+                         "y":56.5152
+                        },
+                    
+                        {
+                         "x":20.3207,
+                         "y":42.8735
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Grainy 10 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"distortionX",
+                         "type":"float",
+                         "value":8
+                        },
+                    
+                        {
+                         "name":"distortionY",
+                         "type":"float",
+                         "value":5
+                        },
+                    
+                        {
+                         "name":"intensity",
+                         "type":"float",
+                         "value":0.25
+                        },
+                    
+                        {
+                         "name":"noiseSpeedX",
+                         "type":"float",
+                         "value":0.1
+                        },
+                    
+                        {
+                         "name":"noiseSpeedY",
+                         "type":"float",
+                         "value":0.03
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"water_ripple"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":3
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":2.2
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":398.524,
+                 "x":847.738,
+                 "y":215.69605
+                },
+            
+                {
+                 "height":0,
+                 "id":18,
+                 "name":"forest_floor_shadows",
+                 "opacity":0.72,
+                 "polygon":[
+                        {
+                         "x":0,
+                         "y":0
+                        },
+                    
+                        {
+                         "x":-33,
+                         "y":-28.3333333333334
+                        },
+                    
+                        {
+                         "x":36,
+                         "y":-28
+                        },
+                    
+                        {
+                         "x":51,
+                         "y":-54.6666666666667
+                        },
+                    
+                        {
+                         "x":121.666666666667,
+                         "y":-89.3333333333333
+                        },
+                    
+                        {
+                         "x":164.333333333333,
+                         "y":-102.666666666667
+                        },
+                    
+                        {
+                         "x":179.333333333333,
+                         "y":-106
+                        },
+                    
+                        {
+                         "x":211,
+                         "y":-103
+                        },
+                    
+                        {
+                         "x":248.333333333333,
+                         "y":-77
+                        },
+                    
+                        {
+                         "x":269.333333333333,
+                         "y":-100.666666666667
+                        },
+                    
+                        {
+                         "x":320.333333333333,
+                         "y":-106.333333333333
+                        },
+                    
+                        {
+                         "x":371,
+                         "y":-86.6666666666667
+                        },
+                    
+                        {
+                         "x":399,
+                         "y":-43.3333333333333
+                        },
+                    
+                        {
+                         "x":457.666666666667,
+                         "y":-25
+                        },
+                    
+                        {
+                         "x":444.333333333333,
+                         "y":26.6666666666666
+                        },
+                    
+                        {
+                         "x":53.6666666666667,
+                         "y":23
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Perlin\/Perlin 16 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"multiply"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.08
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":-0.01
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.05
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":6
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":4
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":163,
+                 "y":295
+                },
+            
+                {
+                 "height":0,
+                 "id":20,
+                 "name":"forest_floor_shadows2",
+                 "opacity":0.61,
+                 "polygon":[
+                        {
+                         "x":0,
+                         "y":0
+                        },
+                    
+                        {
+                         "x":-33,
+                         "y":-28.3333
+                        },
+                    
+                        {
+                         "x":36,
+                         "y":-28
+                        },
+                    
+                        {
+                         "x":51,
+                         "y":-54.6667
+                        },
+                    
+                        {
+                         "x":121.667,
+                         "y":-89.3333
+                        },
+                    
+                        {
+                         "x":164.333,
+                         "y":-102.667
+                        },
+                    
+                        {
+                         "x":179.333,
+                         "y":-106
+                        },
+                    
+                        {
+                         "x":211,
+                         "y":-103
+                        },
+                    
+                        {
+                         "x":248.333,
+                         "y":-77
+                        },
+                    
+                        {
+                         "x":269.333,
+                         "y":-100.667
+                        },
+                    
+                        {
+                         "x":320.333,
+                         "y":-106.333
+                        },
+                    
+                        {
+                         "x":371,
+                         "y":-86.6667
+                        },
+                    
+                        {
+                         "x":399,
+                         "y":-43.3333
+                        },
+                    
+                        {
+                         "x":457.667,
+                         "y":-25
+                        },
+                    
+                        {
+                         "x":444.333,
+                         "y":26.6667
+                        },
+                    
+                        {
+                         "x":53.6667,
+                         "y":23
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Perlin\/Perlin 16 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"multiply"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":1.6
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":-0.08
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.05
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":6
+                        },
+                    
+                        {
+                         "name":"uvScaleY",
+                         "type":"float",
+                         "value":4
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":163,
+                 "y":295.333333333333
+                },
+            
+                {
+                 "height":315.499666666667,
+                 "id":21,
+                 "name":"day_light",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"contrast",
+                         "type":"float",
+                         "value":1.03
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"front"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"saturation",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"region_grade"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.4
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.2
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1.4
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1.8
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":204.166666666667,
+                 "x":518.083333333333,
+                 "y":34.9168333333333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -564,7 +1427,7 @@
                         }],
                  "opacity":1,
                  "type":"objectgroup",
-                 "visible":true,
+                 "visible":false,
                  "x":0,
                  "y":0
                 },
@@ -621,7 +1484,7 @@
          "y":0
         }],
  "nextlayerid":19,
- "nextobjectid":11,
+ "nextobjectid":22,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

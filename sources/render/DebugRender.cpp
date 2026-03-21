@@ -6,6 +6,7 @@
 #include "RenderHelpers.h"
 #include "adventure/AdventureActorHelpers.h"
 #include "scripting/ScriptSystem.h"
+#include "EffectShaderRegistry.h"
 
 static void DrawWalkPolygons(const GameState& state)
 {
@@ -366,6 +367,133 @@ static void DrawEffectDebug(const GameState& state)
     }
 }
 
+static void DrawEffectRegionDebug(const GameState& state)
+{
+    const SceneData& scene = state.adventure.currentScene;
+
+    const int count = std::min(
+            static_cast<int>(scene.effectRegions.size()),
+            static_cast<int>(state.adventure.effectRegions.size()));
+
+    auto GetRegionDebugColor = [](const SceneEffectRegionData& sceneEffect) -> Color {
+        if (sceneEffect.renderAsOverlay) {
+            return Color{255, 210, 80, 255};   // warm yellow/orange
+        }
+
+        switch (sceneEffect.depthMode) {
+            case ScenePropDepthMode::Back:
+                return Color{80, 160, 255, 255};   // blue
+            case ScenePropDepthMode::DepthSorted:
+                return Color{80, 255, 180, 255};   // aqua/green
+            case ScenePropDepthMode::Front:
+                return Color{200, 120, 255, 255};  // violet
+            default:
+                return Color{255, 255, 255, 255};
+        }
+    };
+
+    auto GetBlendModeText = [](SceneEffectBlendMode mode) -> const char* {
+        switch (mode) {
+            case SceneEffectBlendMode::Add:
+                return "add";
+            case SceneEffectBlendMode::Multiply:
+                return "multiply";
+            case SceneEffectBlendMode::Normal:
+            default:
+                return "normal";
+        }
+    };
+
+    for (int i = 0; i < count; ++i) {
+        const SceneEffectRegionData& sceneEffect = scene.effectRegions[i];
+        const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+        if (!effect.visible) {
+            continue;
+        }
+
+        const Color color = GetRegionDebugColor(sceneEffect);
+
+        const bool isPolygon =
+                static_cast<int>(sceneEffect.polygon.vertices.size()) >= 3;
+
+        Vector2 labelAnchor{};
+
+        if (isPolygon) {
+            const int vertexCount = static_cast<int>(sceneEffect.polygon.vertices.size());
+
+            float sumX = 0.0f;
+            float sumY = 0.0f;
+
+            for (int v = 0; v < vertexCount; ++v) {
+                const Vector2 a{
+                        sceneEffect.polygon.vertices[v].x - state.adventure.camera.position.x,
+                        sceneEffect.polygon.vertices[v].y - state.adventure.camera.position.y
+                };
+                const Vector2 b{
+                        sceneEffect.polygon.vertices[(v + 1) % vertexCount].x - state.adventure.camera.position.x,
+                        sceneEffect.polygon.vertices[(v + 1) % vertexCount].y - state.adventure.camera.position.y
+                };
+
+                DrawLineEx(a, b, 2.0f, color);
+                DrawCircleV(a, 3.0f, color);
+
+                sumX += a.x;
+                sumY += a.y;
+            }
+
+            labelAnchor.x = sumX / static_cast<float>(vertexCount);
+            labelAnchor.y = sumY / static_cast<float>(vertexCount);
+        } else {
+            Rectangle rect{};
+            rect.x = sceneEffect.worldRect.x - state.adventure.camera.position.x;
+            rect.y = sceneEffect.worldRect.y - state.adventure.camera.position.y;
+            rect.width = sceneEffect.worldRect.width;
+            rect.height = sceneEffect.worldRect.height;
+
+            DrawRectangleLinesEx(rect, 2.0f, color);
+
+            DrawCircleV(Vector2{rect.x, rect.y}, 3.0f, color);
+            DrawCircleV(Vector2{rect.x + rect.width, rect.y}, 3.0f, color);
+            DrawCircleV(Vector2{rect.x + rect.width, rect.y + rect.height}, 3.0f, color);
+            DrawCircleV(Vector2{rect.x, rect.y + rect.height}, 3.0f, color);
+
+            labelAnchor.x = rect.x + rect.width * 0.5f;
+            labelAnchor.y = rect.y + rect.height * 0.5f;
+        }
+
+        DrawCircleV(labelAnchor, 4.0f, color);
+
+        std::string line1 =
+                sceneEffect.id +
+                " [" +
+                std::string(isPolygon ? "poly" : "rect") +
+                "]";
+
+        std::string line2 =
+                std::string(SceneEffectShaderTypeToString(effect.shaderType)) +
+                "  blend=" +
+                GetBlendModeText(sceneEffect.blendMode);
+
+        if (sceneEffect.renderAsOverlay) {
+            line2 += "  overlay";
+        }
+
+        DrawText(
+                line1.c_str(),
+                static_cast<int>(labelAnchor.x + 8.0f),
+                static_cast<int>(labelAnchor.y - 20.0f),
+                16,
+                color);
+
+        DrawText(
+                line2.c_str(),
+                static_cast<int>(labelAnchor.x + 8.0f),
+                static_cast<int>(labelAnchor.y - 2.0f),
+                16,
+                color);
+    }
+}
+
 static void DrawScriptDebugPanel(const GameState& state)
 {
     std::vector<ScriptDebugEntry> entries;
@@ -479,11 +607,12 @@ void RenderAdventureDebug(const GameState& state) {
 
     if (state.debug.showEffects) {
         DrawEffectDebug(state);
-        DrawSoundEmitterDebug(state);
+        DrawEffectRegionDebug(state);
     }
 
     if (state.debug.showFeetPoints) {
         DrawDebugActors(state);
+        DrawSoundEmitterDebug(state);
     }
 
     if (state.debug.showScaleInfo) {

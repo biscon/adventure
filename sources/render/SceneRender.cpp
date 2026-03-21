@@ -217,8 +217,13 @@ static void DrawSceneEffectSprite(
     dst.width = sceneEffect.worldSize.x;
     dst.height = sceneEffect.worldSize.y;
 
-    const Color drawColor = BuildEffectSpriteDrawColor(effect);
     const SceneEffectShaderCategory shaderCategory = GetEffectShaderCategory(effect.shaderType);
+    Color drawColor = BuildEffectSpriteDrawColor(effect);
+    // if using a shader set draw color to white and use effect opacity for alpha
+    if(shaderCategory != SceneEffectShaderCategory::None) {
+        drawColor = WHITE;
+        drawColor.a = static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity)));
+    }
 
     EndBlendMode();
     BeginBlendMode(GetRaylibBlendMode(sceneEffect.blendMode));
@@ -237,6 +242,14 @@ static void DrawSceneEffectSprite(
             SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->noiseScrollSpeedLoc, effect.shaderParams.noiseScrollSpeed);
             SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->intensityLoc, effect.shaderParams.intensity);
             SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->phaseOffsetLoc, effect.shaderParams.phaseOffset);
+            if (shaderEntry->tintLoc >= 0) {
+                const float tint[3] = {
+                        effect.shaderParams.tintR,
+                        effect.shaderParams.tintG,
+                        effect.shaderParams.tintB
+                };
+                SetShaderValue(shaderEntry->shader, shaderEntry->tintLoc, tint, SHADER_UNIFORM_VEC3);
+            }
 
             DrawTexturePro(texRes->texture, src, dst, Vector2{0.0f, 0.0f}, 0.0f, drawColor);
 
@@ -294,10 +307,16 @@ static void DrawSceneEffectRegion(
     dst.width = effectBounds.width;
     dst.height = effectBounds.height;
 
-    Color drawColor = effect.tint;
-    drawColor.a = MultiplyU8(
-            drawColor.a,
-            static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity))));
+    Color drawColor = WHITE;
+    drawColor.a = static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity)));
+
+    // if using a shader set draw color to white and use effect opacity for alpha
+    if(shaderCategory == SceneEffectShaderCategory::None) {
+        drawColor = effect.tint;
+        drawColor.a = MultiplyU8(
+                drawColor.a,
+                static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity))));
+    }
 
     EndBlendMode();
     BeginBlendMode(GetRaylibBlendMode(sceneEffect.blendMode));
@@ -325,6 +344,15 @@ static void DrawSceneEffectRegion(
             SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->regionPosLoc, regionPos);
             SetShaderVec2IfValid(shaderEntry->shader, shaderEntry->regionSizeLoc, regionSize);
             SetShaderFloatIfValid(shaderEntry->shader, shaderEntry->softnessLoc, effect.shaderParams.softness);
+
+            if (shaderEntry->tintLoc >= 0) {
+                const float tint[3] = {
+                        effect.shaderParams.tintR,
+                        effect.shaderParams.tintG,
+                        effect.shaderParams.tintB
+                };
+                SetShaderValue(shaderEntry->shader, shaderEntry->tintLoc, tint, SHADER_UNIFORM_VEC3);
+            }
 
             SetShaderPolygonIfValid(
                     shaderEntry->shader,

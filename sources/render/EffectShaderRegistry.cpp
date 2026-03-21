@@ -15,7 +15,9 @@ namespace
             { SceneEffectShaderType::UvScroll,    SceneEffectShaderCategory::SelfTexture },
             { SceneEffectShaderType::HeatShimmer, SceneEffectShaderCategory::SceneSample },
             { SceneEffectShaderType::RegionGrade, SceneEffectShaderCategory::SceneSample },
-            { SceneEffectShaderType::WaterRipple, SceneEffectShaderCategory::SceneSample }
+            { SceneEffectShaderType::WaterRipple, SceneEffectShaderCategory::SceneSample },
+            { SceneEffectShaderType::WindSway,    SceneEffectShaderCategory::SelfTexture },
+            { SceneEffectShaderType::PolyClip,    SceneEffectShaderCategory::SelfTexture },
     };
 
     static constexpr int gEffectShaderCount =
@@ -35,6 +37,12 @@ namespace
 
             case SceneEffectShaderType::WaterRipple:
                 return ASSETS_PATH "shaders/scenesample/water_ripple.fs";
+
+            case SceneEffectShaderType::WindSway:
+                return ASSETS_PATH "shaders/selftexture/wind_sway.fs";
+
+            case SceneEffectShaderType::PolyClip:
+                return ASSETS_PATH "shaders/selftexture/poly_clip.fs";
 
             case SceneEffectShaderType::None:
             default:
@@ -204,12 +212,15 @@ SceneEffectShaderCategory GetEffectShaderCategory(SceneEffectShaderType type)
 {
     switch (type) {
         case SceneEffectShaderType::UvScroll:
+        case SceneEffectShaderType::WindSway:
+        case SceneEffectShaderType::PolyClip:
             return SceneEffectShaderCategory::SelfTexture;
+
         case SceneEffectShaderType::HeatShimmer:
         case SceneEffectShaderType::RegionGrade:
-            return SceneEffectShaderCategory::SceneSample;
         case SceneEffectShaderType::WaterRipple:
             return SceneEffectShaderCategory::SceneSample;
+
         case SceneEffectShaderType::None:
         default:
             return SceneEffectShaderCategory::None;
@@ -230,6 +241,12 @@ const char* SceneEffectShaderTypeToString(SceneEffectShaderType type)
 
         case SceneEffectShaderType::WaterRipple:
             return "water_ripple";
+
+        case SceneEffectShaderType::WindSway:
+            return "wind_sway";
+
+        case SceneEffectShaderType::PolyClip:
+            return "poly_clip";
 
         case SceneEffectShaderType::None:
         default:

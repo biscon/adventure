@@ -12,7 +12,7 @@ function Scene_onEnter()
     -- Restore door state
     setLayerVisible("door_closed", flag("door_closed"))
 
-    --startScript("FlickerLightBulbLoop")
+    startScript("FlickerLightBulbLoop")
     startScript("FurnaceGlowLoopFancy")
     startScript("FurnaceGlowCoreLoop")
 end
@@ -83,6 +83,9 @@ function SetBulbLighting(on)
     setEffectVisible("light_bulb", on)
     setEffectVisible("light_bulb_halo", on)
     setEffectVisible("no_light_shadow", not on)
+    setEffectRegionVisible("light_bulb_color_grade", on)
+    setEffectRegionVisible("light_bulb_halo", on)
+    setEffectRegionVisible("light_bulb_halo2", on)
 
     if on then
         setEffectOpacity("light_bulb_halo", 1.0)

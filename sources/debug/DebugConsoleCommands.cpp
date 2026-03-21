@@ -12,6 +12,7 @@
 #include "audio/Audio.h"
 #include "save/SaveGame.h"
 #include "resources/TextureAsset.h"
+#include "render/EffectShaderRegistry.h"
 
 static std::vector<std::string> SplitConsoleWords(const std::string& text)
 {
@@ -497,60 +498,113 @@ bool ExecuteConsoleSlashCommand(GameState& state, const std::string& line)
             return true;
         }
 
-        DebugConsoleAddLine(state, "effects:", SKYBLUE);
+        auto DepthModeToText = [](ScenePropDepthMode mode) -> const char* {
+            switch (mode) {
+                case ScenePropDepthMode::Back:
+                    return "back";
+                case ScenePropDepthMode::Front:
+                    return "front";
+                case ScenePropDepthMode::DepthSorted:
+                default:
+                    return "depthSorted";
+            }
+        };
 
-        const int count = std::min(
+        auto BlendModeToText = [](SceneEffectBlendMode mode) -> const char* {
+            switch (mode) {
+                case SceneEffectBlendMode::Add:
+                    return "add";
+                case SceneEffectBlendMode::Multiply:
+                    return "multiply";
+                case SceneEffectBlendMode::Normal:
+                default:
+                    return "normal";
+            }
+        };
+
+        DebugConsoleAddLine(state, "effect sprites:", SKYBLUE);
+
+        const int spriteCount = std::min(
                 static_cast<int>(state.adventure.currentScene.effectSprites.size()),
                 static_cast<int>(state.adventure.effectSprites.size()));
 
-        if (count <= 0) {
+        if (spriteCount <= 0) {
             DebugConsoleAddLine(state, "  <none>", LIGHTGRAY);
-            return true;
+        } else {
+            for (int i = 0; i < spriteCount; ++i) {
+                const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
+                const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+
+                const char* shaderName = SceneEffectShaderTypeToString(effect.shaderType);
+
+                std::string line =
+                        "  " + sceneEffect.id +
+                        " shader=" + shaderName +
+                        " depth=" + DepthModeToText(sceneEffect.depthMode) +
+                        " blend=" + BlendModeToText(sceneEffect.blendMode) +
+                        " overlay=" + std::string(sceneEffect.renderAsOverlay ? "true" : "false") +
+                        " opacity=" + std::to_string(effect.opacity);
+
+                if (!effect.visible) {
+                    line += " hidden";
+                }
+
+                DebugConsoleAddLine(state, line, LIGHTGRAY);
+            }
         }
 
-        for (int i = 0; i < count; ++i) {
-            const SceneEffectSpriteData& sceneEffect = state.adventure.currentScene.effectSprites[i];
-            const EffectSpriteInstance& effect = state.adventure.effectSprites[i];
+        DebugConsoleAddLine(state, "effect regions:", SKYBLUE);
 
-            std::string depthModeText = "depthSorted";
-            switch (sceneEffect.depthMode) {
-                case ScenePropDepthMode::Back:
-                    depthModeText = "back";
-                    break;
-                case ScenePropDepthMode::DepthSorted:
-                    depthModeText = "depthSorted";
-                    break;
-                case ScenePropDepthMode::Front:
-                    depthModeText = "front";
-                    break;
+        const int regionCount = std::min(
+                static_cast<int>(state.adventure.currentScene.effectRegions.size()),
+                static_cast<int>(state.adventure.effectRegions.size()));
+
+        if (regionCount <= 0) {
+            DebugConsoleAddLine(state, "  <none>", LIGHTGRAY);
+        } else {
+            for (int i = 0; i < regionCount; ++i) {
+                const SceneEffectRegionData& sceneEffect = state.adventure.currentScene.effectRegions[i];
+                const EffectRegionInstance& effect = state.adventure.effectRegions[i];
+
+                const char* shaderName = SceneEffectShaderTypeToString(effect.shaderType);
+
+                const bool isPoly =
+                        sceneEffect.polygon.vertices.size() >= 3;
+
+                std::string shapeText;
+                if (isPoly) {
+                    shapeText = "poly(" + std::to_string(static_cast<int>(sceneEffect.polygon.vertices.size())) + ")";
+                } else {
+                    shapeText = "rect";
+                }
+
+                std::string line =
+                        "  " + sceneEffect.id +
+                        " shape=" + shapeText +
+                        " shader=" + shaderName +
+                        " depth=" + DepthModeToText(sceneEffect.depthMode) +
+                        " blend=" + BlendModeToText(sceneEffect.blendMode) +
+                        " overlay=" + std::string(sceneEffect.renderAsOverlay ? "true" : "false") +
+                        " opacity=" + std::to_string(effect.opacity);
+
+                if (!effect.visible) {
+                    line += " hidden";
+                }
+
+                DebugConsoleAddLine(state, line, LIGHTGRAY);
+
+                if (!isPoly) {
+                    DebugConsoleAddLine(
+                            state,
+                            "      rect=(" +
+                            std::to_string(static_cast<int>(sceneEffect.worldRect.x)) + "," +
+                            std::to_string(static_cast<int>(sceneEffect.worldRect.y)) + "," +
+                            std::to_string(static_cast<int>(sceneEffect.worldRect.width)) + "," +
+                            std::to_string(static_cast<int>(sceneEffect.worldRect.height)) + ")",
+                            GRAY);
+                }
             }
-
-            std::string blendModeText = "normal";
-            switch (sceneEffect.blendMode) {
-                case SceneEffectBlendMode::Normal:
-                    blendModeText = "normal";
-                    break;
-                case SceneEffectBlendMode::Add:
-                    blendModeText = "add";
-                    break;
-                case SceneEffectBlendMode::Multiply:
-                    blendModeText = "multiply";
-                    break;
-            }
-
-            std::string line =
-                    "  " + sceneEffect.id +
-                    " depth=" + depthModeText +
-                    " blend=" + blendModeText +
-                    " opacity=" + std::to_string(effect.opacity);
-
-            if (!effect.visible) {
-                line += " hidden";
-            }
-
-            DebugConsoleAddLine(state, line, LIGHTGRAY);
         }
-
         return true;
     }
 

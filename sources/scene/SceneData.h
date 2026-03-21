@@ -88,7 +88,9 @@ enum class SceneEffectShaderType {
     UvScroll,
     HeatShimmer,
     RegionGrade,
-    WaterRipple
+    WaterRipple,
+    WindSway,
+    PolyClip
 };
 
 enum class SceneEffectShaderCategory {

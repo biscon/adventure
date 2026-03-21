@@ -162,6 +162,14 @@ static bool ParseSceneEffectShaderType(const std::string& s, SceneEffectShaderTy
         outType = SceneEffectShaderType::WaterRipple;
         return true;
     }
+    if (s == "wind_sway") {
+        outType = SceneEffectShaderType::WindSway;
+        return true;
+    }
+    if (s == "poly_clip") {
+        outType = SceneEffectShaderType::PolyClip;
+        return true;
+    }
     return false;
 }
 
@@ -176,6 +184,10 @@ static const char* SceneEffectShaderTypeToString(SceneEffectShaderType type)
             return "region_grade";
         case SceneEffectShaderType::WaterRipple:
             return "water_ripple";
+        case SceneEffectShaderType::WindSway:
+            return "wind_sway";
+        case SceneEffectShaderType::PolyClip:
+            return "poly_clip";
         case SceneEffectShaderType::None:
         default:
             return "none";
@@ -186,6 +198,8 @@ static SceneEffectShaderCategory GetSceneEffectShaderCategory(SceneEffectShaderT
 {
     switch (type) {
         case SceneEffectShaderType::UvScroll:
+        case SceneEffectShaderType::WindSway:
+        case SceneEffectShaderType::PolyClip:
             return SceneEffectShaderCategory::SelfTexture;
         case SceneEffectShaderType::HeatShimmer:
         case SceneEffectShaderType::RegionGrade:
@@ -481,9 +495,13 @@ static void ProcessLayerRecursive(
         }
 
         TextureLoadSettings textureSettings{};
-        if (effect.shaderType == SceneEffectShaderType::UvScroll) {
+        if (effect.shaderType == SceneEffectShaderType::UvScroll ||
+            effect.shaderType == SceneEffectShaderType::WindSway) {
             textureSettings.filter = TextureFilterMode::Bilinear;
             textureSettings.wrap = TextureWrapMode::Repeat;
+        } else if (effect.shaderType == SceneEffectShaderType::PolyClip) {
+            textureSettings.filter = TextureFilterMode::Bilinear;
+            textureSettings.wrap = TextureWrapMode::Clamp;
         }
 
         const fs::path imagePath = (tiledDir / imageRel).lexically_normal();
@@ -951,9 +969,13 @@ static void ProcessLayerRecursive(
 
             TextureLoadSettings textureSettings{};
 
-            if (effect.shaderType == SceneEffectShaderType::UvScroll) {
+            if (effect.shaderType == SceneEffectShaderType::UvScroll ||
+                effect.shaderType == SceneEffectShaderType::WindSway) {
                 textureSettings.filter = TextureFilterMode::Bilinear;
                 textureSettings.wrap = TextureWrapMode::Repeat;
+            } else if (effect.shaderType == SceneEffectShaderType::PolyClip) {
+                textureSettings.filter = TextureFilterMode::Bilinear;
+                textureSettings.wrap = TextureWrapMode::Clamp;
             }
 
             if (!assetRel.empty()) {

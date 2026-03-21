@@ -18,7 +18,6 @@ uniform vec2 uSceneSize;
 uniform vec2 uRegionPos;
 uniform vec2 uRegionSize;
 uniform float uSoftness;
-uniform vec3 uTint;
 
 uniform int uUsePolygon;
 uniform int uPolygonVertexCount;
@@ -38,18 +37,8 @@ void main()
         discard;
     }
 
-    vec2 safeUvScale = max(uUvScale, vec2(0.0001));
-    vec2 uv = fragTexCoord * safeUvScale;
-    uv += uScrollSpeed * uTime;
-    uv += vec2(uPhaseOffset, uPhaseOffset);
-
-    vec4 texel = texture(texture0, uv);
-
-    texel.rgb *= uTint;
+    vec4 texel = texture(texture0, fragTexCoord);
     texel.a *= mask;
-
-    float heightFade = smoothstep(0.0, 0.4, local.y);
-    texel.a *= heightFade;
 
     finalColor = texel * colDiffuse * fragColor;
     finalColor.rgb *= finalColor.a;
