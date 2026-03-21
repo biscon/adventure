@@ -527,6 +527,8 @@ static std::shared_ptr<Menu> createMainMenu()
         save.text = "Save Game";
         save.isSubmenu = true;
         save.submenuBuilder = createSaveMenu;
+        save.enabled = game->adventure.controlsEnabled;
+        save.color = game->adventure.controlsEnabled ? LIGHTGRAY : DARKGRAY;
         menu->items.push_back(save);
     }
 
