@@ -8,20 +8,6 @@
 #include "utils/json.hpp"
 #include "data/GameState.h"
 
-static int GetSafeMonitorIndex()
-{
-    const int monitorCount = GetMonitorCount();
-    if (monitorCount <= 0) {
-        return 0;
-    }
-
-    int monitor = GetCurrentMonitor();
-    if (monitor < 0 || monitor >= monitorCount) {
-        monitor = 0;
-    }
-
-    return monitor;
-}
 
 void ApplySettings(SettingsData& settings)
 {
@@ -39,7 +25,7 @@ void ApplySettings(SettingsData& settings)
     }
 
     const Resolution res = settings.availableResolutions[settings.selectedResolutionIndex];
-    settings.monitor = GetSafeMonitorIndex();
+    settings.monitor = GetCurrentMonitor();
 
     switch (settings.displayMode) {
         case DisplayMode::Windowed: {
@@ -153,15 +139,5 @@ void InitSettings(SettingsData& data, const std::string &filename) {
 
     data.originalResolutionIndex = data.selectedResolutionIndex;
     data.originalDisplayMode = data.displayMode;
-
-    RefreshResolutions(data);
 }
 
-static Color GuiIntToColor(int colInt) {
-    Color c;
-    c.r = (colInt >> 0) & 0xFF;
-    c.g = (colInt >> 8) & 0xFF;
-    c.b = (colInt >> 16) & 0xFF;
-    c.a = (colInt >> 24) & 0xFF;
-    return c;
-}

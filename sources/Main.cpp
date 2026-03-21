@@ -133,6 +133,8 @@ int main()
     }
 
     SetExitKey(0);
+    RefreshResolutions(state.settings);
+    ApplySettings(state.settings);
 
     if (!InitEffectShaderRegistry()) {
         TraceLog(LOG_WARNING, "One or more effect shaders failed to load");
@@ -147,7 +149,7 @@ int main()
     RenderTexture2D uiTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
     SetTextureFilter(uiTarget.texture, TEXTURE_FILTER_BILINEAR);
 
-    ApplySettings(state.settings);
+
 
     InitInput(state.input);
     InitAudio(state);
