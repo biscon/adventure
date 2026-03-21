@@ -61,6 +61,22 @@ void ToggleMacNativeFullscreen()
              active ? "true" : "false");
 
     dispatch_async(dispatch_get_main_queue(), ^{
+        NSWindowStyleMask style = [window styleMask];
+        style |= NSWindowStyleMaskTitled;
+        style |= NSWindowStyleMaskClosable;
+        style |= NSWindowStyleMaskMiniaturizable;
+        style |= NSWindowStyleMaskResizable;
+        [window setStyleMask:style];
+
+        NSWindowCollectionBehavior behavior = [window collectionBehavior];
+        behavior |= NSWindowCollectionBehaviorFullScreenPrimary;
+        [window setCollectionBehavior:behavior];
+
+        TraceLog(LOG_INFO,
+         "MacFullscreenBridge: styleMask=0x%llx collectionBehavior=0x%llx",
+         (unsigned long long)[window styleMask],
+         (unsigned long long)[window collectionBehavior]);
+
         [window toggleFullScreen:nil];
     });
 }
