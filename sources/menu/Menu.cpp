@@ -285,52 +285,65 @@ static std::shared_ptr<Menu> createDisplayModeMenu()
     return menu;
 }
 
-static std::shared_ptr<Menu> createDebugMenu()
+static std::shared_ptr<Menu> createGraphicsMenu()
 {
     auto menu = std::make_shared<Menu>();
-    menu->title = "Debug Options";
+    menu->title = "Graphics";
+    menu->hint = "VSync changes require restart.";
 
-    MenuItem toggleFPS;
-    toggleFPS.text = game->settings.showFPS ? "Disable FPS" : "Enable FPS";
-    toggleFPS.action = [] {
-        game->settings.showFPS = !game->settings.showFPS;
-        SaveSettings(game->settings);
-    };
-    menu->items.push_back(toggleFPS);
+    {
+        MenuItem item;
+        item.text = game->settings.displayMode == DisplayMode::Borderless
+                    ? "Resolution (desktop controlled)"
+                    : "Resolution";
+        item.isSubmenu = true;
+        item.submenuBuilder = createResolutionMenu;
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = "Display Mode";
+        item.isSubmenu = true;
+        item.submenuBuilder = createDisplayModeMenu;
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = game->settings.vsync ? "Disable VSync (restart required)" : "Enable VSync (restart required)";
+        item.action = [] {
+            game->settings.vsync = !game->settings.vsync;
+            SaveSettings(game->settings);
+            ShowMenuToast("VSync change requires restart");
+        };
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = game->settings.fpsLock ? "Unlock FPS" : "Lock FPS (60)";
+        item.action = [] {
+            game->settings.fpsLock = !game->settings.fpsLock;
+            ApplySettings(game->settings);
+            SaveSettings(game->settings);
+        };
+        menu->items.push_back(item);
+    }
+
+    {
+        MenuItem item;
+        item.text = game->settings.showFPS ? "Hide FPS Counter" : "Show FPS Counter";
+        item.action = [] {
+            game->settings.showFPS = !game->settings.showFPS;
+            SaveSettings(game->settings);
+        };
+        menu->items.push_back(item);
+    }
 
     MenuItem back;
     back.text = "Back";
     back.action = [] {
-        if (!menuStack.empty()) {
-            menuStack.pop();
-        }
-    };
-    menu->items.push_back(back);
-
-    return menu;
-}
-
-static std::shared_ptr<Menu> createExposureMenu()
-{
-    auto menu = std::make_shared<Menu>();
-    menu->title = "Exposure";
-    menu->hint = "Increase to make the game world look brighter.";
-
-    MenuItem slider;
-    slider.text = "Exposure";
-    slider.isSlider = true;
-    slider.sliderMin = 0.5f;
-    slider.sliderMax = 2.5f;
-    slider.getValue = []() { return game->settings.exposure; };
-    slider.setValue = [](float v) {
-        game->settings.exposure = v;
-    };
-    menu->items.push_back(slider);
-
-    MenuItem back;
-    back.text = "Back";
-    back.action = [] {
-        SaveSettings(game->settings);
         if (!menuStack.empty()) {
             menuStack.pop();
         }
@@ -392,27 +405,9 @@ static std::shared_ptr<Menu> createSettingsMenu()
 
     {
         MenuItem item;
-        item.text = game->settings.displayMode == DisplayMode::Borderless
-                    ? "Resolution (desktop controlled)"
-                    : "Resolution";
+        item.text = "Graphics";
         item.isSubmenu = true;
-        item.submenuBuilder = createResolutionMenu;
-        menu->items.push_back(item);
-    }
-
-    {
-        MenuItem item;
-        item.text = "Display Mode";
-        item.isSubmenu = true;
-        item.submenuBuilder = createDisplayModeMenu;
-        menu->items.push_back(item);
-    }
-
-    {
-        MenuItem item;
-        item.text = "Exposure";
-        item.isSubmenu = true;
-        item.submenuBuilder = createExposureMenu;
+        item.submenuBuilder = createGraphicsMenu;
         menu->items.push_back(item);
     }
 
@@ -421,25 +416,6 @@ static std::shared_ptr<Menu> createSettingsMenu()
         item.text = "Audio";
         item.isSubmenu = true;
         item.submenuBuilder = createAudioMenu;
-        menu->items.push_back(item);
-    }
-
-    {
-        MenuItem item;
-        item.text = "Debug Options";
-        item.isSubmenu = true;
-        item.submenuBuilder = createDebugMenu;
-        menu->items.push_back(item);
-    }
-
-    {
-        MenuItem item;
-        item.text = game->settings.fpsLock ? "Unlock FPS" : "Lock FPS (60)";
-        item.action = [] {
-            game->settings.fpsLock = !game->settings.fpsLock;
-            ApplySettings(game->settings);
-            SaveSettings(game->settings);
-        };
         menu->items.push_back(item);
     }
 

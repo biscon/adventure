@@ -83,6 +83,26 @@
                  "width":0,
                  "x":327.39393939394,
                  "y":287.787878787878
+                },
+            
+                {
+                 "height":0,
+                 "id":22,
+                 "name":"lake_shore",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"front"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":803.666666666667,
+                 "y":289.666666666667
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1484,7 +1504,7 @@
          "y":0
         }],
  "nextlayerid":19,
- "nextobjectid":22,
+ "nextobjectid":23,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

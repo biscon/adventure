@@ -75,7 +75,13 @@ static void ProcessGameModeInput(GameState& state) {
 
 int main()
 {
-    SetConfigFlags(FLAG_VSYNC_HINT);
+    GameState state;
+    InitSettings(state.settings, "settings.json");
+
+    if (state.settings.vsync) {
+        SetConfigFlags(FLAG_VSYNC_HINT);
+    }
+
     InstallDebugConsoleTraceLogHook();
     InitWindow(1920, 1080, "Adventure");
     SetExitKey(0);
@@ -93,9 +99,6 @@ int main()
     RenderTexture2D uiTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
     SetTextureFilter(uiTarget.texture, TEXTURE_FILTER_BILINEAR);
 
-    GameState state;
-
-    InitSettings(state.settings, "settings.json");
     ApplySettings(state.settings);
 
     InitInput(state.input);

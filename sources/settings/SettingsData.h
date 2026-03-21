@@ -31,7 +31,7 @@ struct SettingsData {
     bool needsApply = false;
     bool showFPS = false;
     bool fpsLock = true;
-    float exposure = 1.1;
+    bool vsync = true;
 
     float soundVolume = 1.0f;
     float musicVolume = 0.7f;

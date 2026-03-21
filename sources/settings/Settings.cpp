@@ -64,7 +64,7 @@ void SaveSettings(const SettingsData& settings) {
     j["monitor"] = settings.monitor;
     j["showFPS"] = settings.showFPS;
     j["lockFPS"] = settings.fpsLock;
-    j["exposure"] = settings.exposure;
+    j["vsync"] = settings.vsync;
     j["soundVolume"] = settings.soundVolume;
     j["musicVolume"] = settings.musicVolume;
 
@@ -129,8 +129,8 @@ void InitSettings(SettingsData& data, const std::string &filename) {
         if(j.contains("monitor")) {
             j["monitor"].get_to(data.monitor);
         }
-        if(j.contains("exposure")) {
-            j["exposure"].get_to(data.exposure);
+        if (j.contains("vsync")) {
+            j["vsync"].get_to(data.vsync);
         }
         if (j.contains("soundVolume")) {
             j["soundVolume"].get_to(data.soundVolume);
