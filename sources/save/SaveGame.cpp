@@ -13,6 +13,7 @@
 #include "adventure/Dialogue.h"
 #include "debug/DebugConsole.h"
 #include "resources/Resources.h"
+#include "adventure/AdventureCamera.h"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -651,6 +652,26 @@ namespace
         }
     }
 
+    static void RestoreCameraFromControlledActor(GameState& state)
+    {
+        ActorInstance* controlledActor = GetControlledActor(state);
+        if (controlledActor == nullptr) {
+            return;
+        }
+
+        state.adventure.camera.mode = CameraModeData::FollowControlledActor;
+        state.adventure.camera.followedActor = -1;
+        state.adventure.camera.moving = false;
+        state.adventure.camera.moveStart = {};
+        state.adventure.camera.moveTarget = {};
+        state.adventure.camera.moveElapsedMs = 0.0f;
+        state.adventure.camera.moveDurationMs = 0.0f;
+        state.adventure.camera.biasLatch = CameraBiasLatch::None;
+        state.adventure.camera.currentBiasShiftX = 0.0f;
+        state.adventure.camera.position =
+                GetImmediateCenteredCameraPosition(state, *controlledActor);
+    }
+
     static void RestoreActors(GameState& state, const SaveRestoreData& data)
     {
         for (const SavedActorState& saved : data.actors) {
@@ -895,6 +916,7 @@ namespace
         RestoreSoundEmitters(state, data);
         RestoreAudioState(state, data);
         RestoreControlledActor(state, data);
+        RestoreCameraFromControlledActor(state);
 
         state.adventure.controlsEnabled = data.controlsEnabled;
         ClearTransientUiAndRuntimeState(state);
