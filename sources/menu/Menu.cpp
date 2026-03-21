@@ -193,6 +193,21 @@ static std::shared_ptr<Menu> createResolutionMenu()
     auto menu = std::make_shared<Menu>();
     menu->title = "Resolution";
 
+    if (game->settings.displayMode == DisplayMode::Borderless) {
+        menu->hint = "Borderless uses the desktop resolution.";
+
+        MenuItem back;
+        back.text = "Back";
+        back.action = [] {
+            if (!menuStack.empty()) {
+                menuStack.pop();
+            }
+        };
+        menu->items.push_back(back);
+
+        return menu;
+    }
+
     for (size_t i = 0; i < game->settings.availableResolutions.size(); ++i) {
         const Resolution& availRes = game->settings.availableResolutions[i];
 
@@ -230,7 +245,7 @@ static std::shared_ptr<Menu> createDisplayModeMenu()
 {
     auto menu = std::make_shared<Menu>();
     menu->title = "Display Mode";
-    menu->hint = "Fullscreen is buggy AF, consider yourself warned.";
+    menu->hint = "Borderless is recommended.";
 
     {
         MenuItem item;
@@ -238,19 +253,6 @@ static std::shared_ptr<Menu> createDisplayModeMenu()
         item.color = game->settings.displayMode == DisplayMode::Windowed ? WHITE : LIGHTGRAY;
         item.action = [] {
             game->settings.displayMode = DisplayMode::Windowed;
-            game->settings.needsApply = true;
-            ApplySettings(game->settings);
-            SaveSettings(game->settings);
-        };
-        menu->items.push_back(item);
-    }
-
-    {
-        MenuItem item;
-        item.text = game->settings.displayMode == DisplayMode::Fullscreen ? "< Fullscreen >" : "Fullscreen";
-        item.color = game->settings.displayMode == DisplayMode::Fullscreen ? WHITE : LIGHTGRAY;
-        item.action = [] {
-            game->settings.displayMode = DisplayMode::Fullscreen;
             game->settings.needsApply = true;
             ApplySettings(game->settings);
             SaveSettings(game->settings);
@@ -390,7 +392,9 @@ static std::shared_ptr<Menu> createSettingsMenu()
 
     {
         MenuItem item;
-        item.text = "Resolution";
+        item.text = game->settings.displayMode == DisplayMode::Borderless
+                    ? "Resolution (desktop controlled)"
+                    : "Resolution";
         item.isSubmenu = true;
         item.submenuBuilder = createResolutionMenu;
         menu->items.push_back(item);

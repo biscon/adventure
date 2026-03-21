@@ -9,47 +9,47 @@
 #include "utils/json.hpp"
 #include "data/GameState.h"
 
-void ApplySettings(SettingsData& settings) {
-    Resolution res = settings.availableResolutions[settings.selectedResolutionIndex];
+void ApplySettings(SettingsData& settings)
+{
+    if (settings.availableResolutions.empty()) {
+        RefreshResolutions(settings);
+    }
+
+    if (settings.availableResolutions.empty()) {
+        settings.availableResolutions.push_back({1920, 1080});
+    }
+
+    if (settings.selectedResolutionIndex < 0 ||
+        settings.selectedResolutionIndex >= static_cast<int>(settings.availableResolutions.size())) {
+        settings.selectedResolutionIndex = 0;
+    }
+
+    const Resolution res = settings.availableResolutions[settings.selectedResolutionIndex];
     settings.monitor = GetCurrentMonitor();
+
     switch (settings.displayMode) {
         case DisplayMode::Windowed: {
             ClearWindowState(FLAG_FULLSCREEN_MODE);
             ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
+            SetWindowMonitor(settings.monitor);
             SetWindowSize(res.width, res.height);
-
-            // Manually center on primary monitor (assumes monitor starts at 0,0)
-            /*
-            int monitorWidth = GetMonitorWidth(settings.monitor);
-            int monitorHeight = GetMonitorHeight(settings.monitor);
-            int winX = (monitorWidth - res.width) / 2;
-            int winY = (monitorHeight - res.height) / 2;
-            SetWindowPosition(winX, winY);
-             */
-            break;
-        }
-
-        case DisplayMode::Fullscreen: {
-            ClearWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
-            SetWindowSize(res.width, res.height);
-            SetWindowState(FLAG_FULLSCREEN_MODE);
             break;
         }
 
         case DisplayMode::Borderless: {
             ClearWindowState(FLAG_FULLSCREEN_MODE);
+            SetWindowMonitor(settings.monitor);
             SetWindowState(FLAG_BORDERLESS_WINDOWED_MODE);
             SetWindowSize(GetMonitorWidth(settings.monitor), GetMonitorHeight(settings.monitor));
             break;
         }
     }
-    SetWindowMonitor(settings.monitor);
 
     settings.originalResolutionIndex = settings.selectedResolutionIndex;
     settings.originalDisplayMode = settings.displayMode;
 
-    if(settings.fpsLock) {
-        SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+    if (settings.fpsLock) {
+        SetTargetFPS(60);
     } else {
         SetTargetFPS(0);
     }
@@ -74,23 +74,31 @@ void SaveSettings(const SettingsData& settings) {
     }
 }
 
-void RefreshResolutions(SettingsData& data) {
-    int monitor = GetCurrentMonitor();
+void RefreshResolutions(SettingsData& data)
+{
+    const int monitor = GetCurrentMonitor();
     data.monitor = monitor;
-    // Populate available resolutions
     data.availableResolutions.clear();
 
-    int monWidth = GetMonitorWidth(monitor);
-    int monHeight = GetMonitorHeight(monitor);
+    const int monWidth = GetMonitorWidth(monitor);
+    const int monHeight = GetMonitorHeight(monitor);
 
-    if(monWidth >= 1920 && monHeight >= 1080) {
+    if (monWidth >= 1920 && monHeight >= 1080) {
         data.availableResolutions.push_back({1920, 1080});
     }
-    if(monWidth >= 2560 && monHeight >= 1440) {
+    if (monWidth >= 2560 && monHeight >= 1440) {
         data.availableResolutions.push_back({2560, 1440});
     }
+    if (monWidth >= 3840 && monHeight >= 2160) {
+        data.availableResolutions.push_back({3840, 2160});
+    }
 
-    if (data.selectedResolutionIndex >= data.availableResolutions.size()) {
+    if (data.availableResolutions.empty()) {
+        data.availableResolutions.push_back({1920, 1080});
+    }
+
+    if (data.selectedResolutionIndex < 0 ||
+        data.selectedResolutionIndex >= static_cast<int>(data.availableResolutions.size())) {
         data.selectedResolutionIndex = 0;
     }
 }
@@ -106,7 +114,12 @@ void InitSettings(SettingsData& data, const std::string &filename) {
         file >> j;
 
         data.selectedResolutionIndex = j.value("resolutionIndex", 0);
-        data.displayMode = static_cast<DisplayMode>(j.value("displayMode", 0));
+        const int savedDisplayMode = j.value("displayMode", 0);
+        if (savedDisplayMode == 1 || savedDisplayMode == 2) {
+            data.displayMode = DisplayMode::Borderless;
+        } else {
+            data.displayMode = DisplayMode::Windowed;
+        }
         if(j["showFPS"] != nullptr) {
             j["showFPS"].get_to(data.showFPS);
         }
@@ -129,7 +142,6 @@ void InitSettings(SettingsData& data, const std::string &filename) {
 
     data.originalResolutionIndex = data.selectedResolutionIndex;
     data.originalDisplayMode = data.displayMode;
-    data.originalMonitor = data.monitor;
 
     RefreshResolutions(data);
 }
