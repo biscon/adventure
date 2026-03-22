@@ -1,4 +1,5 @@
 function Scene_onEnter()
+    math.randomseed(os.time())
     if not flag("store_init") then
         setFlag("store_init", true)
         -- first time only stuff
@@ -17,14 +18,22 @@ function Scene_look_ledger()
 end
 
 function Scene_use_ledger()
+    disableControls()
     walkToHotspot("ledger")
     face("left")
     playAnimation("reach_left")
     delay(600)
-    sayActor("store_clerk", "That is not for sale sir!")
+    if not flag("can_use_ledger") then
+        sayActor("store_clerk", "That is not for sale good sir!")
+    else
+        say("This ledger is full of transactions involving the hotel.")
+        say("Apparently they order a lot of food items, for a place that's supposed to be closed down.")
+    end
+    enableControls()
     return true
 end
 
+-- Flavor hotspots --------------------------------------------------------
 function Scene_look_notice_board()
     walkToHotspot("notice_board")
     face("back")
@@ -64,6 +73,8 @@ function Scene_use_file_cabinet()
     say("Sorry")
     return true
 end
+
+-- Store clerk ----------------------------------------------------
 
 function Scene_look_actor_store_clerk()
     walkToHotspot("ledger")
@@ -154,6 +165,23 @@ end
 
 -- Dog the bounty hunter ---------------------------------------------
 
+function ComfortDog()
+    local barks = {
+        "Woof!",
+        "Grr...",
+        "Arf!"
+    }
+    while true do
+        playPropAnimation("german_shepard", "bark")
+        delay(500)
+        setPropAnimation("german_shepard", "idle")
+        sayAt(3*100, 3*300, barks[math.random(#barks)], YELLOW)
+        --delay(600)
+
+        delay(1200)
+    end
+end
+
 function Scene_use_dog()
     disableControls()
     walkToHotspot("dog")
@@ -165,7 +193,7 @@ function Scene_use_dog()
     for i = 1, 3 do
         if i == 2 then
             faceActor("store_clerk", "front")
-            startWalkTo(3*190, 3*336)
+            startWalkTo(3*240, 3*336)
         end
         playPropAnimation("german_shepard", "bark")
         delay(500)
@@ -183,7 +211,8 @@ function Scene_use_dog()
     sayActor("store_clerk", "You are!.")
     sayAt(3*100, 3*300, "Woof!", BLUE)
     enableControls()
-
+    setFlag("can_use_ledger", true)
+    startScript("ComfortDog")
     --sayProp("german_shepard", "Woof!", RED)
 
     return true

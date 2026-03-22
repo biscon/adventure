@@ -374,7 +374,7 @@
                         {
                          "name":"lookText",
                          "type":"string",
-                         "value":"override"
+                         "value":"A young german shepard."
                         },
                     
                         {
@@ -394,6 +394,84 @@
                  "width":0,
                  "x":13.2243841317419,
                  "y":352.618099280999
+                },
+            
+                {
+                 "height":0,
+                 "id":33,
+                 "name":"bell",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":8.91445654545456,
+                         "y":-8.67583636363636
+                        },
+                    
+                        {
+                         "x":10.0422636363636,
+                         "y":-17.4241454545455
+                        },
+                    
+                        {
+                         "x":17.9199272727273,
+                         "y":-21.2092454545455
+                        },
+                    
+                        {
+                         "x":24.5275636363636,
+                         "y":-17.0883909090909
+                        },
+                    
+                        {
+                         "x":26.9363545454545,
+                         "y":-11.7172218181818
+                        },
+                    
+                        {
+                         "x":25.0164909090909,
+                         "y":-4.57937454545453
+                        },
+                    
+                        {
+                         "x":11.7373404545455,
+                         "y":-4.91271363636366
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"Bell"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"For summoning the owner, if we wasn't already present."
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":171
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":318
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":156,
+                 "y":228.5
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -891,7 +969,7 @@
          "y":0
         }],
  "nextlayerid":21,
- "nextobjectid":33,
+ "nextobjectid":34,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",
