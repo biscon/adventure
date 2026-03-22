@@ -204,6 +204,7 @@ bool AdventureScriptPlayAnimation(GameState& state, const std::string& animation
         TraceLog(LOG_WARNING, "Animation not found or has no duration: %s", animationName.c_str());
         return false;
     }
+    player.flipX = false;
 
     player.path = {};
     state.adventure.pendingInteraction = {};
@@ -616,6 +617,7 @@ bool AdventureScriptPlayActorAnimation(GameState& state, const std::string& acto
     actor->scriptAnimationDurationMs = durationMs;
     actor->inIdleState = false;
     actor->stoppedTimeMs = 0.0f;
+    actor->flipX = false;
 
     return true;
 }

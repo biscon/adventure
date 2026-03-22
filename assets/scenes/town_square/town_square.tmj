@@ -346,6 +346,18 @@
     
         {
          "draworder":"topdown",
+         "id":19,
+         "name":"props",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
          "id":5,
          "name":"exits",
          "objects":[
@@ -921,8 +933,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":19,
- "nextobjectid":31,
+ "nextlayerid":20,
+ "nextobjectid":32,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

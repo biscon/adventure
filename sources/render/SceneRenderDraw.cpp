@@ -122,6 +122,17 @@ static void SetShaderPolygonIfValid(
     SetShaderValueV(shader, polygonPointsLoc, points, SHADER_UNIFORM_VEC2, vertexCount);
 }
 
+static Vector2 GetRoundedRenderCamera(const GameState& state)
+{
+    //return state.adventure.camera.position;
+
+    const Vector2 cam = state.adventure.camera.position;
+    return Vector2{
+            std::round(cam.x),
+            std::round(cam.y)
+    };
+}
+
 void SceneRenderDrawSceneImageLayer(const GameState& state, const SceneImageLayer& layer)
 {
     if (!layer.visible || layer.textureHandle < 0) {
@@ -133,7 +144,7 @@ void SceneRenderDrawSceneImageLayer(const GameState& state, const SceneImageLaye
         return;
     }
 
-    const Vector2 cam = state.adventure.camera.position;
+    const Vector2 cam = GetRoundedRenderCamera(state);
 
     Rectangle src{};
     src.x = 0.0f;
@@ -167,7 +178,7 @@ void SceneRenderDrawSceneEffectSprite(
         return;
     }
 
-    const Vector2 cam = state.adventure.camera.position;
+    const Vector2 cam = GetRoundedRenderCamera(state);
 
     Rectangle src{};
     src.x = 0.0f;
@@ -180,6 +191,12 @@ void SceneRenderDrawSceneEffectSprite(
     dst.y = sceneEffect.worldPos.y - cam.y;
     dst.width = sceneEffect.worldSize.x;
     dst.height = sceneEffect.worldSize.y;
+
+    // round to whole pixels
+    dst.x = std::round(dst.x);
+    dst.y = std::round(dst.y);
+    dst.width = std::round(dst.width);
+    dst.height = std::round(dst.height);
 
     const SceneEffectShaderCategory shaderCategory = GetEffectShaderCategory(effect.shaderType);
     Color drawColor = BuildEffectSpriteDrawColor(effect);
@@ -250,7 +267,7 @@ void SceneRenderDrawSceneEffectRegion(
         }
     }
 
-    const Vector2 cam = state.adventure.camera.position;
+    const Vector2 cam = GetRoundedRenderCamera(state);
 
     const Rectangle effectBounds = sceneEffect.usePolygon
                                    ? BuildPolygonBounds(sceneEffect.polygon)
@@ -269,6 +286,12 @@ void SceneRenderDrawSceneEffectRegion(
     dst.y = effectBounds.y - cam.y;
     dst.width = effectBounds.width;
     dst.height = effectBounds.height;
+
+    // round to whole pixels
+    dst.x = std::round(dst.x);
+    dst.y = std::round(dst.y);
+    dst.width = std::round(dst.width);
+    dst.height = std::round(dst.height);
 
     Color drawColor = WHITE;
     drawColor.a = static_cast<unsigned char>(std::round(255.0f * Clamp01(effect.opacity)));
@@ -358,7 +381,7 @@ void SceneRenderDrawActor(const GameState& state, const ActorInstance& actor)
     const float depthScale = ComputeDepthScale(state.adventure.currentScene, actor.feetPos.y);
     const float finalScale = asset->baseDrawScale * depthScale;
 
-    const Vector2 cam = state.adventure.camera.position;
+    const Vector2 cam = GetRoundedRenderCamera(state);
     const Vector2 screenFeet = {
             actor.feetPos.x - cam.x,
             actor.feetPos.y - cam.y
@@ -418,6 +441,14 @@ void SceneRenderDrawActor(const GameState& state, const ActorInstance& actor)
             origin.x = pivotX * finalScale;
         }
 
+        // round to whole pixels
+        dst.x = std::round(dst.x);
+        dst.y = std::round(dst.y);
+        origin.x = std::round(origin.x);
+        origin.y = std::round(origin.y);
+        dst.width = std::round(dst.width);
+        dst.height = std::round(dst.height);
+
         DrawTexturePro(texRes->texture, src, dst, origin, 0.0f, WHITE);
     }
 }
@@ -448,7 +479,7 @@ static void DrawSpriteProp(
                              : 1.0f;
     const float finalScale = asset->baseDrawScale * depthScale;
 
-    const Vector2 cam = state.adventure.camera.position;
+    const Vector2 cam = GetRoundedRenderCamera(state);
     const Vector2 screenFeet{
             prop.feetPos.x - cam.x,
             prop.feetPos.y - cam.y
@@ -502,6 +533,14 @@ static void DrawSpriteProp(
                    ? (frame.sourceSize.x - pivotX) * finalScale
                    : pivotX * finalScale;
 
+        // round to whole pixels
+        dst.x = std::round(dst.x);
+        dst.y = std::round(dst.y);
+        origin.x = std::round(origin.x);
+        origin.y = std::round(origin.y);
+        dst.width = std::round(dst.width);
+        dst.height = std::round(dst.height);
+
         DrawTexturePro(texRes->texture, src, dst, origin, 0.0f, WHITE);
     }
 }
@@ -522,7 +561,7 @@ static void DrawImageProp(
                              : 1.0f;
     const float finalScale = static_cast<float>(state.adventure.currentScene.baseAssetScale) * depthScale;
 
-    const Vector2 cam = state.adventure.camera.position;
+    const Vector2 cam = GetRoundedRenderCamera(state);
     const Vector2 screenFeet{
             prop.feetPos.x - cam.x,
             prop.feetPos.y - cam.y
@@ -547,6 +586,14 @@ static void DrawImageProp(
     Vector2 origin{};
     origin.x = (static_cast<float>(texRes->texture.width) * 0.5f) * finalScale;
     origin.y = static_cast<float>(texRes->texture.height) * finalScale;
+
+    // round to whole pixels
+    dst.x = std::round(dst.x);
+    dst.y = std::round(dst.y);
+    origin.x = std::round(origin.x);
+    origin.y = std::round(origin.y);
+    dst.width = std::round(dst.width);
+    dst.height = std::round(dst.height);
 
     DrawTexturePro(texRes->texture, src, dst, origin, 0.0f, WHITE);
 }

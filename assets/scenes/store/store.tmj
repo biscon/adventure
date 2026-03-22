@@ -166,13 +166,13 @@
                         {
                          "name":"walkToX",
                          "type":"float",
-                         "value":356
+                         "value":329
                         },
                     
                         {
                          "name":"walkToY",
                          "type":"float",
-                         "value":285
+                         "value":291
                         }],
                  "rotation":0,
                  "type":"",
@@ -331,6 +331,69 @@
                  "width":0,
                  "x":331.333333333333,
                  "y":148
+                },
+            
+                {
+                 "height":0,
+                 "id":32,
+                 "name":"dog",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":1.47830979036926,
+                         "y":0.821256645169408
+                        },
+                    
+                        {
+                         "x":0.123696868258081,
+                         "y":-36.0549099805386
+                        },
+                    
+                        {
+                         "x":76.7079717015527,
+                         "y":-36.3552992809991
+                        },
+                    
+                        {
+                         "x":76.7506158682581,
+                         "y":1.12303071900088
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"Dog"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"left"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"override"
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":120
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":340
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":13.2243841317419,
+                 "y":352.618099280999
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -503,6 +566,56 @@
                  "width":0,
                  "x":204,
                  "y":309
+                },
+            
+                {
+                 "height":0,
+                 "id":31,
+                 "name":"german_shepard",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"animation",
+                         "type":"string",
+                         "value":"sleep"
+                        },
+                    
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/props\/german_shepard.prop.json"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"depthSorted"
+                        },
+                    
+                        {
+                         "name":"depthScaling",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"flipX",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"visualType",
+                         "type":"string",
+                         "value":"sprite"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":51,
+                 "y":341
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -778,7 +891,7 @@
          "y":0
         }],
  "nextlayerid":21,
- "nextobjectid":31,
+ "nextobjectid":33,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

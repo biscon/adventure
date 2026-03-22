@@ -113,6 +113,67 @@
     
         {
          "draworder":"topdown",
+         "id":19,
+         "name":"props",
+         "objects":[
+                {
+                 "height":0,
+                 "id":23,
+                 "name":"german_shepard",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"animation",
+                         "type":"string",
+                         "value":"idle"
+                        },
+                    
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/props\/german_shepard.prop.json"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"depthSorted"
+                        },
+                    
+                        {
+                         "name":"depthScaling",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"flipX",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"visualType",
+                         "type":"string",
+                         "value":"sprite"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":836.333333333333,
+                 "y":302
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
          "id":16,
          "name":"effect_regions",
          "objects":[
@@ -1503,8 +1564,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":19,
- "nextobjectid":23,
+ "nextlayerid":20,
+ "nextobjectid":24,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

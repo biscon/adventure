@@ -5,5 +5,5 @@
         "y": 79
     },
     "baseDrawScale": 6.0,
-    "useRightForLeft": true
+    "useRightForLeft": false
 }

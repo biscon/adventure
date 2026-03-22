@@ -10,12 +10,19 @@ end
 function Scene_look_ledger()
     walkToHotspot("ledger")
     face("left")
-    say("A ledger filled with careful entries.")
-    say("Most of it means nothing to me.")
+    say("Some kind of ledger, probably detailing the stores financial transactions.")
+    sayActor("store_clerk", "Yes it's where I keep track of all my orders sir.")
+    say("Interesting.")
     return true
 end
+
 function Scene_use_ledger()
-    return Scene_look_ledger()
+    walkToHotspot("ledger")
+    face("left")
+    playAnimation("reach_left")
+    delay(600)
+    sayActor("store_clerk", "That is not for sale sir!")
+    return true
 end
 
 function Scene_look_notice_board()
@@ -25,6 +32,7 @@ function Scene_look_notice_board()
     say("Some are so old the ink has nearly vanished.")
     return true
 end
+
 function Scene_use_notice_board()
     return Scene_look_notice_board()
 end
@@ -50,7 +58,11 @@ function Scene_look_file_cabinet()
 end
 
 function Scene_use_file_cabinet()
-    return Scene_look_file_cabinet()
+    walkToHotspot("file_cabinet")
+    face("back")
+    sayActor("store_clerk", "Keep your hands of my files, they're private!")
+    say("Sorry")
+    return true
 end
 
 function Scene_look_actor_store_clerk()
@@ -136,6 +148,43 @@ function Scene_use_actor_store_clerk()
             friend = flag("asked_store_friend")
         })
     end)
+
+    return true
+end
+
+-- Dog the bounty hunter ---------------------------------------------
+
+function Scene_use_dog()
+    disableControls()
+    walkToHotspot("dog")
+    face("left")
+    playAnimation("pickup_left")
+    delay(300)
+    playPropAnimation("german_shepard", "wake_up")
+    delay(1000)
+    for i = 1, 3 do
+        if i == 2 then
+            faceActor("store_clerk", "front")
+            startWalkTo(3*190, 3*336)
+        end
+        playPropAnimation("german_shepard", "bark")
+        delay(500)
+    end
+    setPropAnimation("german_shepard", "idle")
+    delay(200)
+    face("left")
+    sayAt(3*100, 3*300, "Woof!", RED)
+    sayActor("store_clerk", "Easy there little fella!.")
+    walkActorToHotspot("store_clerk", "dog")
+    faceActor("store_clerk", "left")
+    playActorAnimation("store_clerk", "pickup_left")
+    delay(300)
+    sayActor("store_clerk", "Who's a good boy?.")
+    sayActor("store_clerk", "You are!.")
+    sayAt(3*100, 3*300, "Woof!", BLUE)
+    enableControls()
+
+    --sayProp("german_shepard", "Woof!", RED)
 
     return true
 end
