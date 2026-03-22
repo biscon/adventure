@@ -176,6 +176,36 @@ void AdventureStartSpeech(
     state.adventure.speechUi.skippable = skippable;
 }
 
+void AdventureStartAmbientSpeech(
+        GameState& state,
+        SpeechAnchorType anchorType,
+        int actorIndex,
+        int propIndex,
+        Vector2 worldPos,
+        const std::string& text,
+        Color color,
+        int durationMs)
+{
+    constexpr size_t MAX_AMBIENT_SPEECH = 6;
+
+    if (state.adventure.ambientSpeechUis.size() >= MAX_AMBIENT_SPEECH) {
+        state.adventure.ambientSpeechUis.erase(state.adventure.ambientSpeechUis.begin());
+    }
+
+    SpeechUiState speech{};
+    speech.active = true;
+    speech.anchorType = anchorType;
+    speech.propIndex = propIndex;
+    speech.actorIndex = actorIndex;
+    speech.worldPos = worldPos;
+    speech.text = text;
+    speech.color = color;
+    speech.timerMs = 0.0f;
+    speech.durationMs = AdventureComputeSpeechDurationMs(text, durationMs);
+    speech.skippable = false;
+
+    state.adventure.ambientSpeechUis.push_back(speech);
+}
 
 bool AdventureTryGetSpriteAnimationDurationMs(
         const GameState& state,

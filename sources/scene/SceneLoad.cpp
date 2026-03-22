@@ -106,6 +106,8 @@ void UnloadCurrentScene(GameState& state)
     state.adventure.controlledActorIndex = -1;
     state.adventure.actorDefinitions.clear();
     state.adventure.dialogueUi = {};
+    state.adventure.speechUi = {};
+    state.adventure.ambientSpeechUis.clear();
 
     ClearSceneAudio(state);
     UnloadSceneResources(state.resources);

@@ -697,6 +697,29 @@ static void UpdateSpeechSkipInput(GameState& state)
     }
 }
 
+static void UpdateAmbientSpeechUi(GameState& state, float dt)
+{
+    auto& ambient = state.adventure.ambientSpeechUis;
+
+    for (SpeechUiState& speech : ambient) {
+        if (!speech.active) {
+            continue;
+        }
+
+        speech.timerMs += dt * 1000.0f;
+        if (speech.timerMs >= speech.durationMs) {
+            speech.active = false;
+        }
+    }
+
+    ambient.erase(
+            std::remove_if(
+                    ambient.begin(),
+                    ambient.end(),
+                    [](const SpeechUiState& speech) { return !speech.active; }),
+            ambient.end());
+}
+
 static void UpdateCursorFromAdventure(GameState& state)
 {
     if (state.adventure.hoverUi.active) {
@@ -806,7 +829,15 @@ void AdventureUpdate(GameState& state, float dt)
     HandleDebugInput(state);
     UpdateInventoryUi(state, dt);
     UpdateDialogueUi(state);
+
     UpdateSpeechSkipInput(state);
+    if (state.adventure.speechUi.active) {
+        state.adventure.speechUi.timerMs += dt * 1000.0f;
+        if (state.adventure.speechUi.timerMs >= state.adventure.speechUi.durationMs) {
+            state.adventure.speechUi = {};
+        }
+    }
+    UpdateAmbientSpeechUi(state, dt);
 
     if (!IsDialogueUiActive(state) && !state.adventure.speechUi.active) {
         HandleHeldItemWorldUse(state);

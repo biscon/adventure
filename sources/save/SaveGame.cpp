@@ -602,6 +602,7 @@ namespace
         state.adventure.pendingInteraction = {};
         state.adventure.actionQueue = {};
         state.adventure.speechUi = {};
+        state.adventure.ambientSpeechUis.clear();
         state.adventure.hoverUi = {};
         state.adventure.dialogueUi = {};
 

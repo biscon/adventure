@@ -171,14 +171,13 @@ function ComfortDog()
         "Grr...",
         "Arf!"
     }
+
     while true do
         playPropAnimation("german_shepard", "bark")
         delay(500)
         setPropAnimation("german_shepard", "idle")
-        sayAt(3*100, 3*300, barks[math.random(#barks)], YELLOW)
-        --delay(600)
-
-        delay(1200)
+        startSayAt(3*100, 3*300, barks[math.random(#barks)], YELLOW)
+        delay(2200)
     end
 end
 

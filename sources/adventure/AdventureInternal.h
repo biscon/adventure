@@ -33,6 +33,16 @@ void AdventureStartSpeech(
         int durationMs,
         bool skippable = true);
 
+void AdventureStartAmbientSpeech(
+        GameState& state,
+        SpeechAnchorType anchorType,
+        int actorIndex,
+        int propIndex,
+        Vector2 worldPos,
+        const std::string& text,
+        Color color,
+        int durationMs);
+
 bool AdventureTryGetSpriteAnimationDurationMs(
         const GameState& state,
         SpriteAssetHandle spriteAssetHandle,

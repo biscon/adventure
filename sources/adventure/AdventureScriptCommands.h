@@ -16,6 +16,23 @@ bool AdventureScriptSayAt(GameState& state,
                           Color color = WHITE,
                           int durationMs = -1);
 
+bool AdventureScriptStartSay(GameState& state, const std::string& text, int durationMs = -1);
+bool AdventureScriptStartSayProp(GameState& state,
+                                 const std::string& propId,
+                                 const std::string& text,
+                                 const Color* overrideColor = nullptr,
+                                 int durationMs = -1);
+bool AdventureScriptStartSayAt(GameState& state,
+                               Vector2 worldPos,
+                               const std::string& text,
+                               Color color = WHITE,
+                               int durationMs = -1);
+bool AdventureScriptStartSayActor(GameState& state,
+                                  const std::string& actorId,
+                                  const std::string& text,
+                                  const Color* overrideColor = nullptr,
+                                  int durationMs = -1);
+
 bool AdventureScriptWalkTo(GameState& state, Vector2 worldPos);
 bool AdventureScriptWalkToHotspot(GameState& state, const std::string& hotspotId);
 bool AdventureScriptWalkToExit(GameState& state, const std::string& exitId);

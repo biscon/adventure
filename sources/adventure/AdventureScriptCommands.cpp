@@ -88,6 +88,134 @@ bool AdventureScriptSayAt(GameState& state,
     return true;
 }
 
+bool AdventureScriptStartSay(GameState& state, const std::string& text, int durationMs)
+{
+    const ActorInstance* controlledActor = GetControlledActor(state);
+    if (!state.adventure.currentScene.loaded || controlledActor == nullptr) {
+        return false;
+    }
+
+    const ActorDefinitionData* actorDef =
+            FindActorDefinitionByIndex(state, controlledActor->actorDefIndex);
+    const Color talkColor = (actorDef != nullptr) ? actorDef->talkColor : WHITE;
+
+    AdventureStartAmbientSpeech(
+            state,
+            SpeechAnchorType::Player,
+            -1,
+            -1,
+            {},
+            text,
+            talkColor,
+            durationMs);
+
+    return true;
+}
+
+bool AdventureScriptStartSayProp(GameState& state,
+                                 const std::string& propId,
+                                 const std::string& text,
+                                 const Color* overrideColor,
+                                 int durationMs)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int scenePropIndex = AdventureFindScenePropIndexById(state, propId);
+    if (scenePropIndex < 0 ||
+        scenePropIndex >= static_cast<int>(state.adventure.currentScene.props.size()) ||
+        scenePropIndex >= static_cast<int>(state.adventure.props.size())) {
+        return false;
+    }
+
+    if (!state.adventure.props[scenePropIndex].visible) {
+        return false;
+    }
+
+    Color color = WHITE;
+    if (overrideColor != nullptr) {
+        color = *overrideColor;
+    }
+
+    AdventureStartAmbientSpeech(
+            state,
+            SpeechAnchorType::Prop,
+            -1,
+            scenePropIndex,
+            {},
+            text,
+            color,
+            durationMs);
+
+    return true;
+}
+
+bool AdventureScriptStartSayAt(GameState& state,
+                               Vector2 worldPos,
+                               const std::string& text,
+                               Color color,
+                               int durationMs)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    AdventureStartAmbientSpeech(
+            state,
+            SpeechAnchorType::Position,
+            -1,
+            -1,
+            worldPos,
+            text,
+            color,
+            durationMs);
+
+    return true;
+}
+
+bool AdventureScriptStartSayActor(GameState& state,
+                                  const std::string& actorId,
+                                  const std::string& text,
+                                  const Color* overrideColor,
+                                  int durationMs)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    ActorInstance* actor = AdventureFindSceneActorById(state, actorId);
+    if (actor == nullptr) {
+        return false;
+    }
+
+    const ActorDefinitionData* actorDef = AdventureGetActorDefinitionForInstance(state, *actor);
+
+    Color color = WHITE;
+    if (overrideColor != nullptr) {
+        color = *overrideColor;
+    } else if (actorDef != nullptr) {
+        color = actorDef->talkColor;
+    }
+
+    const int actorIndex = FindActorInstanceIndexById(state, actorId);
+    if (actorIndex < 0) {
+        return false;
+    }
+
+    AdventureStartAmbientSpeech(
+            state,
+            SpeechAnchorType::Actor,
+            actorIndex,
+            -1,
+            {},
+            text,
+            color,
+            durationMs);
+
+    return true;
+}
+
 bool AdventureScriptWalkTo(GameState& state, Vector2 worldPos)
 {
     ActorInstance* controlledActor = GetControlledActor(state);

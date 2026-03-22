@@ -118,23 +118,118 @@ static void DrawBottomCenteredHoverName(const GameState& state)
     DrawShadowedTextLine(font, text, pos, fontSize, spacing, WHITE, shadowOffset);
 }
 
-static void DrawSpeechUi(const GameState& state)
+struct SpeechLayoutBox
 {
-    if (!state.adventure.speechUi.active) {
+    Rectangle rect{};
+};
+
+static bool RectsOverlapWithPadding(const Rectangle& a, const Rectangle& b, float padding)
+{
+    Rectangle aa{
+            a.x - padding,
+            a.y - padding,
+            a.width + padding * 2.0f,
+            a.height + padding * 2.0f
+    };
+
+    Rectangle bb{
+            b.x - padding,
+            b.y - padding,
+            b.width + padding * 2.0f,
+            b.height + padding * 2.0f
+    };
+
+    return CheckCollisionRecs(aa, bb);
+}
+
+static bool DoesSpeechRectOverlapExisting(
+        const Rectangle& rect,
+        const std::vector<SpeechLayoutBox>& placedBoxes,
+        float padding)
+{
+    for (const SpeechLayoutBox& placed : placedBoxes) {
+        if (RectsOverlapWithPadding(rect, placed.rect, padding)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static Rectangle ResolveSpeechRectPlacement(
+        Rectangle desiredRect,
+        const std::vector<SpeechLayoutBox>& placedBoxes,
+        float minX,
+        float minY,
+        float maxX,
+        float maxY,
+        float verticalStep)
+{
+    Rectangle rect = desiredRect;
+
+    if (rect.x < minX) {
+        rect.x = minX;
+    }
+    if (rect.x + rect.width > maxX) {
+        rect.x = maxX - rect.width;
+    }
+    if (rect.y < minY) {
+        rect.y = minY;
+    }
+    if (rect.y + rect.height > maxY) {
+        rect.y = maxY - rect.height;
+    }
+
+    if (!DoesSpeechRectOverlapExisting(rect, placedBoxes, 8.0f)) {
+        return rect;
+    }
+
+    // Prefer moving upward first, then downward.
+    for (int stepIndex = 1; stepIndex <= 20; ++stepIndex) {
+        const float upOffset = verticalStep * static_cast<float>(stepIndex);
+        Rectangle upRect = rect;
+        upRect.y = rect.y - upOffset;
+
+        if (upRect.y >= minY &&
+            upRect.y + upRect.height <= maxY &&
+            !DoesSpeechRectOverlapExisting(upRect, placedBoxes, 8.0f)) {
+            return upRect;
+        }
+
+        const float downOffset = verticalStep * static_cast<float>(stepIndex);
+        Rectangle downRect = rect;
+        downRect.y = rect.y + downOffset;
+
+        if (downRect.y >= minY &&
+            downRect.y + downRect.height <= maxY &&
+            !DoesSpeechRectOverlapExisting(downRect, placedBoxes, 8.0f)) {
+            return downRect;
+        }
+    }
+
+    return rect;
+}
+
+static void DrawSingleSpeechUi(
+        const GameState& state,
+        const SpeechUiState& speechUi,
+        std::vector<SpeechLayoutBox>& placedBoxes,
+        float fontSize,
+        float maxWidth,
+        float lineHeight)
+{
+    if (!speechUi.active) {
         return;
     }
 
     Font font = GetFontDefault();
-    const float fontSize = 42.0f;
     const float spacing = 2.0f;
-    const float maxWidth = 900.0f;
-    const float lineHeight = 44.0f;
     const int shadowOffset = 2;
 
     Rectangle anchorRect{};
     bool haveAnchorRect = false;
 
-    switch (state.adventure.speechUi.anchorType) {
+    switch (speechUi.anchorType) {
         case SpeechAnchorType::Player:
         {
             const ActorInstance* controlledActor = GetControlledActor(state);
@@ -146,9 +241,10 @@ static void DrawSpeechUi(const GameState& state)
             haveAnchorRect = true;
             break;
         }
+
         case SpeechAnchorType::Actor:
         {
-            const int actorIndex = state.adventure.speechUi.actorIndex;
+            const int actorIndex = speechUi.actorIndex;
             if (actorIndex < 0 ||
                 actorIndex >= static_cast<int>(state.adventure.actors.size())) {
                 return;
@@ -163,9 +259,10 @@ static void DrawSpeechUi(const GameState& state)
             haveAnchorRect = true;
             break;
         }
+
         case SpeechAnchorType::Prop:
         {
-            const int propIndex = state.adventure.speechUi.propIndex;
+            const int propIndex = speechUi.propIndex;
             if (propIndex < 0 ||
                 propIndex >= static_cast<int>(state.adventure.currentScene.props.size()) ||
                 propIndex >= static_cast<int>(state.adventure.props.size())) {
@@ -187,8 +284,8 @@ static void DrawSpeechUi(const GameState& state)
         case SpeechAnchorType::Position:
         {
             const Vector2 screenPos{
-                    state.adventure.speechUi.worldPos.x - state.adventure.camera.position.x,
-                    state.adventure.speechUi.worldPos.y - state.adventure.camera.position.y
+                    speechUi.worldPos.x - state.adventure.camera.position.x,
+                    speechUi.worldPos.y - state.adventure.camera.position.y
             };
 
             anchorRect.x = screenPos.x - 1.0f;
@@ -205,7 +302,7 @@ static void DrawSpeechUi(const GameState& state)
     }
 
     const std::vector<std::string> lines =
-            WrapTextLines(font, state.adventure.speechUi.text, fontSize, spacing, maxWidth);
+            WrapTextLines(font, speechUi.text, fontSize, spacing, maxWidth);
 
     float widest = 0.0f;
     for (const auto& line : lines) {
@@ -217,22 +314,60 @@ static void DrawSpeechUi(const GameState& state)
     float x = anchorRect.x + anchorRect.width * 0.5f - widest * 0.5f;
     float y = anchorRect.y - totalHeight - 30.0f;
 
-    if (x < 20.0f) x = 20.0f;
-    if (x + widest > static_cast<float>(INTERNAL_WIDTH) - 20.0f) {
-        x = static_cast<float>(INTERNAL_WIDTH) - 20.0f - widest;
-    }
+    Rectangle speechRect{};
+    speechRect.x = x;
+    speechRect.y = y;
+    speechRect.width = widest;
+    speechRect.height = totalHeight;
 
-    if (y < 20.0f) y = 20.0f;
+    speechRect = ResolveSpeechRectPlacement(
+            speechRect,
+            placedBoxes,
+            20.0f,
+            20.0f,
+            static_cast<float>(INTERNAL_WIDTH) - 20.0f,
+            static_cast<float>(INTERNAL_HEIGHT) - 20.0f,
+            lineHeight);
 
-    const Color speechColor = state.adventure.speechUi.color;
+    const Color speechColor = speechUi.color;
 
     for (size_t i = 0; i < lines.size(); ++i) {
         Vector2 pos{
-                x,
-                y + lineHeight * static_cast<float>(i)
+                speechRect.x,
+                speechRect.y + lineHeight * static_cast<float>(i)
         };
         DrawShadowedTextLine(font, lines[i], pos, fontSize, spacing, speechColor, shadowOffset);
     }
+
+    SpeechLayoutBox placed{};
+    placed.rect = speechRect;
+    placedBoxes.push_back(placed);
+}
+
+static void DrawSpeechUi(const GameState& state)
+{
+    std::vector<SpeechLayoutBox> placedBoxes;
+    placedBoxes.reserve(state.adventure.ambientSpeechUis.size() + 1);
+
+    // Ambient speech a bit smaller.
+    for (const SpeechUiState& speech : state.adventure.ambientSpeechUis) {
+        DrawSingleSpeechUi(
+                state,
+                speech,
+                placedBoxes,
+                34.0f,   // smaller than primary
+                700.0f,
+                36.0f);
+    }
+
+    // Primary speech stays larger and is placed last, so it gets priority.
+    DrawSingleSpeechUi(
+            state,
+            state.adventure.speechUi,
+            placedBoxes,
+            42.0f,
+            900.0f,
+            44.0f);
 }
 
 static bool CanInventoryPageBackwardUi(const ActorInventoryData& inv)

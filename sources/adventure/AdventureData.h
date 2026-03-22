@@ -309,6 +309,7 @@ struct AdventureData {
     PendingInteraction pendingInteraction{};
 
     SpeechUiState speechUi{};
+    std::vector<SpeechUiState> ambientSpeechUis{};
     HoverUiState hoverUi{};
     AdventureActionQueue actionQueue{};
     ScreenShakeState screenShake{};

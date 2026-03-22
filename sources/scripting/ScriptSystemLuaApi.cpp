@@ -422,6 +422,116 @@ static int Lua_sayAt(lua_State* L)
     return lua_yieldk(L, 0, 0, Lua_WaitContinuation);
 }
 
+static int Lua_startSay(lua_State* L)
+{
+    const char* text = luaL_checkstring(L, 1);
+
+    Color color{};
+    bool hasColor = false;
+    int durationMs = -1;
+    if (!ParseOptionalTalkColorAndDuration(L, 2, color, hasColor, durationMs)) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    if (gameState == nullptr || text == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptStartSay(*gameState, std::string(text), durationMs);
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_startSayProp(lua_State* L)
+{
+    const char* propId = luaL_checkstring(L, 1);
+    const char* text = luaL_checkstring(L, 2);
+
+    Color color{};
+    bool hasColor = false;
+    int durationMs = -1;
+    if (!ParseOptionalTalkColorAndDuration(L, 3, color, hasColor, durationMs)) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    if (gameState == nullptr || propId == nullptr || text == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptStartSayProp(
+            *gameState,
+            std::string(propId),
+            std::string(text),
+            hasColor ? &color : nullptr,
+            durationMs);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_startSayAt(lua_State* L)
+{
+    const float x = static_cast<float>(luaL_checknumber(L, 1));
+    const float y = static_cast<float>(luaL_checknumber(L, 2));
+    const char* text = luaL_checkstring(L, 3);
+
+    Color color = WHITE;
+    bool hasColor = false;
+    int durationMs = -1;
+    if (!ParseOptionalTalkColorAndDuration(L, 4, color, hasColor, durationMs)) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    if (gameState == nullptr || text == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptStartSayAt(
+            *gameState,
+            Vector2{x, y},
+            std::string(text),
+            hasColor ? color : WHITE,
+            durationMs);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
+static int Lua_startSayActor(lua_State* L)
+{
+    const char* actorId = luaL_checkstring(L, 1);
+    const char* text = luaL_checkstring(L, 2);
+
+    Color color{};
+    bool hasColor = false;
+    int durationMs = -1;
+    if (!ParseOptionalTalkColorAndDuration(L, 3, color, hasColor, durationMs)) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    if (gameState == nullptr || actorId == nullptr || text == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptStartSayActor(
+            *gameState,
+            std::string(actorId),
+            std::string(text),
+            hasColor ? &color : nullptr,
+            durationMs);
+
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 static int Lua_walkTo(lua_State* L)
 {
     const float x = static_cast<float>(luaL_checknumber(L, 1));
@@ -1811,6 +1921,12 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "say", Lua_say);
     lua_register(L, "sayProp", Lua_sayProp);
     lua_register(L, "sayAt", Lua_sayAt);
+    lua_register(L, "sayActor", Lua_sayActor);
+    lua_register(L, "startSay", Lua_startSay);
+    lua_register(L, "startSayProp", Lua_startSayProp);
+    lua_register(L, "startSayAt", Lua_startSayAt);
+    lua_register(L, "startSayActor", Lua_startSayActor);
+
     lua_register(L, "dialogue", Lua_dialogue);
     lua_register(L, "walkTo", Lua_walkTo);
     lua_register(L, "walkToHotspot", Lua_walkToHotspot);
@@ -1830,7 +1946,6 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "movePropBy", Lua_movePropBy);
 
     lua_register(L, "controlActor", Lua_controlActor);
-    lua_register(L, "sayActor", Lua_sayActor);
     lua_register(L, "walkActorTo", Lua_walkActorTo);
     lua_register(L, "walkActorToHotspot", Lua_walkActorToHotspot);
     lua_register(L, "walkActorToExit", Lua_walkActorToExit);
