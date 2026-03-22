@@ -228,5 +228,17 @@ void AdventureQueueLoadSceneInternal(GameState& state, const char* sceneId, cons
     state.adventure.pendingSceneId = sceneId;
     state.adventure.pendingSpawnId = (spawnId != nullptr) ? spawnId : "";
     state.adventure.hasPendingSceneLoad = true;
+
+    if (state.adventure.currentScene.loaded) {
+        SceneFadeState& fade = state.adventure.sceneFade;
+        if (fade.phase == SceneFadePhase::None) {
+            fade.phase = SceneFadePhase::FadingOut;
+            fade.durationMs = 300.0f;
+            fade.elapsedMs = 0.0f;
+            fade.opacity = 0.0f;
+            fade.loadTriggered = false;
+            state.adventure.controlsEnabled = false;
+        }
+    }
 }
 

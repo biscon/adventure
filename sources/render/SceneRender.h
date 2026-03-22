@@ -12,3 +12,5 @@ void RenderAdventureSceneComposited(
         const GameState& state,
         RenderTexture2D& worldTarget,
         RenderTexture2D& tempTarget);
+
+void RenderAdventureSceneFadeOverlay(const GameState& state);

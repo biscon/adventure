@@ -88,9 +88,19 @@ void AdventureProcessPendingLoads(GameState& state)
 
     if (LoadSceneById(state, sceneId.c_str())) {
         state.mode = GameMode::Game;
+
+        SceneFadeState& fade = state.adventure.sceneFade;
+        fade.phase = SceneFadePhase::FadingIn;
+        fade.durationMs = 300.0f;
+        fade.elapsedMs = 0.0f;
+        fade.opacity = 1.0f;
+        fade.loadTriggered = false;
+
+        state.adventure.controlsEnabled = false;
     } else {
         TraceLog(LOG_ERROR, "Scene load failed: %s", sceneId.c_str());
         state.mode = GameMode::Menu;
+        state.adventure.sceneFade = {};
     }
 
     state.adventure.pendingSpawnId.clear();
@@ -114,10 +124,18 @@ static void UpdateActorFacingAndAnimation(ActorInstance& actor, Vector2 movement
 
     bool useHorizontal = false;
 
+    /*
     if (wasHorizontal) {
-        useHorizontal = !(absY > absX * 1.8f);
+        useHorizontal = !(absY > absX * 1.35f);
     } else {
-        useHorizontal = (absX > absY * 1.35f);
+        useHorizontal = (absX > absY * 1.8f);
+    }
+     */
+
+    if (wasHorizontal) {
+        useHorizontal = !(absY > absX * 1.15f);
+    } else {
+        useHorizontal = (absX > absY * 2.2f);
     }
 
     if (useHorizontal && absX > 0.0001f) {
@@ -138,7 +156,7 @@ static void UpdateActorFacingAndAnimation(ActorInstance& actor, Vector2 movement
     }
 }
 
-static bool UpdateActorMovement(ActorInstance& actor, float dt)
+static bool UpdateActorMovement(const SceneData& scene, ActorInstance& actor, float dt)
 {
     if (!actor.path.active || actor.path.currentPoint >= static_cast<int>(actor.path.points.size())) {
         actor.path.active = false;
@@ -162,8 +180,10 @@ static bool UpdateActorMovement(ActorInstance& actor, float dt)
     };
 
     const float dist = AdventureLength(delta);
+
     const float speedMultiplier = actor.path.fastMove ? actor.fastMoveMultiplier : 1.0f;
-    const float moveSpeed = actor.walkSpeed * speedMultiplier;
+    const float depthScale = ComputeDepthScale(scene, actor.feetPos.y);
+    const float moveSpeed = actor.walkSpeed * speedMultiplier * depthScale;
 
     if (dist <= 1.0f) {
         actor.feetPos = target;
@@ -208,8 +228,7 @@ static bool UpdateControlledActorMovement(GameState& state, float dt)
     if (controlledActor == nullptr) {
         return false;
     }
-
-    return UpdateActorMovement(*controlledActor, dt);
+    return UpdateActorMovement(state.adventure.currentScene, *controlledActor, dt);
 }
 
 static void ExecutePendingInteraction(GameState& state)
@@ -738,11 +757,49 @@ static void UpdateScreenShake(GameState& state, float dt)
     shake.currentOffset.y = baseOffset.y * remaining01;
 }
 
+static void UpdateSceneFade(GameState& state, float dt)
+{
+    SceneFadeState& fade = state.adventure.sceneFade;
+    state.adventure.controlsEnabled = (fade.phase == SceneFadePhase::None);
+    if (fade.phase == SceneFadePhase::None) {
+        fade.opacity = 0.0f;
+        fade.elapsedMs = 0.0f;
+        fade.loadTriggered = false;
+        return;
+    }
+
+    fade.elapsedMs += dt * 1000.0f;
+    const float durationMs = std::max(fade.durationMs, 0.001f);
+    float t = fade.elapsedMs / durationMs;
+    t = Clamp(t, 0.0f, 1.0f);
+
+    if (fade.phase == SceneFadePhase::FadingOut) {
+        fade.opacity = t;
+
+        if (t >= 1.0f && !fade.loadTriggered) {
+            fade.loadTriggered = true;
+            AdventureProcessPendingLoads(state);
+        }
+
+        return;
+    }
+
+    if (fade.phase == SceneFadePhase::FadingIn) {
+        fade.opacity = 1.0f - t;
+
+        if (t >= 1.0f) {
+            fade.phase = SceneFadePhase::None;
+            fade.elapsedMs = 0.0f;
+            fade.opacity = 0.0f;
+            fade.loadTriggered = false;
+        }
+    }
+}
+
 void AdventureUpdate(GameState& state, float dt)
 {
-    AdventureProcessPendingLoads(state);
-
     if (!state.adventure.currentScene.loaded) {
+        AdventureProcessPendingLoads(state);
         return;
     }
 
@@ -774,7 +831,7 @@ void AdventureUpdate(GameState& state, float dt)
             continue;
         }
 
-        UpdateActorMovement(actor, dt);
+        UpdateActorMovement(state.adventure.currentScene, actor, dt);
     }
 
     UpdateCamera(state, dt);
@@ -799,7 +856,10 @@ void AdventureUpdate(GameState& state, float dt)
             }
         } else if (actor.path.active) {
             const float speedMultiplier = actor.path.fastMove ? actor.fastMoveMultiplier : 1.0f;
-            actor.animationTimeMs += dt * 1000.0f * speedMultiplier;
+            //const float depthScale = ComputeDepthScale(state.adventure.currentScene, actor.feetPos.y);
+            const float depthScale = std::max(0.50f, ComputeDepthScale(state.adventure.currentScene, actor.feetPos.y));
+            actor.animationTimeMs += dt * 1000.0f * speedMultiplier * depthScale;
+
         } else if (actor.inIdleState) {
             actor.animationTimeMs += dt * 1000.0f;
         }
@@ -814,5 +874,6 @@ void AdventureUpdate(GameState& state, float dt)
     UpdateInventoryPickupPopup(state, dt);
     UpdateProps(state, dt);
     UpdateScreenShake(state, dt);
+    UpdateSceneFade(state, dt);
     ScriptSystemUpdate(state, dt);
 }

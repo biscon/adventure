@@ -149,8 +149,6 @@ int main()
     RenderTexture2D uiTarget = LoadRenderTexture(INTERNAL_WIDTH, INTERNAL_HEIGHT);
     SetTextureFilter(uiTarget.texture, TEXTURE_FILTER_BILINEAR);
 
-
-
     InitInput(state.input);
     InitAudio(state);
     InitCursor(state);
@@ -197,7 +195,7 @@ int main()
 
         if(state.mode == GameMode::Menu) MenuHandleInput(state);
 
-        if (state.mode == GameMode::Menu || state.adventure.hasPendingSceneLoad) {
+        if (state.mode == GameMode::Menu) {
             AdventureProcessPendingLoads(state);
         }
 
@@ -212,6 +210,7 @@ int main()
 
             BeginTextureMode(worldTarget);
             RenderAdventureDebug(state);
+            RenderAdventureSceneFadeOverlay(state);
             EndTextureMode();
 
             BeginTextureMode(uiTarget);

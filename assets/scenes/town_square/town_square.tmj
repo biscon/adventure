@@ -1,0 +1,935 @@
+{ "compressionlevel":-1,
+ "height":1,
+ "infinite":false,
+ "layers":[
+        {
+         "id":4,
+         "layers":[
+                {
+                 "id":9,
+                 "image":"town_square_bg.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "name":"back1",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"background",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":3,
+         "layers":[],
+         "name":"foreground",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":7,
+         "name":"hotspots",
+         "objects":[
+                {
+                 "height":0,
+                 "id":26,
+                 "name":"hotel_sign",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":0,
+                         "y":0
+                        },
+                    
+                        {
+                         "x":0.50463000000002,
+                         "y":-60.6365
+                        },
+                    
+                        {
+                         "x":84.5,
+                         "y":-60.7486
+                        },
+                    
+                        {
+                         "x":81.9815,
+                         "y":2.11350999999999
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"Adrift Inn sign"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"Dirty old window that doesn't allow any light to shrine through. You can barely make out the gray and solemn streets of the once proud city."
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":362
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":272
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":333,
+                 "y":124.5
+                },
+            
+                {
+                 "height":0,
+                 "id":27,
+                 "name":"store_sign",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":-0.909090909090907,
+                         "y":2.36363636363637
+                        },
+                    
+                        {
+                         "x":-1.34308520710059,
+                         "y":-31.7541434782849
+                        },
+                    
+                        {
+                         "x":110.181818181818,
+                         "y":-29.6327105194731
+                        },
+                    
+                        {
+                         "x":109.994206562668,
+                         "y":2.5930358441633
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"O'Malley's sign"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"sign"
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":119
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":266
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":49,
+                 "y":138.475019610382
+                },
+            
+                {
+                 "height":0,
+                 "id":28,
+                 "name":"alley",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":0,
+                         "y":0
+                        },
+                    
+                        {
+                         "x":0.239873431952662,
+                         "y":-76.0700258552409
+                        },
+                    
+                        {
+                         "x":40.1666666666666,
+                         "y":-76.2106581459961
+                        },
+                    
+                        {
+                         "x":38.9695098619329,
+                         "y":2.65145185400395
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"A narrow alley"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"alley"
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":512
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":259
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":517,
+                 "y":187.128724812663
+                },
+            
+                {
+                 "height":0,
+                 "id":29,
+                 "name":"anchors",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":11.4142386538922,
+                         "y":31.11364
+                        },
+                    
+                        {
+                         "x":3.94427171609456,
+                         "y":22.8709
+                        },
+                    
+                        {
+                         "x":6.0410841643039,
+                         "y":5.07479080838647
+                        },
+                    
+                        {
+                         "x":10.0141682828357,
+                         "y":-4.09038870261796
+                        },
+                    
+                        {
+                         "x":19.3888895390925,
+                         "y":-4.25782999691722
+                        },
+                    
+                        {
+                         "x":24.6573011389115,
+                         "y":0.0162014135298136
+                        },
+                    
+                        {
+                         "x":31.3735882571334,
+                         "y":-10.3503403916962
+                        },
+                    
+                        {
+                         "x":39.7193617160945,
+                         "y":-8.7577
+                        },
+                    
+                        {
+                         "x":46.499076279248,
+                         "y":2.21804
+                        },
+                    
+                        {
+                         "x":46.853910855549,
+                         "y":10.3987313228956
+                        },
+                    
+                        {
+                         "x":55.9028618914599,
+                         "y":10.1964033094968
+                        },
+                    
+                        {
+                         "x":51.1168557831096,
+                         "y":25.6692068473887
+                        },
+                    
+                        {
+                         "x":29.7605977853355,
+                         "y":30.5085038539812
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"Rusty anchors"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"anchors"
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":166
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":249
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":130.670971617239,
+                 "y":204.666666666667
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":5,
+         "name":"exits",
+         "objects":[
+                {
+                 "height":0,
+                 "id":24,
+                 "name":"to_hotel_lobby",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":-9.88859454545457,
+                         "y":-3.48883818181818
+                        },
+                    
+                        {
+                         "x":30.8279818181818,
+                         "y":-3.45454545454547
+                        },
+                    
+                        {
+                         "x":30.0797545454545,
+                         "y":72.5793636363636
+                        },
+                    
+                        {
+                         "x":-10.1475081818182,
+                         "y":72.3975454545455
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"Hotel entrance"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"hotel"
+                        },
+                    
+                        {
+                         "name":"targetScene",
+                         "type":"string",
+                         "value":"hotel_lobby"
+                        },
+                    
+                        {
+                         "name":"targetSpawn",
+                         "type":"string",
+                         "value":"default"
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":365
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":243
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":358.333333333333,
+                 "y":159.666666666667
+                },
+            
+                {
+                 "height":0,
+                 "id":25,
+                 "name":"to_store",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":-9.88859,
+                         "y":-3.48884
+                        },
+                    
+                        {
+                         "x":30.828,
+                         "y":-3.45455
+                        },
+                    
+                        {
+                         "x":30.0798,
+                         "y":72.5794
+                        },
+                    
+                        {
+                         "x":-10.1475,
+                         "y":72.3975
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"Store door                      "
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"A small store. Probably the only place here that still does business."
+                        },
+                    
+                        {
+                         "name":"targetScene",
+                         "type":"string",
+                         "value":"store"
+                        },
+                    
+                        {
+                         "name":"targetSpawn",
+                         "type":"string",
+                         "value":"default"
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":114
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":232
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":95.060606060606,
+                 "y":151.151515151515
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":6,
+         "name":"spawns",
+         "objects":[
+                {
+                 "height":0,
+                 "id":2,
+                 "name":"default",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":271.727272727273,
+                 "y":334.454545454545
+                },
+            
+                {
+                 "height":0,
+                 "id":22,
+                 "name":"from_hotel_lobby",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"front"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":366.666666666667,
+                 "y":240.333333333334
+                },
+            
+                {
+                 "height":0,
+                 "id":23,
+                 "name":"from_store",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"front"
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":126,
+                 "y":247.333333333333
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":16,
+         "name":"effect_regions",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":2,
+         "layers":[
+                {
+                 "draworder":"topdown",
+                 "id":8,
+                 "name":"navmesh",
+                 "objects":[
+                        {
+                         "height":0,
+                         "id":7,
+                         "name":"",
+                         "opacity":1,
+                         "polygon":[
+                                {
+                                 "x":-3.70789643354033,
+                                 "y":11.6717737283247
+                                },
+                            
+                                {
+                                 "x":-22.1693796594268,
+                                 "y":12.037225074632
+                                },
+                            
+                                {
+                                 "x":-22.4818580252815,
+                                 "y":-10.7196580396902
+                                },
+                            
+                                {
+                                 "x":-82.7196036512945,
+                                 "y":-12.4638772947843
+                                },
+                            
+                                {
+                                 "x":-82.7491109153653,
+                                 "y":-45.3550998371401
+                                },
+                            
+                                {
+                                 "x":-3.12219620618274,
+                                 "y":-41.9591435067359
+                                },
+                            
+                                {
+                                 "x":-2.61923015760338,
+                                 "y":-48.4686863795291
+                                },
+                            
+                                {
+                                 "x":20.9032671013941,
+                                 "y":-48.4194190367044
+                                },
+                            
+                                {
+                                 "x":21.6578904308279,
+                                 "y":-64.0518451312023
+                                },
+                            
+                                {
+                                 "x":21.8336431942858,
+                                 "y":-76.5505560518036
+                                },
+                            
+                                {
+                                 "x":33.8267331772371,
+                                 "y":-77.2126302215888
+                                },
+                            
+                                {
+                                 "x":34.0232956666331,
+                                 "y":-62.4988801791714
+                                },
+                            
+                                {
+                                 "x":99.235425324914,
+                                 "y":-62.1472464734003
+                                },
+                            
+                                {
+                                 "x":99.9124400029469,
+                                 "y":-76.0365901794622
+                                },
+                            
+                                {
+                                 "x":131.821233668951,
+                                 "y":-74.9864433900424
+                                },
+                            
+                                {
+                                 "x":131.585485352242,
+                                 "y":-81.2032846936976
+                                },
+                            
+                                {
+                                 "x":168.821401064721,
+                                 "y":-81.2521911769116
+                                },
+                            
+                                {
+                                 "x":168.916666666667,
+                                 "y":-52.3333333333333
+                                },
+                            
+                                {
+                                 "x":203.100233954886,
+                                 "y":-52.7371031088408
+                                },
+                            
+                                {
+                                 "x":203.596129169289,
+                                 "y":-44.0506447686611
+                                },
+                            
+                                {
+                                 "x":235.462636081082,
+                                 "y":-44.1196671774953
+                                },
+                            
+                                {
+                                 "x":235.25,
+                                 "y":-48.8333333333333
+                                },
+                            
+                                {
+                                 "x":259.146111167668,
+                                 "y":-48.6352777494993
+                                },
+                            
+                                {
+                                 "x":260.090184711966,
+                                 "y":-62.187879872755
+                                },
+                            
+                                {
+                                 "x":275.137773393713,
+                                 "y":-62.2055597297371
+                                },
+                            
+                                {
+                                 "x":275.022245204318,
+                                 "y":-70.2803582588957
+                                },
+                            
+                                {
+                                 "x":293.706697829499,
+                                 "y":-69.596696803222
+                                },
+                            
+                                {
+                                 "x":294.073364474018,
+                                 "y":-44.1710994052842
+                                },
+                            
+                                {
+                                 "x":338.583333333334,
+                                 "y":-43.25
+                                },
+                            
+                                {
+                                 "x":338.75,
+                                 "y":-33.8333333333334
+                                },
+                            
+                                {
+                                 "x":395.5,
+                                 "y":-34.0833333333334
+                                },
+                            
+                                {
+                                 "x":397.471836272231,
+                                 "y":-66.265664851085
+                                },
+                            
+                                {
+                                 "x":410.960325801806,
+                                 "y":-66.5868013179904
+                                },
+                            
+                                {
+                                 "x":411.044461588673,
+                                 "y":-83.0630057490999
+                                },
+                            
+                                {
+                                 "x":421.41272027258,
+                                 "y":-83.4086843608572
+                                },
+                            
+                                {
+                                 "x":421.021608638788,
+                                 "y":-94.0834980287295
+                                },
+                            
+                                {
+                                 "x":431.560000782431,
+                                 "y":-94.257543100757
+                                },
+                            
+                                {
+                                 "x":432.183337667282,
+                                 "y":-104.311729834959
+                                },
+                            
+                                {
+                                 "x":437.736335222897,
+                                 "y":-104.313190313795
+                                },
+                            
+                                {
+                                 "x":437.669078202824,
+                                 "y":-112.034738071586
+                                },
+                            
+                                {
+                                 "x":453.416666666667,
+                                 "y":-111.833333333333
+                                },
+                            
+                                {
+                                 "x":453.320159187436,
+                                 "y":-99.9605043715821
+                                },
+                            
+                                {
+                                 "x":447.11983322727,
+                                 "y":-99.6713402758039
+                                },
+                            
+                                {
+                                 "x":445.424832632268,
+                                 "y":-85.1773416026935
+                                },
+                            
+                                {
+                                 "x":439.163676030992,
+                                 "y":-84.5942605827719
+                                },
+                            
+                                {
+                                 "x":439.67685734092,
+                                 "y":-66.0310867182842
+                                },
+                            
+                                {
+                                 "x":473.5,
+                                 "y":-65.8333333333334
+                                },
+                            
+                                {
+                                 "x":473.333333333333,
+                                 "y":-51.1666666666667
+                                },
+                            
+                                {
+                                 "x":552.166666666667,
+                                 "y":-51
+                                },
+                            
+                                {
+                                 "x":553.583333333333,
+                                 "y":48.3333333333333
+                                },
+                            
+                                {
+                                 "x":-3.33333333333331,
+                                 "y":48.6666666666666
+                                }],
+                         "rotation":0,
+                         "type":"",
+                         "visible":true,
+                         "width":0,
+                         "x":85.9569038650782,
+                         "y":302.26258101734
+                        }],
+                 "opacity":1,
+                 "type":"objectgroup",
+                 "visible":false,
+                 "x":0,
+                 "y":0
+                },
+            
+                {
+                 "draworder":"topdown",
+                 "id":11,
+                 "name":"blockers",
+                 "objects":[],
+                 "opacity":1,
+                 "type":"objectgroup",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
+         "name":"navigation",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":12,
+         "layers":[],
+         "name":"effects_back",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":13,
+         "layers":[],
+         "name":"effects_front",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "id":14,
+         "layers":[],
+         "name":"effects_overlay",
+         "opacity":1,
+         "type":"group",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":19,
+ "nextobjectid":31,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.0",
+ "tileheight":360,
+ "tilesets":[],
+ "tilewidth":640,
+ "type":"map",
+ "version":"1.10",
+ "width":1
+}

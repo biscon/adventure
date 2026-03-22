@@ -2,7 +2,7 @@
     "actorId": "main_actor",
     "displayName": "Main Actor",
     "spriteAsset": "main_actor.actor.json",
-    "talkColor": "ORANGE",
+    "talkColor": "WHITE",
     "walkSpeed": 400.0,
     "fastMoveMultiplier": 2.0,
     "idleDelayMs": 200.0,

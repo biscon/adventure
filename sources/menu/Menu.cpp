@@ -103,7 +103,7 @@ static float ClampFloat(float v, float minValue, float maxValue)
 
 static void startNewGame()
 {
-    AdventureQueueLoadScene(*game, "basement_demo");
+    AdventureQueueLoadScene(*game, "town_square");
 }
 
 static Rectangle GetMenuItemRect(const Menu& menu, float itemWidth, int index)

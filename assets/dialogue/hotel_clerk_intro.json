@@ -1,0 +1,15 @@
+{
+    "choiceSets": [
+        {
+            "id": "hotel_clerk_intro",
+            "options": [
+                { "id": "need_room", "text": "I need a room for the night." },
+                { "id": "who_are_you", "text": "Do you run this place?" },
+                { "id": "about_town", "text": "Quiet town." },
+                { "id": "friend", "text": "I'm looking for a friend." },
+                { "id": "ledger", "text": "I saw the store ledger." },
+                { "id": "goodbye", "text": "Never mind." }
+            ]
+        }
+    ]
+}

@@ -11,7 +11,7 @@
 #include "render/EffectShaderRegistry.h"
 #include "render/SceneRenderData.h"
 #include "render/SceneRenderInternal.h"
-
+#include "raymath.h"
 
 
 static void SetShaderFloatIfValid(const Shader& shader, int loc, float value)
@@ -204,6 +204,19 @@ bool ApplySceneSampleEffectRegionPass(
     EndTextureMode();
 
     return true;
+}
+
+void RenderAdventureSceneFadeOverlay(const GameState& state)
+{
+    const float opacity = Clamp(state.adventure.sceneFade.opacity, 0.0f, 1.0f);
+    if (opacity <= 0.0001f) {
+        return;
+    }
+
+    Color fadeColor = BLACK;
+    fadeColor.a = static_cast<unsigned char>(std::round(255.0f * opacity));
+
+    DrawRectangle(0, 0, INTERNAL_WIDTH, INTERNAL_HEIGHT, fadeColor);
 }
 
 void RenderAdventureSceneComposited(

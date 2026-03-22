@@ -1442,7 +1442,7 @@
                         {
                          "name":"depthMode",
                          "type":"string",
-                         "value":"back"
+                         "value":"front"
                         },
                     
                         {
@@ -1527,7 +1527,7 @@
                         {
                          "name":"depthMode",
                          "type":"string",
-                         "value":"back"
+                         "value":"front"
                         },
                     
                         {

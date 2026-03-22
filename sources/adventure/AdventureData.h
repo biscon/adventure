@@ -251,6 +251,22 @@ struct ScreenShakeState {
     Vector2 currentOffset{};
 };
 
+enum class SceneFadePhase {
+    None,
+    FadingOut,
+    FadingIn
+};
+
+struct SceneFadeState {
+    SceneFadePhase phase = SceneFadePhase::None;
+
+    float durationMs = 300.0f;
+    float elapsedMs = 0.0f;
+    float opacity = 0.0f;
+
+    bool loadTriggered = false;
+};
+
 struct AdventureData {
     std::string pendingSceneId;
     std::string pendingSpawnId;
@@ -296,5 +312,6 @@ struct AdventureData {
     HoverUiState hoverUi{};
     AdventureActionQueue actionQueue{};
     ScreenShakeState screenShake{};
+    SceneFadeState sceneFade{};
     bool controlsEnabled = true;
 };
