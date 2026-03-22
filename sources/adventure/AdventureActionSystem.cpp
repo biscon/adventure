@@ -120,8 +120,15 @@ static void QueuePathToTarget(
 void QueueAdventureActionsFromInput(GameState& state)
 {
     if (!state.adventure.controlsEnabled) {
+        for (auto& ev : FilterEvents(state.input, true, InputEventType::MouseClick)) {
+            if (ev.mouse.button == MOUSE_LEFT_BUTTON ||
+                ev.mouse.button == MOUSE_RIGHT_BUTTON) {
+                ConsumeEvent(ev);
+            }
+        }
         return;
     }
+
     if (!HasControlledActor(state) || !state.adventure.currentScene.loaded) {
         return;
     }

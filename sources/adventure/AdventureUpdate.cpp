@@ -783,7 +783,7 @@ static void UpdateScreenShake(GameState& state, float dt)
 static void UpdateSceneFade(GameState& state, float dt)
 {
     SceneFadeState& fade = state.adventure.sceneFade;
-    state.adventure.controlsEnabled = (fade.phase == SceneFadePhase::None);
+
     if (fade.phase == SceneFadePhase::None) {
         fade.opacity = 0.0f;
         fade.elapsedMs = 0.0f;
@@ -815,6 +815,9 @@ static void UpdateSceneFade(GameState& state, float dt)
             fade.elapsedMs = 0.0f;
             fade.opacity = 0.0f;
             fade.loadTriggered = false;
+
+            // only re-enable here if fade system is supposed to own the temporary lock
+            state.adventure.controlsEnabled = true;
         }
     }
 }
@@ -839,7 +842,7 @@ void AdventureUpdate(GameState& state, float dt)
     }
     UpdateAmbientSpeechUi(state, dt);
 
-    if (!IsDialogueUiActive(state) && !state.adventure.speechUi.active) {
+    if (!IsDialogueUiActive(state) && !state.adventure.speechUi.active && state.adventure.controlsEnabled) {
         HandleHeldItemWorldUse(state);
         QueueAdventureActionsFromInput(state);
         ProcessAdventureActions(state);
