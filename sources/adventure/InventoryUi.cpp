@@ -161,7 +161,7 @@ static bool IsInventoryOpenWanted(const GameState& state)
     if (IsDialogueUiActive(state)) {
         return false;
     }
-    if (!state.adventure.controlsEnabled) {
+    if (!state.adventure.controlsEnabled || state.adventure.fadeInputBlocked) {
         return false;
     }
 
@@ -213,7 +213,7 @@ void UpdateInventoryHoverUi(GameState& state)
         return;
     }
 
-    if (!state.adventure.controlsEnabled) {
+    if (!state.adventure.controlsEnabled || state.adventure.fadeInputBlocked) {
         return;
     }
 
@@ -485,7 +485,7 @@ void UpdateInventoryUi(GameState& state, float dt)
         return;
     }
 
-    if (!state.adventure.controlsEnabled) {
+    if (!state.adventure.controlsEnabled || state.adventure.fadeInputBlocked) {
         return;
     }
 

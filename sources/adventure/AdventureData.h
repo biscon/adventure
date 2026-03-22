@@ -317,5 +317,6 @@ struct AdventureData {
     AdventureActionQueue actionQueue{};
     ScreenShakeState screenShake{};
     SceneFadeState sceneFade{};
+    bool fadeInputBlocked = false;
     bool controlsEnabled = true;
 };

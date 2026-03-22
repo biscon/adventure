@@ -119,7 +119,7 @@ static void QueuePathToTarget(
 
 void QueueAdventureActionsFromInput(GameState& state)
 {
-    if (!state.adventure.controlsEnabled) {
+    if (!state.adventure.controlsEnabled || state.adventure.fadeInputBlocked) {
         for (auto& ev : FilterEvents(state.input, true, InputEventType::MouseClick)) {
             if (ev.mouse.button == MOUSE_LEFT_BUTTON ||
                 ev.mouse.button == MOUSE_RIGHT_BUTTON) {

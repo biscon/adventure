@@ -834,7 +834,7 @@ bool AdventureScriptSetControlsEnabled(GameState& state, bool enabled)
 {
     state.adventure.controlsEnabled = enabled;
     if(!enabled) {
-        state.adventure.pendingInteraction = {};
+        //state.adventure.pendingInteraction = {};
         state.adventure.actionQueue.clear();
     }
     return true;

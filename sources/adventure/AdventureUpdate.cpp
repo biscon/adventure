@@ -95,11 +95,11 @@ void AdventureProcessPendingLoads(GameState& state)
         fade.elapsedMs = 0.0f;
         fade.opacity = 1.0f;
         fade.loadTriggered = false;
-
-        state.adventure.controlsEnabled = false;
+        state.adventure.fadeInputBlocked = true;
     } else {
         TraceLog(LOG_ERROR, "Scene load failed: %s", sceneId.c_str());
         state.mode = GameMode::Menu;
+        state.adventure.fadeInputBlocked = false;
         state.adventure.sceneFade = {};
     }
 
@@ -788,8 +788,11 @@ static void UpdateSceneFade(GameState& state, float dt)
         fade.opacity = 0.0f;
         fade.elapsedMs = 0.0f;
         fade.loadTriggered = false;
+        state.adventure.fadeInputBlocked = false;
         return;
     }
+
+    state.adventure.fadeInputBlocked = true;
 
     fade.elapsedMs += dt * 1000.0f;
     const float durationMs = std::max(fade.durationMs, 0.001f);
@@ -815,9 +818,7 @@ static void UpdateSceneFade(GameState& state, float dt)
             fade.elapsedMs = 0.0f;
             fade.opacity = 0.0f;
             fade.loadTriggered = false;
-
-            // only re-enable here if fade system is supposed to own the temporary lock
-            state.adventure.controlsEnabled = true;
+            state.adventure.fadeInputBlocked = false;
         }
     }
 }
@@ -842,9 +843,16 @@ void AdventureUpdate(GameState& state, float dt)
     }
     UpdateAmbientSpeechUi(state, dt);
 
-    if (!IsDialogueUiActive(state) && !state.adventure.speechUi.active && state.adventure.controlsEnabled) {
-        HandleHeldItemWorldUse(state);
-        QueueAdventureActionsFromInput(state);
+    const bool adventureInputEnabled =
+            state.adventure.controlsEnabled &&
+            !state.adventure.fadeInputBlocked;
+
+    if (!IsDialogueUiActive(state) && !state.adventure.speechUi.active) {
+        if (adventureInputEnabled) {
+            HandleHeldItemWorldUse(state);
+            QueueAdventureActionsFromInput(state);
+        }
+
         ProcessAdventureActions(state);
     }
 

@@ -273,7 +273,7 @@ void AdventureQueueLoadSceneInternal(GameState& state, const char* sceneId, cons
             fade.elapsedMs = 0.0f;
             fade.opacity = 0.0f;
             fade.loadTriggered = false;
-            state.adventure.controlsEnabled = false;
+            state.adventure.fadeInputBlocked = true;
         }
     }
 }
