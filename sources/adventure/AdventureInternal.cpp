@@ -174,6 +174,8 @@ void AdventureStartSpeech(
     state.adventure.speechUi.timerMs = 0.0f;
     state.adventure.speechUi.durationMs = AdventureComputeSpeechDurationMs(text, durationMs);
     state.adventure.speechUi.skippable = skippable;
+    state.adventure.speechUi.fadeInMs = 50.0f;
+    state.adventure.speechUi.fadeOutMs = 50.0f;
 }
 
 void AdventureStartAmbientSpeech(
@@ -201,7 +203,11 @@ void AdventureStartAmbientSpeech(
     speech.text = text;
     speech.color = color;
     speech.timerMs = 0.0f;
-    speech.durationMs = AdventureComputeSpeechDurationMs(text, durationMs);
+
+    const float baseDurationMs = AdventureComputeSpeechDurationMs(text, durationMs);
+    speech.fadeInMs = 50.0f;
+    speech.fadeOutMs = 50.0f;
+    speech.durationMs = baseDurationMs + speech.fadeInMs + speech.fadeOutMs;
     speech.skippable = false;
 
     state.adventure.ambientSpeechUis.push_back(speech);

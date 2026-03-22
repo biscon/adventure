@@ -210,6 +210,29 @@ static Rectangle ResolveSpeechRectPlacement(
     return rect;
 }
 
+static float ComputeSpeechUiAlpha(const SpeechUiState& speechUi)
+{
+    if (!speechUi.active || speechUi.durationMs <= 0.0f) {
+        return 0.0f;
+    }
+
+    float alpha = 1.0f;
+
+    if (speechUi.fadeInMs > 0.0f && speechUi.timerMs < speechUi.fadeInMs) {
+        alpha = std::min(alpha, speechUi.timerMs / speechUi.fadeInMs);
+    }
+
+    if (speechUi.fadeOutMs > 0.0f) {
+        const float fadeOutStartMs = speechUi.durationMs - speechUi.fadeOutMs;
+        if (speechUi.timerMs > fadeOutStartMs) {
+            const float remainingMs = speechUi.durationMs - speechUi.timerMs;
+            alpha = std::min(alpha, remainingMs / speechUi.fadeOutMs);
+        }
+    }
+
+    return Clamp01(alpha);
+}
+
 static void DrawSingleSpeechUi(
         const GameState& state,
         const SpeechUiState& speechUi,
@@ -219,6 +242,11 @@ static void DrawSingleSpeechUi(
         float lineHeight)
 {
     if (!speechUi.active) {
+        return;
+    }
+
+    const float alpha = ComputeSpeechUiAlpha(speechUi);
+    if (alpha <= 0.0f) {
         return;
     }
 
@@ -329,7 +357,9 @@ static void DrawSingleSpeechUi(
             static_cast<float>(INTERNAL_HEIGHT) - 20.0f,
             lineHeight);
 
-    const Color speechColor = speechUi.color;
+    Color speechColor = speechUi.color;
+    speechColor.a = static_cast<unsigned char>(
+            std::round(static_cast<float>(speechColor.a) * alpha));
 
     for (size_t i = 0; i < lines.size(); ++i) {
         Vector2 pos{

@@ -31,22 +31,17 @@ static void DrawShadowedTextLine(
         Color textColor,
         int shadowOffset)
 {
-    const Color shadow = Color{0, 0, 0, 170};
+    Color shadow = Color{0, 0, 0, 170};
+    shadow.a = static_cast<unsigned char>(
+            std::round(static_cast<float>(shadow.a) * (static_cast<float>(textColor.a) / 255.0f)));
 
     const Vector2 adjustPos = pos;
     pos.x = std::trunc(pos.x);
     pos.y = std::trunc(pos.y);
 
-    DrawTextEx(
-            font,
-            text.c_str(),
-            Vector2{
-                    adjustPos.x + static_cast<float>(shadowOffset),
-                    adjustPos.y + static_cast<float>(shadowOffset)
-            },
-            fontSize,
-            spacing,
-            shadow);
+    DrawTextEx(font, text.c_str(),
+               Vector2{adjustPos.x + static_cast<float>(shadowOffset), adjustPos.y + static_cast<float>(shadowOffset)},
+               fontSize, spacing, shadow);
 
     DrawTextEx(font, text.c_str(), adjustPos, fontSize, spacing, textColor);
 }

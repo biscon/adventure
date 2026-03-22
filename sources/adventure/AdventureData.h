@@ -206,6 +206,9 @@ struct SpeechUiState {
     float durationMs = 0.0f;
     Color color = WHITE;
     bool skippable = true;
+
+    float fadeInMs = 0.0f;
+    float fadeOutMs = 0.0f;
 };
 
 struct HoverUiState {

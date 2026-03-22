@@ -896,12 +896,6 @@ void AdventureUpdate(GameState& state, float dt)
         }
     }
 
-    if (state.adventure.speechUi.active) {
-        state.adventure.speechUi.timerMs += dt * 1000.0f;
-        if (state.adventure.speechUi.timerMs >= state.adventure.speechUi.durationMs) {
-            state.adventure.speechUi = {};
-        }
-    }
     UpdateInventoryPickupPopup(state, dt);
     UpdateProps(state, dt);
     UpdateScreenShake(state, dt);
