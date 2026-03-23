@@ -517,6 +517,84 @@
                  "width":0,
                  "x":456.283290773943,
                  "y":105.844894124298
+                },
+            
+                {
+                 "height":0,
+                 "id":34,
+                 "name":"bell",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":8.91446,
+                         "y":-8.67584
+                        },
+                    
+                        {
+                         "x":10.0423,
+                         "y":-17.4241
+                        },
+                    
+                        {
+                         "x":17.9199,
+                         "y":-21.2092
+                        },
+                    
+                        {
+                         "x":24.5276,
+                         "y":-17.0884
+                        },
+                    
+                        {
+                         "x":26.9364,
+                         "y":-11.7172
+                        },
+                    
+                        {
+                         "x":25.0165,
+                         "y":-4.57937
+                        },
+                    
+                        {
+                         "x":11.7373,
+                         "y":-4.91271
+                        }],
+                 "properties":[
+                        {
+                         "name":"displayName",
+                         "type":"string",
+                         "value":"Bell"
+                        },
+                    
+                        {
+                         "name":"facing",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"lookText",
+                         "type":"string",
+                         "value":"For summoning the clerk, if we wasn't already present."
+                        },
+                    
+                        {
+                         "name":"walkToX",
+                         "type":"float",
+                         "value":310
+                        },
+                    
+                        {
+                         "name":"walkToY",
+                         "type":"float",
+                         "value":291
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":291.666666666667,
+                 "y":199
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -972,7 +1050,7 @@
          "y":0
         }],
  "nextlayerid":22,
- "nextobjectid":34,
+ "nextobjectid":35,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

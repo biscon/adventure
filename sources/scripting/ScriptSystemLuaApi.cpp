@@ -1899,6 +1899,84 @@ static int Lua_effectRegionOpacity(lua_State* L)
     return 1;
 }
 
+static int Lua_SetActorPosition(lua_State* L)
+{
+    const char* actorId = luaL_checkstring(L, 1);
+    const float x = static_cast<float>(luaL_checknumber(L, 2));
+    const float y = static_cast<float>(luaL_checknumber(L, 3));
+
+    AdventureScriptSetActorPosition(*gameState, actorId, Vector2{x, y});
+    return 0;
+}
+
+static int Lua_GetActorPosition(lua_State* L)
+{
+    const char* actorId = luaL_checkstring(L, 1);
+
+    Vector2 pos{};
+    if (!AdventureScriptGetActorPosition(*gameState, actorId, pos)) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_newtable(L);
+
+    lua_pushnumber(L, pos.x);
+    lua_setfield(L, -2, "x");
+
+    lua_pushnumber(L, pos.y);
+    lua_setfield(L, -2, "y");
+
+    return 1;
+}
+
+static int Lua_GetPropPosition(lua_State* L)
+{
+    const char* propId = luaL_checkstring(L, 1);
+
+    Vector2 pos{};
+    if (!AdventureScriptGetPropPosition(*gameState, propId, pos)) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_newtable(L);
+
+    lua_pushnumber(L, pos.x);
+    lua_setfield(L, -2, "x");
+
+    lua_pushnumber(L, pos.y);
+    lua_setfield(L, -2, "y");
+
+    return 1;
+}
+
+static int Lua_GetHotspotInteractionPosition(lua_State* L)
+{
+    if (gameState == nullptr) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    const char* hotspotId = luaL_checkstring(L, 1);
+
+    Vector2 pos{};
+    if (!AdventureScriptGetHotspotInteractionPosition(*gameState, hotspotId, pos)) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_newtable(L);
+
+    lua_pushnumber(L, pos.x);
+    lua_setfield(L, -2, "x");
+
+    lua_pushnumber(L, pos.y);
+    lua_setfield(L, -2, "y");
+
+    return 1;
+}
+
 void RegisterLuaAPI(lua_State* L)
 {
     lua_register(L, "setFlag", Lua_setFlag);
@@ -2005,6 +2083,11 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "panCameraToProp", Lua_panCameraToProp);
     lua_register(L, "panCameraToHotspot", Lua_panCameraToHotspot);
     lua_register(L, "shakeScreen", Lua_shakeScreen);
+
+    lua_register(L, "setActorPosition", Lua_SetActorPosition);
+    lua_register(L, "getActorPosition", Lua_GetActorPosition);
+    lua_register(L, "getPropPosition", Lua_GetPropPosition);
+    lua_register(L, "getHotspotInteractionPosition", Lua_GetHotspotInteractionPosition);
 
     lua_register(L, "print", Lua_consolePrint);
     lua_register(L, "log", Lua_log);

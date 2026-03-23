@@ -65,7 +65,14 @@ end
 function Scene_use_stairs()
     walkToHotspot("stairs")
     face("left")
-    say("I should speak to whoever runs this place first.")
+
+    if not flag("hotel_room_unlocked") then
+        say("I should speak to whoever runs this place first.")
+        return true
+    end
+
+    say("That must be my room upstairs.")
+    -- later: changeScene("hotel_upstairs", "from_lobby")
     return true
 end
 
@@ -93,6 +100,39 @@ function Scene_use_display_case()
     return Scene_look_display_case()
 end
 
+function Scene_look_bell()
+    walkToHotspot("bell")
+    face("left")
+    say("A small brass desk bell.")
+    say("Polished more often than the rest of the lobby.")
+    return true
+end
+
+function Scene_use_bell()
+    disableControls()
+    walkToHotspot("bell")
+    face("back")
+
+    local times = getInt("hotel_bell_rang_count")
+    if times < 0 then
+        times = 0
+    end
+
+    if times == 0 then
+        --playSound("bell")
+        setInt("hotel_bell_rang_count", 1)
+        sayActor("hotel_clerk", "Do not do that, sir. I am standing right here.")
+    elseif times == 1 then
+        --playSound("bell")
+        setInt("hotel_bell_rang_count", 2)
+        sayActor("hotel_clerk", "I should prefer not to be summoned like a servant.")
+    else
+        say("I had better not be overly rude.")
+    end
+    enableControls()
+    return true
+end
+
 function Scene_look_actor_hotel_clerk()
     walkToHotspot("desk")
     face("left")
@@ -101,19 +141,74 @@ function Scene_look_actor_hotel_clerk()
 end
 
 function Scene_use_actor_hotel_clerk()
+    disableControls()
+    if flag("hotel_room_unlocked") then
+        walkToHotspot("desk")
+        face("left")
+        say("I'd rather not speak to that unpleasant gentleman again.")
+        say("I should go upstairs and see to my room.")
+        enableControls()
+        return true
+    end
+
     walkToHotspot("desk")
     face("left")
 
     sayActor("hotel_clerk", "Yes?")
 
+    enableControls()
+
     Adv.runConversationDynamic("hotel_clerk_intro", {
         need_room = function()
-            setFlag("asked_clerk_room", true)
-            setFlag("hotel_room_denied", true)
-            say("I need a room for the night.")
-            sayActor("hotel_clerk", "No rooms.")
-            say("Your key rack says otherwise.")
-            sayActor("hotel_clerk", "Then it ought to mind its own business.")
+            if not flag("hotel_room_denied") then
+                setFlag("asked_clerk_room", true)
+                setFlag("hotel_room_denied", true)
+
+                say("I need a room for the night.")
+                sayActor("hotel_clerk", "No rooms.")
+
+                if not flag("saw_store_ledger") then
+                    say("Your key rack says otherwise.")
+                    sayActor("hotel_clerk", "Then it ought to mind its own business.")
+                    return
+                end
+            else
+                say("I need a room for the night.")
+                sayActor("hotel_clerk", "I told you, we're closed.")
+                sayActor("hotel_clerk", "There are no rooms.")
+
+                if not flag("saw_store_ledger") then
+                    return
+                end
+            end
+
+            -- Only reaches here if player HAS seen the ledger
+            local followup = dialogue("hotel_clerk_room_followup")
+
+            if followup == "confront_ledger" then
+                setFlag("confronted_clerk_with_ledger", true)
+                setFlag("hotel_room_unlocked", true)
+
+                say("The store ledger tells a different story.")
+                sayActor("hotel_clerk", "Does it.")
+                say("Food, lamp oil, soap.")
+                say("Enough supplies for a good many guests.")
+                sayActor("hotel_clerk", "The storekeeper keeps his accounts. That is his affair.")
+                say("And this is yours.")
+                say("You told me you had no rooms.")
+                sayActor("hotel_clerk", "I told you what seemed advisable.")
+                say("Advisable for whom?")
+                sayActor("hotel_clerk", "...")
+                sayActor("hotel_clerk", "There may be one room available.")
+                sayActor("hotel_clerk", "Upstairs. End of the hall.")
+                sayActor("hotel_clerk", "You will keep to it, and trouble no one.")
+                say("...")
+                return "exit"
+
+            elseif followup == "leave_it" or followup == nil then
+                say("Very well. Good day to you.")
+                return "exit"
+            end
         end,
 
         who_are_you = function()
@@ -133,21 +228,7 @@ function Scene_use_actor_hotel_clerk()
         friend = function()
             setFlag("asked_clerk_friend", true)
             say("I'm looking for a friend.")
-            sayActor("hotel_clerk", "Then I hope your friend wanted to be found.")
-        end,
-
-        ledger = function()
-            setFlag("confronted_clerk_with_ledger", true)
-            setFlag("hotel_room_unlocked", true)
-
-            say("I saw the store ledger.")
-            sayActor("hotel_clerk", "Did you.")
-            say("You told me you had no rooms.")
-            sayActor("hotel_clerk", "I told you what seemed best at the time.")
-            say("For whom?")
-            sayActor("hotel_clerk", "...")
-            sayActor("hotel_clerk", "There may be one room available.")
-            sayActor("hotel_clerk", "Upstairs. End of the hall.")
+            sayActor("hotel_clerk", "Then I hope your friend had sense enough to keep moving.")
         end,
 
         goodbye = function()
@@ -158,9 +239,7 @@ function Scene_use_actor_hotel_clerk()
         return Adv.hiddenOptions({
             who_are_you = flag("asked_clerk_name"),
             about_town = flag("asked_clerk_town"),
-            friend = flag("asked_clerk_friend"),
-            need_room = flag("hotel_room_unlocked"),
-            ledger = not flag("saw_store_ledger") or flag("confronted_clerk_with_ledger")
+            friend = flag("asked_clerk_friend")
         })
     end)
 

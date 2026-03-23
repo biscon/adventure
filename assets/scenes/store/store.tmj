@@ -723,7 +723,7 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":215.75,
+                 "x":215,
                  "y":291
                 }],
          "opacity":1,
@@ -737,7 +737,371 @@
          "draworder":"topdown",
          "id":16,
          "name":"effect_regions",
-         "objects":[],
+         "objects":[
+                {
+                 "height":124.5,
+                 "id":34,
+                 "name":"day_light",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":18.75,
+                         "y":0.5
+                        },
+                    
+                        {
+                         "x":66.417,
+                         "y":0.75
+                        },
+                    
+                        {
+                         "x":111.167,
+                         "y":197
+                        },
+                    
+                        {
+                         "x":101.361230619128,
+                         "y":209.369943481682
+                        },
+                    
+                        {
+                         "x":81.1300143823767,
+                         "y":220.488411970674
+                        },
+                    
+                        {
+                         "x":44.0738682095872,
+                         "y":223.833804321689
+                        },
+                    
+                        {
+                         "x":5.58163959916038,
+                         "y":218.535625614548
+                        },
+                    
+                        {
+                         "x":-15.2806716583676,
+                         "y":210.195513360427
+                        },
+                    
+                        {
+                         "x":-25.25,
+                         "y":196.25
+                        }],
+                 "properties":[
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.03
+                        },
+                    
+                        {
+                         "name":"contrast",
+                         "type":"float",
+                         "value":1.02
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"front"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"saturation",
+                         "type":"float",
+                         "value":0.92
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"region_grade"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.05
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":6
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.08
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":0.95
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":0.85
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":85.667,
+                 "x":496.4165,
+                 "y":119.75
+                },
+            
+                {
+                 "height":231.5,
+                 "id":36,
+                 "name":"light_shaft",
+                 "opacity":0.6,
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"light_shaft.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"contrast",
+                         "type":"float",
+                         "value":1.03
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"front"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"saturation",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"poly_clip"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.08
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.2
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1.4
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1.8
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":137.667,
+                 "x":465.9165,
+                 "y":116.25
+                },
+            
+                {
+                 "height":124.5,
+                 "id":37,
+                 "name":"light_shaft_dust",
+                 "opacity":0.25,
+                 "polygon":[
+                        {
+                         "x":18.75,
+                         "y":0.5
+                        },
+                    
+                        {
+                         "x":66.417,
+                         "y":0.75
+                        },
+                    
+                        {
+                         "x":99.861,
+                         "y":117.87
+                        },
+                    
+                        {
+                         "x":78.6299999999999,
+                         "y":137.488
+                        },
+                    
+                        {
+                         "x":41.5739,
+                         "y":140.834
+                        },
+                    
+                        {
+                         "x":3.08163999999999,
+                         "y":135.536
+                        },
+                    
+                        {
+                         "x":-16.7807,
+                         "y":118.696
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Grainy 6 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"front"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":-0.015
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.2
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":2
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.22
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":1.2
+                        },
+                    
+                        {
+                         "name":"uvScaley",
+                         "type":"float",
+                         "value":1.2
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":85.667,
+                 "x":496.6665,
+                 "y":120.25
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -969,7 +1333,7 @@
          "y":0
         }],
  "nextlayerid":21,
- "nextobjectid":34,
+ "nextobjectid":38,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

@@ -1472,3 +1472,69 @@ bool AdventureScriptGetEffectRegionOpacity(const GameState& state, const std::st
     outOpacity = state.adventure.effectRegions[effectRegionIndex].opacity;
     return true;
 }
+
+bool AdventureScriptSetActorPosition(GameState& state, const std::string& actorId, Vector2 worldPos)
+{
+    const int actorIndex = FindActorInstanceIndexById(state, actorId);
+    if (actorIndex < 0 ||
+        actorIndex >= static_cast<int>(state.adventure.actors.size())) {
+        TraceLog(LOG_WARNING, "setActorPosition: actor not found: %s", actorId.c_str());
+        return false;
+    }
+
+    ActorInstance& actor = state.adventure.actors[actorIndex];
+    actor.feetPos = worldPos;
+    actor.path = {};
+    actor.animationTimeMs = 0.0f;
+    actor.stoppedTimeMs = actor.idleDelayMs;
+    actor.inIdleState = true;
+
+    const int controlledActorIndex = GetControlledActorIndex(state);
+    if (actorIndex == controlledActorIndex) {
+        state.adventure.pendingInteraction = {};
+    }
+
+    return true;
+}
+
+bool AdventureScriptGetActorPosition(const GameState& state, const std::string& actorId, Vector2& outWorldPos)
+{
+    const int actorIndex = FindActorInstanceIndexById(state, actorId);
+    if (actorIndex < 0 ||
+        actorIndex >= static_cast<int>(state.adventure.actors.size())) {
+        TraceLog(LOG_WARNING, "getActorPosition: actor not found: %s", actorId.c_str());
+        return false;
+    }
+
+    const ActorInstance& actor = state.adventure.actors[actorIndex];
+    outWorldPos = actor.feetPos;
+    return true;
+}
+
+bool AdventureScriptGetPropPosition(const GameState& state, const std::string& propId, Vector2& outWorldPos)
+{
+    const int propIndex = AdventureFindScenePropIndexById(state, propId);
+    if (propIndex < 0 ||
+        propIndex >= static_cast<int>(state.adventure.props.size())) {
+        TraceLog(LOG_WARNING, "getPropPosition: prop not found: %s", propId.c_str());
+        return false;
+    }
+
+    outWorldPos = state.adventure.props[propIndex].feetPos;
+    return true;
+}
+
+bool AdventureScriptGetHotspotInteractionPosition(const GameState& state,
+                                                  const std::string& hotspotId,
+                                                  Vector2& outWorldPos)
+{
+    for (const SceneHotspot& hotspot : state.adventure.currentScene.hotspots) {
+        if (hotspot.id == hotspotId) {
+            outWorldPos = hotspot.walkTo;
+            return true;
+        }
+    }
+
+    TraceLog(LOG_WARNING, "getHotspotInteractionPosition: hotspot not found: %s", hotspotId.c_str());
+    return false;
+}

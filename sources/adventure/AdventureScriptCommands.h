@@ -138,3 +138,11 @@ bool AdventureScriptSetEffectRegionVisible(GameState& state, const std::string& 
 bool AdventureScriptIsEffectRegionVisible(const GameState& state, const std::string& effectRegionId, bool& outVisible);
 bool AdventureScriptSetEffectRegionOpacity(GameState& state, const std::string& effectRegionId, float opacity);
 bool AdventureScriptGetEffectRegionOpacity(const GameState& state, const std::string& effectRegionId, float& outOpacity);
+
+bool AdventureScriptSetActorPosition(GameState& state, const std::string& actorId, Vector2 worldPos);
+bool AdventureScriptGetActorPosition(const GameState& state, const std::string& actorId, Vector2& outWorldPos);
+bool AdventureScriptGetPropPosition(const GameState& state, const std::string& propId, Vector2& outWorldPos);
+
+bool AdventureScriptGetHotspotInteractionPosition(const GameState& state,
+                                                  const std::string& hotspotId,
+                                                  Vector2& outWorldPos);

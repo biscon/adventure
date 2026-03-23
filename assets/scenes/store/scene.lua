@@ -1,19 +1,19 @@
 function Scene_onEnter()
-    math.randomseed(os.time())
     if not flag("store_init") then
         setFlag("store_init", true)
         -- first time only stuff
-        -- e.g. intro dialogue, item placement, whatever
     end
-    -- start running scene scripts (animation, interactivity etc)
+
+    if flag("distracted_by_dog") then
+        RestoreDistractedByDog()
+    end
 end
 
 function Scene_look_ledger()
     walkToHotspot("ledger")
     face("left")
-    say("Some kind of ledger, probably detailing the stores financial transactions.")
-    sayActor("store_clerk", "Yes it's where I keep track of all my orders sir.")
-    say("Interesting.")
+    say("A business ledger.")
+    say("The entries are neat enough, though I make little sense of them at a glance.")
     return true
 end
 
@@ -21,13 +21,68 @@ function Scene_use_ledger()
     disableControls()
     walkToHotspot("ledger")
     face("left")
+    if flag("saw_store_ledger") then
+        say("I've already gotten what I needed from that.")
+        enableControls()
+        return true
+    end
+
     playAnimation("reach_left")
     delay(600)
-    if not flag("can_use_ledger") then
-        sayActor("store_clerk", "That is not for sale good sir!")
+
+    if not flag("distracted_by_dog") then
+        sayActor("store_clerk", "That is not for sale, sir.")
     else
-        say("This ledger is full of transactions involving the hotel.")
-        say("Apparently they order a lot of food items, for a place that's supposed to be closed down.")
+        say("The ledger is full of deliveries to the hotel.")
+        say("Food, lamp oil, soap... enough to serve more guests than the clerk admits to having.")
+        setFlag("saw_store_ledger", true)
+        StopComfortDog()
+        setFlag("distracted_by_dog", false)
+        sayActor("store_clerk", "Can I help you, sir?")
+    end
+
+    enableControls()
+    return true
+end
+
+function StopComfortDog()
+    stopScript("ComfortDog")
+    startSayActor("store_clerk", "There now, be still.")
+    playPropAnimation("german_shepard", "goto_sleep")
+    delay(600)
+    walkActorTo("store_clerk", 3*215, 3*291)
+    faceActor("store_clerk", "right")
+end
+
+-- Saved by the bell ------------------------------------------------------
+function Scene_look_bell()
+    walkToHotspot("bell")
+    face("left")
+    say("A small counter bell.")
+    say("It looks as though it gets more use than the clerk would like.")
+    return true
+end
+
+function Scene_use_bell()
+    disableControls()
+    walkToHotspot("bell")
+    face("back")
+
+    local times = getInt("store_bell_rang_count")
+    if times < 0 then
+        times = 0
+    end
+
+    if times == 0 then
+        playSound("bell")
+        setInt("store_bell_rang_count", 1)
+        sayActor("store_clerk", "No need for that, sir. I'm right here.")
+    elseif times == 1 then
+        playSound("bell")
+        setInt("store_bell_rang_count", 2)
+        sayActor("store_clerk", "Please, sir. There's no call for that.")
+    else
+        say("I had better not be overly rude.")
     end
     enableControls()
     return true
@@ -69,8 +124,15 @@ end
 function Scene_use_file_cabinet()
     walkToHotspot("file_cabinet")
     face("back")
-    sayActor("store_clerk", "Keep your hands of my files, they're private!")
-    say("Sorry")
+
+    if not flag("distracted_by_dog") then
+        sayActor("store_clerk", "Kindly keep your hands off my files, sir.")
+        face("left")
+        say("My apologies.")
+    else
+        say("I have no wish to rummage through a cabinet full of dull papers.")
+    end
+
     return true
 end
 
@@ -79,69 +141,70 @@ end
 function Scene_look_actor_store_clerk()
     walkToHotspot("ledger")
     face("left")
-    say("A young man, trying very hard not to be noticed.")
+    say("A young man trying very hard not to draw attention to himself.")
     return true
 end
 
 function Scene_use_actor_store_clerk()
+    if flag("distracted_by_dog") then
+        sayActor("store_clerk", "One moment, sir. I'll be with you directly.")
+        return true
+    end
+
+    disableControls()
     walkToHotspot("ledger")
     face("left")
-
     sayActor("store_clerk", "Yes, sir?")
+    enableControls()
 
     Adv.runConversationDynamic("store_clerk_intro", {
 
         buy_supplies = function()
             setFlag("asked_store_buy", true)
             say("Do you sell provisions?")
-            sayActor("store_clerk", "A few things. Not much comes through these days.")
-            sayActor("store_clerk", "What we have is on the shelves.")
+            sayActor("store_clerk", "A few things, sir. Not so much as we once did.")
+            sayActor("store_clerk", "What there is, you see before you.")
         end,
 
         about_town = function()
             setFlag("asked_store_town", true)
             say("I passed a church on my way in.")
             say("St. Mary's, I think.")
-            say("It looked... abandoned.")
+            say("It looked abandoned.")
             sayActor("store_clerk", "It is.")
-            say("What happened to it?")
-            sayActor("store_clerk", "Folks stopped attending.")
-            say("Just like that?")
-            sayActor("store_clerk", "Not all at once.")
-            sayActor("store_clerk", "They found... other places to be.")
-        end,
-
-        ledger = function()
-            setFlag("asked_store_ledger", true)
-            setFlag("saw_store_ledger", true)
-
-            say("What's that book?")
-            sayActor("store_clerk", "Just accounts.")
-            say("You keep careful records.")
-            sayActor("store_clerk", "I have to.")
-            say("I noticed the inn comes up often.")
-            sayActor("store_clerk", "They take deliveries.")
-            say("Even this late?")
-            sayActor("store_clerk", "Sometimes it's better not to delay things.")
+            say("What became of it?")
+            sayActor("store_clerk", "Fewer and fewer folk went there.")
+            say("Just drifted away?")
+            sayActor("store_clerk", "Something like that.")
+            sayActor("store_clerk", "They found other habits.")
         end,
 
         inn = function()
             setFlag("asked_store_inn", true)
             say("The inn seems empty.")
-            sayActor("store_clerk", "It isn't.")
-            say("The clerk told me otherwise.")
+            sayActor("store_clerk", "It is not as empty as it looks.")
+            say("The clerk gave me a different impression.")
             sayActor("store_clerk", "He would.")
             say("Why?")
-            sayActor("store_clerk", "You should be careful where you stay.")
+            sayActor("store_clerk", "I think I'd be careful where I lodged, if I were you.")
         end,
 
         friend = function()
             setFlag("asked_store_friend", true)
             say("I'm looking for someone.")
-            sayActor("store_clerk", "Then I hope you find them quickly.")
-            say("Why quickly?")
-            sayActor("store_clerk", "Because after a while...")
-            sayActor("store_clerk", "...people stop asking to leave.")
+            sayActor("store_clerk", "Then I hope you find him soon, sir.")
+            say("Why soon?")
+            sayActor("store_clerk", "Because Innsmouth is not a place for lingering.")
+        end,
+
+        hotel_deliveries = function()
+            setFlag("asked_store_hotel_deliveries", true)
+            say("The hotel seems to be receiving plenty of supplies.")
+            sayActor("store_clerk", "It receives what is ordered.")
+            say("Rather a lot for an inn with no rooms to let.")
+            sayActor("store_clerk", "I would not speak too freely of other men's business, sir.")
+            say("Then the inn is doing business?")
+            sayActor("store_clerk", "I did not say that.")
         end,
 
         goodbye = function()
@@ -153,10 +216,10 @@ function Scene_use_actor_store_clerk()
     }, function()
         return Adv.hiddenOptions({
             buy_supplies = flag("asked_store_buy"),
-            ledger = flag("asked_store_ledger"),
             about_town = flag("asked_store_town"),
             inn = flag("asked_store_inn"),
-            friend = flag("asked_store_friend")
+            friend = flag("asked_store_friend"),
+            hotel_deliveries = (not flag("saw_store_ledger")) or flag("asked_store_hotel_deliveries")
         })
     end)
 
@@ -165,54 +228,96 @@ end
 
 -- Dog the bounty hunter ---------------------------------------------
 
+function RestoreDistractedByDog()
+    local pos = getHotspotInteractionPosition("dog")
+    setActorPosition("store_clerk", pos.x, pos.y)
+    faceActor("store_clerk", "left")
+    setPropAnimation("german_shepard", "idle")
+    startScript("ComfortDog")
+end
+
 function ComfortDog()
     local barks = {
         "Woof!",
-        "Grr...",
-        "Arf!"
+        "Arf!",
+        "Rrrf!"
+    }
+
+    local sootheLines = {
+        "Easy now...",
+        "Steady, lad.",
+        "Hush now.",
+        "There, there.",
+        "Quiet now, boy."
     }
 
     while true do
-        playPropAnimation("german_shepard", "bark")
-        delay(500)
-        setPropAnimation("german_shepard", "idle")
-        startSayAt(3*100, 3*300, barks[math.random(#barks)], YELLOW)
-        delay(2200)
+        local cyclesThisMinute = math.random(2, 3)
+
+        for cycle = 1, cyclesThisMinute do
+            local barkCount = math.random(1, 3)
+
+            for bark = 1, barkCount do
+                playPropAnimation("german_shepard", "bark")
+                delay(350)
+                setPropAnimation("german_shepard", "idle")
+                startSayAt(3*100, 3*300, barks[math.random(#barks)], YELLOW)
+                delay(1900)
+            end
+
+            playActorAnimation("store_clerk", "pickup_left")
+            startSayActor("store_clerk", sootheLines[math.random(#sootheLines)])
+            delay(math.random(3000, 4000))
+        end
+
+        local remainingDelay = math.random(12000, 22000)
+        delay(remainingDelay)
     end
 end
 
 function Scene_use_dog()
+    if flag("saw_store_ledger") then
+        say("I better not disturb it again.")
+        return true
+    end
+    if flag("distracted_by_dog") then
+        say("I don't want to disturb them.")
+        return true
+    end
     disableControls()
     walkToHotspot("dog")
     face("left")
     playAnimation("pickup_left")
     delay(300)
+
     playPropAnimation("german_shepard", "wake_up")
     delay(1000)
+
     for i = 1, 3 do
         if i == 2 then
             faceActor("store_clerk", "front")
             startWalkTo(3*240, 3*336)
         end
+
         playPropAnimation("german_shepard", "bark")
         delay(500)
+        setPropAnimation("german_shepard", "idle")
+        startSayAt(3*100, 3*300, ({ "Woof!", "Arf!", "Rrrf!" })[math.random(3)], ORANGE)
+        delay(1900)
     end
-    setPropAnimation("german_shepard", "idle")
-    delay(200)
+
     face("left")
-    sayAt(3*100, 3*300, "Woof!", RED)
-    sayActor("store_clerk", "Easy there little fella!.")
+    sayActor("store_clerk", "Easy there, little fellow.")
     walkActorToHotspot("store_clerk", "dog")
     faceActor("store_clerk", "left")
     playActorAnimation("store_clerk", "pickup_left")
     delay(300)
-    sayActor("store_clerk", "Who's a good boy?.")
-    sayActor("store_clerk", "You are!.")
-    sayAt(3*100, 3*300, "Woof!", BLUE)
+    sayActor("store_clerk", "There now. Be still.")
+
     enableControls()
-    setFlag("can_use_ledger", true)
+    setFlag("distracted_by_dog", true)
     startScript("ComfortDog")
-    --sayProp("german_shepard", "Woof!", RED)
 
     return true
 end
+
