@@ -1,4 +1,27 @@
-#include "AdventureActorHelpers.h"
+#include "AdventureHelpers.h"
+
+#include <cctype>
+
+std::string SanitizeIdForMethod(const std::string& input)
+{
+    std::string out;
+    out.reserve(input.size());
+
+    for (unsigned char c : input) {
+        if (std::isalnum(c)) {
+            out.push_back(static_cast<char>(std::tolower(c)));
+        } else {
+            out.push_back('_');
+        }
+    }
+
+    return out;
+}
+
+std::string BuildSceneMethodName(const char* prefix, const std::string& objectId)
+{
+    return std::string("Scene_") + prefix + SanitizeIdForMethod(objectId);
+}
 
 ActorInstance* FindActorInstanceById(GameState& state, const std::string& actorId)
 {
@@ -99,11 +122,13 @@ bool HasControlledActor(const GameState& state)
     return GetControlledActorIndex(state) >= 0;
 }
 
-const ActorInstance* FindActorInstanceByHandle(const GameState& state, ActorHandle handle) {
+const ActorInstance* FindActorInstanceByHandle(const GameState& state, ActorHandle handle)
+{
     return &state.adventure.actors[handle];
 }
 
-ActorInstance* FindActorInstanceByHandle(GameState& state, ActorHandle handle) {
+ActorInstance* FindActorInstanceByHandle(GameState& state, ActorHandle handle)
+{
     return &state.adventure.actors[handle];
 }
 

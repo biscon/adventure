@@ -4,7 +4,7 @@
 #include "resources/AsepriteAsset.h"
 #include "scene/SceneHelpers.h"
 #include "RenderHelpers.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "scripting/ScriptSystem.h"
 #include "EffectShaderRegistry.h"
 

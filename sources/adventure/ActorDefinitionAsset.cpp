@@ -7,7 +7,7 @@
 #include "resources/AsepriteAsset.h"
 #include "ui/TalkColors.h"
 #include "raylib.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;

@@ -8,7 +8,7 @@
 
 #include "utils/json.hpp"
 #include "scene/SceneLoad.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "adventure/Inventory.h"
 #include "adventure/Dialogue.h"
 #include "debug/DebugConsole.h"

@@ -1,7 +1,7 @@
 #include "adventure/Inventory.h"
 
 #include <algorithm>
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "audio/Audio.h"
 
 const ItemDefinitionData* FindItemDefinitionById(const GameState& state, const std::string& itemId)

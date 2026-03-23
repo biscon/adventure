@@ -1,7 +1,7 @@
 #include "AdventureCamera.h"
 #include "raymath.h"
 #include "render/RenderHelpers.h"
-#include "AdventureActorHelpers.h"
+#include "AdventureHelpers.h"
 
 static Vector2 ClampCameraPositionToScene(const SceneData& scene, const CameraData& cam, Vector2 pos)
 {

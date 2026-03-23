@@ -2,7 +2,7 @@
 #include "resources/AsepriteAsset.h"
 #include "scene/SceneHelpers.h"
 #include "resources/TextureAsset.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "raymath.h"
 
 bool GetActorCurrentFrameInfo(

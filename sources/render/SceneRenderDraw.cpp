@@ -6,7 +6,7 @@
 #include "resources/AsepriteAsset.h"
 #include "raylib.h"
 #include "scene/SceneHelpers.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "render/EffectShaderRegistry.h"
 
 static unsigned char MultiplyU8(unsigned char a, unsigned char b)

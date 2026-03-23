@@ -3,7 +3,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "nav/NavMeshQuery.h"
 #include "resources/AsepriteAsset.h"
 #include "raylib.h"

@@ -1,36 +1,11 @@
 #include "AdventureActionSystem.h"
-
-#include <cctype>
-#include <string>
-
 #include "input/Input.h"
 #include "nav/NavMeshQuery.h"
 #include "scripting/ScriptSystem.h"
 #include "scene/SceneHelpers.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "render/RenderHelpers.h"
 
-
-static std::string SanitizeIdForMethod(const std::string& input)
-{
-    std::string out;
-    out.reserve(input.size());
-
-    for (unsigned char c : input) {
-        if (std::isalnum(c)) {
-            out.push_back(static_cast<char>(std::tolower(c)));
-        } else {
-            out.push_back('_');
-        }
-    }
-
-    return out;
-}
-
-static std::string BuildSceneMethodName(const char* prefix, const std::string& objectId)
-{
-    return std::string("Scene_") + prefix + SanitizeIdForMethod(objectId);
-}
 
 static int FindClickedActorIndex(const GameState& state, Vector2 clickScreen)
 {
@@ -266,11 +241,11 @@ void ProcessAdventureActions(GameState& state)
 
                 const SceneHotspot& hotspot = state.adventure.currentScene.hotspots[a.hotspotIndex];
 
-                const std::string method = BuildSceneMethodName("use_", hotspot.id);
-                const ScriptCallResult scriptResult = ScriptSystemCallTrigger(state, method);
-                if (scriptResult == ScriptCallResult::ImmediateTrue ||
-                    scriptResult == ScriptCallResult::StartedAsync ||
-                    scriptResult == ScriptCallResult::Busy)
+                const std::string clickMethod = BuildSceneMethodName("click_", hotspot.id);
+                const ScriptCallResult clickResult = ScriptSystemCallTrigger(state, clickMethod);
+                if (clickResult == ScriptCallResult::ImmediateTrue ||
+                    clickResult == ScriptCallResult::StartedAsync ||
+                    clickResult == ScriptCallResult::Busy)
                 {
                     break;
                 }
@@ -294,11 +269,11 @@ void ProcessAdventureActions(GameState& state)
 
                 const SceneHotspot& hotspot = state.adventure.currentScene.hotspots[a.hotspotIndex];
 
-                const std::string method = BuildSceneMethodName("look_", hotspot.id);
-                const ScriptCallResult scriptResult = ScriptSystemCallTrigger(state, method);
-                if (scriptResult == ScriptCallResult::ImmediateTrue ||
-                    scriptResult == ScriptCallResult::StartedAsync ||
-                    scriptResult == ScriptCallResult::Busy)
+                const std::string clickMethod = BuildSceneMethodName("click_", hotspot.id);
+                const ScriptCallResult clickResult = ScriptSystemCallTrigger(state, clickMethod);
+                if (clickResult == ScriptCallResult::ImmediateTrue ||
+                    clickResult == ScriptCallResult::StartedAsync ||
+                    clickResult == ScriptCallResult::Busy)
                 {
                     break;
                 }
@@ -322,11 +297,11 @@ void ProcessAdventureActions(GameState& state)
 
                 const SceneExit& exitObj = state.adventure.currentScene.exits[a.exitIndex];
 
-                const std::string method = BuildSceneMethodName("use_", exitObj.id);
-                const ScriptCallResult scriptResult = ScriptSystemCallTrigger(state, method);
-                if (scriptResult == ScriptCallResult::ImmediateTrue ||
-                    scriptResult == ScriptCallResult::StartedAsync ||
-                    scriptResult == ScriptCallResult::Busy)
+                const std::string clickMethod = BuildSceneMethodName("click_", exitObj.id);
+                const ScriptCallResult clickResult = ScriptSystemCallTrigger(state, clickMethod);
+                if (clickResult == ScriptCallResult::ImmediateTrue ||
+                    clickResult == ScriptCallResult::StartedAsync ||
+                    clickResult == ScriptCallResult::Busy)
                 {
                     break;
                 }
@@ -350,11 +325,11 @@ void ProcessAdventureActions(GameState& state)
 
                 const SceneExit& exitObj = state.adventure.currentScene.exits[a.exitIndex];
 
-                const std::string method = BuildSceneMethodName("look_", exitObj.id);
-                const ScriptCallResult scriptResult = ScriptSystemCallTrigger(state, method);
-                if (scriptResult == ScriptCallResult::ImmediateTrue ||
-                    scriptResult == ScriptCallResult::StartedAsync ||
-                    scriptResult == ScriptCallResult::Busy)
+                const std::string clickMethod = BuildSceneMethodName("click_", exitObj.id);
+                const ScriptCallResult clickResult = ScriptSystemCallTrigger(state, clickMethod);
+                if (clickResult == ScriptCallResult::ImmediateTrue ||
+                    clickResult == ScriptCallResult::StartedAsync ||
+                    clickResult == ScriptCallResult::Busy)
                 {
                     break;
                 }
@@ -389,16 +364,8 @@ void ProcessAdventureActions(GameState& state)
                 {
                     break;
                 }
-                /*
-                QueuePathToTarget(
-                        state,
-                        a.clickWorld,
-                        actor.feetPos,
-                        a.fastMove,
-                        PendingInteractionType::UseActor,
-                        a.actorIndex);
+
                 break;
-                 */
             }
 
             case AdventureActionType::LookActor:
@@ -422,17 +389,9 @@ void ProcessAdventureActions(GameState& state)
                     break;
                 }
 
-                /*
-                QueuePathToTarget(
-                        state,
-                        a.clickWorld,
-                        actor.feetPos,
-                        false,
-                        PendingInteractionType::LookActor,
-                        a.actorIndex);
-                        */
                 break;
             }
         }
     }
 }
+

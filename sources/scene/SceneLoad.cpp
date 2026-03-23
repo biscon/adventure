@@ -9,7 +9,7 @@
 #include "nav/NavMeshBuild.h"
 #include "raylib.h"
 #include "scripting/ScriptSystem.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "adventure/ActorDefinitionAsset.h"
 #include "adventure/Inventory.h"
 #include "resources/Resources.h"

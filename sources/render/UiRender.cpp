@@ -3,7 +3,7 @@
 #include "UiRender.h"
 #include "scene/SceneHelpers.h"
 #include "render/RenderHelpers.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "adventure/Inventory.h"
 #include "adventure/InventoryUi.h"
 #include "resources/TextureAsset.h"

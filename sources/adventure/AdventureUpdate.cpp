@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "adventure/AdventureActionSystem.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "input/Input.h"
 #include "raylib.h"
 #include "scene/SceneHelpers.h"
@@ -245,28 +245,27 @@ static void ExecutePendingInteraction(GameState& state)
     const PendingInteraction pending = state.adventure.pendingInteraction;
     state.adventure.pendingInteraction = {};
 
-    /*
-    if (pending.type == PendingInteractionType::UseHotspot) {
+    if (pending.type == PendingInteractionType::LookHotspot ||
+        pending.type == PendingInteractionType::UseHotspot) {
         if (pending.targetIndex >= 0 &&
             pending.targetIndex < static_cast<int>(state.adventure.currentScene.hotspots.size())) {
             const SceneHotspot& hotspot = state.adventure.currentScene.hotspots[pending.targetIndex];
             AdventureForceFacing(*player, hotspot.facing);
-            TraceLog(LOG_INFO, "Use hotspot: %s", hotspot.displayName.c_str());
-        }
-        return;
-    }
-     */
 
-    if (pending.type == PendingInteractionType::LookHotspot || pending.type == PendingInteractionType::UseHotspot) {
-        if (pending.targetIndex >= 0 &&
-            pending.targetIndex < static_cast<int>(state.adventure.currentScene.hotspots.size())) {
-            const SceneHotspot& hotspot = state.adventure.currentScene.hotspots[pending.targetIndex];
-            AdventureForceFacing(*player, hotspot.facing);
+            const std::string method = BuildSceneMethodName(
+                    pending.type == PendingInteractionType::UseHotspot ? "use_" : "look_",
+                    hotspot.id);
+
+            const ScriptCallResult result = ScriptSystemCallTrigger(state, method);
+            if (result == ScriptCallResult::ImmediateTrue ||
+                result == ScriptCallResult::StartedAsync ||
+                result == ScriptCallResult::Busy) {
+                return;
+            }
 
             const ActorDefinitionData* actorDef =
                     FindActorDefinitionByIndex(state, player->actorDefIndex);
             const Color talkColor = (actorDef != nullptr) ? actorDef->talkColor : WHITE;
-
 
             AdventureStartSpeech(
                     state,
@@ -286,6 +285,15 @@ static void ExecutePendingInteraction(GameState& state)
             pending.targetIndex < static_cast<int>(state.adventure.currentScene.exits.size())) {
             const SceneExit& exitObj = state.adventure.currentScene.exits[pending.targetIndex];
             AdventureForceFacing(*player, exitObj.facing);
+
+            const std::string method = BuildSceneMethodName("use_", exitObj.id);
+            const ScriptCallResult result = ScriptSystemCallTrigger(state, method);
+            if (result == ScriptCallResult::ImmediateTrue ||
+                result == ScriptCallResult::StartedAsync ||
+                result == ScriptCallResult::Busy) {
+                return;
+            }
+
             AdventureQueueLoadScene(state, exitObj.targetScene.c_str(), exitObj.targetSpawn.c_str());
         }
         return;
@@ -296,9 +304,19 @@ static void ExecutePendingInteraction(GameState& state)
             pending.targetIndex < static_cast<int>(state.adventure.currentScene.exits.size())) {
             const SceneExit& exitObj = state.adventure.currentScene.exits[pending.targetIndex];
             AdventureForceFacing(*player, exitObj.facing);
+
+            const std::string method = BuildSceneMethodName("look_", exitObj.id);
+            const ScriptCallResult result = ScriptSystemCallTrigger(state, method);
+            if (result == ScriptCallResult::ImmediateTrue ||
+                result == ScriptCallResult::StartedAsync ||
+                result == ScriptCallResult::Busy) {
+                return;
+            }
+
             const ActorDefinitionData* actorDef =
                     FindActorDefinitionByIndex(state, player->actorDefIndex);
             const Color talkColor = (actorDef != nullptr) ? actorDef->talkColor : WHITE;
+
             AdventureStartSpeech(
                     state,
                     SpeechAnchorType::Player,
@@ -308,7 +326,6 @@ static void ExecutePendingInteraction(GameState& state)
                     exitObj.lookText,
                     talkColor,
                     -1);
-
         }
         return;
     }

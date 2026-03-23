@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "adventure/AdventureUpdate.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "audio/Audio.h"
 #include "save/SaveGame.h"
 #include "resources/TextureAsset.h"

@@ -1,6 +1,11 @@
 #pragma once
 
+#include <string>
+
 #include "data/GameState.h"
+
+std::string SanitizeIdForMethod(const std::string& input);
+std::string BuildSceneMethodName(const char* prefix, const std::string& objectId);
 
 ActorInstance* FindActorInstanceById(GameState& state, const std::string& actorId);
 const ActorInstance* FindActorInstanceById(const GameState& state, const std::string& actorId);

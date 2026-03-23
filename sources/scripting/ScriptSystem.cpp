@@ -5,7 +5,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cstring>
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "scripting/ScriptSystemInternal.h"
 #include "debug/DebugConsole.h"
 #include "adventure/Dialogue.h"

@@ -5,7 +5,7 @@
 #include <cmath>
 #include "audio/AudioAsset.h"
 #include "resources/Resources.h"
-#include "adventure/AdventureActorHelpers.h"
+#include "adventure/AdventureHelpers.h"
 #include "raylib.h"
 
 static AudioDefinitionData* FindAudioDef(GameState& state, const std::string& id)
