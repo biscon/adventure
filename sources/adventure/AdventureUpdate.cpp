@@ -245,6 +245,7 @@ static void ExecutePendingInteraction(GameState& state)
     const PendingInteraction pending = state.adventure.pendingInteraction;
     state.adventure.pendingInteraction = {};
 
+    /*
     if (pending.type == PendingInteractionType::UseHotspot) {
         if (pending.targetIndex >= 0 &&
             pending.targetIndex < static_cast<int>(state.adventure.currentScene.hotspots.size())) {
@@ -254,8 +255,9 @@ static void ExecutePendingInteraction(GameState& state)
         }
         return;
     }
+     */
 
-    if (pending.type == PendingInteractionType::LookHotspot) {
+    if (pending.type == PendingInteractionType::LookHotspot || pending.type == PendingInteractionType::UseHotspot) {
         if (pending.targetIndex >= 0 &&
             pending.targetIndex < static_cast<int>(state.adventure.currentScene.hotspots.size())) {
             const SceneHotspot& hotspot = state.adventure.currentScene.hotspots[pending.targetIndex];

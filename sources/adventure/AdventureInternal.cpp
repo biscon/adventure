@@ -148,8 +148,13 @@ float AdventureComputeSpeechDurationMs(const std::string& text, int overrideDura
         return static_cast<float>(overrideDurationMs);
     }
 
+    /*
     const float durationMs = 1000.0f + static_cast<float>(text.size()) * 45.0f;
     return std::clamp(durationMs, 1800.0f, 7000.0f);
+    */
+
+    const float durationMs = 750.0f + static_cast<float>(text.size()) * 45.0f;
+    return std::clamp(durationMs, 1400.0f, 7000.0f);
 }
 
 void AdventureStartSpeech(

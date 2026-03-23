@@ -18,6 +18,7 @@ uniform vec2 uSceneSize;
 uniform vec2 uRegionPos;
 uniform vec2 uRegionSize;
 uniform float uSoftness;
+uniform vec3 uTint;
 
 uniform int uUsePolygon;
 uniform int uPolygonVertexCount;
@@ -38,6 +39,7 @@ void main()
     }
 
     vec4 texel = texture(texture0, fragTexCoord);
+    texel.rgb *= uTint;
     texel.a *= mask;
 
     finalColor = texel * colDiffuse * fragColor;

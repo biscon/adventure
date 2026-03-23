@@ -96,6 +96,33 @@ static void ProcessGameModeInput(GameState& state) {
     }
 }
 
+static bool LoadFonts(GameState& state) {
+    //const std::string fontPath = std::string(ASSETS_PATH) + "fonts/AtkinsonHyperlegible-Bold.ttf";
+    //const std::string fontPath = std::string(ASSETS_PATH) + "fonts/AlegreyaSans-Bold.ttf";
+    const std::string fontPath = std::string(ASSETS_PATH) + "fonts/IBMPlexSans-Bold.ttf";
+    state.dialogueFont = LoadFontEx(fontPath.c_str(), 46, nullptr, 0);
+    if(state.dialogueFont.texture.id == 0) {
+        TraceLog(LOG_ERROR, "Could not load dialogue font from %s", fontPath.c_str());
+        return false;
+    }
+    state.hoverLabelFont = LoadFontEx(fontPath.c_str(), 58, nullptr, 0);
+    if(state.hoverLabelFont.texture.id == 0) {
+        TraceLog(LOG_ERROR, "Could not load hover label font from %s", fontPath.c_str());
+        return false;
+    }
+    state.speechFont = LoadFontEx(fontPath.c_str(), 50, nullptr, 0);
+    if(state.speechFont.texture.id == 0) {
+        TraceLog(LOG_ERROR, "Could not load speech font from %s", fontPath.c_str());
+        return false;
+    }
+    state.ambientSpeechFont = LoadFontEx(fontPath.c_str(), 44, nullptr, 0);
+    if(state.ambientSpeechFont.texture.id == 0) {
+        TraceLog(LOG_ERROR, "Could not load ambient speech font from %s", fontPath.c_str());
+        return false;
+    }
+    return true;
+}
+
 int main()
 {
     GameState state;
@@ -152,6 +179,11 @@ int main()
     InitInput(state.input);
     InitAudio(state);
     InitCursor(state);
+
+    if(!LoadFonts(state)) {
+        TraceLog(LOG_ERROR, "Font loading failed.");
+        state.mode = GameMode::Quit;
+    }
 
     LoadAllItemDefinitions(state);
     LoadAllDialogueChoiceSets(state);

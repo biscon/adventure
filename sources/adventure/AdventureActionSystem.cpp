@@ -75,6 +75,8 @@ static void QueuePathToTarget(
     if (player == nullptr) {
         return;
     }
+    state.adventure.pendingInteraction = {};
+
     const NavMeshData& navMesh = state.adventure.currentScene.navMesh;
 
     state.adventure.lastClickWorldPos = clickWorld;
@@ -225,6 +227,8 @@ void QueueAdventureActionsFromInput(GameState& state)
         }
 
         if (!consumed) {
+            state.adventure.actionQueue.clear();
+            state.adventure.pendingInteraction = {};
             state.adventure.actionQueue.push({
                                                      AdventureActionType::WalkToPoint,
                                                      WalkToPointAction{clickWorld, clickWorld, ev.mouse.doubleClick}
@@ -385,7 +389,7 @@ void ProcessAdventureActions(GameState& state)
                 {
                     break;
                 }
-
+                /*
                 QueuePathToTarget(
                         state,
                         a.clickWorld,
@@ -394,6 +398,7 @@ void ProcessAdventureActions(GameState& state)
                         PendingInteractionType::UseActor,
                         a.actorIndex);
                 break;
+                 */
             }
 
             case AdventureActionType::LookActor:
@@ -417,6 +422,7 @@ void ProcessAdventureActions(GameState& state)
                     break;
                 }
 
+                /*
                 QueuePathToTarget(
                         state,
                         a.clickWorld,
@@ -424,6 +430,7 @@ void ProcessAdventureActions(GameState& state)
                         false,
                         PendingInteractionType::LookActor,
                         a.actorIndex);
+                        */
                 break;
             }
         }

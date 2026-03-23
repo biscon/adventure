@@ -32,4 +32,8 @@ struct GameState {
     ScriptData script;
     AudioData audio;
     CursorData cursor;
+    Font dialogueFont;
+    Font speechFont;
+    Font ambientSpeechFont;
+    Font hoverLabelFont;
 };

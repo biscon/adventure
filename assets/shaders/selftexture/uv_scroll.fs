@@ -48,8 +48,10 @@ void main()
     texel.rgb *= uTint;
     texel.a *= mask;
 
-    float heightFade = smoothstep(0.0, 0.4, local.y);
-    texel.a *= heightFade;
+    // this should be moved to a uniform and be configurable from the Tiled file
+    // if it should be enabled
+    //float heightFade = smoothstep(0.0, 0.4, local.y);
+    //texel.a *= heightFade;
 
     finalColor = texel * colDiffuse * fragColor;
     finalColor.rgb *= finalColor.a;

@@ -234,8 +234,9 @@ void RenderDialogueUi(const GameState& state)
         return;
     }
 
-    Font font = GetFontDefault();
-    const float fontSize = 36.0f;
+    //Font font = GetFontDefault();
+    //Font font = state.dialogueFont;
+    const float fontSize = 46.0f;
     const float spacing = 2.0f;
     const int shadowOffset = 2;
 
@@ -250,13 +251,15 @@ void RenderDialogueUi(const GameState& state)
         const Color textColor = hovered ? Color{255, 230, 120, 255} : WHITE;
 
         const std::string line = hovered ? ("> " + option.text) : option.text;
-        const Vector2 size = MeasureTextEx(font, line.c_str(), fontSize, spacing);
+        const Vector2 size = MeasureTextEx(state.dialogueFont, line.c_str(), fontSize, spacing);
 
         Vector2 pos{
                 optionRect.x + (optionRect.width - size.x) * 0.5f,
                 optionRect.y + (optionRect.height - size.y) * 0.5f
         };
+        pos.x = std::round(pos.x);
+        pos.y = std::round(pos.y);
 
-        DrawShadowedTextLine(font, line, pos, fontSize, spacing, textColor, shadowOffset);
+        DrawShadowedTextLine(state.dialogueFont, line, pos, fontSize, spacing, textColor, shadowOffset);
     }
 }

@@ -7,6 +7,7 @@ function Scene_onEnter()
     if flag("distracted_by_dog") then
         RestoreDistractedByDog()
     end
+    startScript("LampGlowLoop")
 end
 
 function Scene_look_ledger()
@@ -47,9 +48,10 @@ end
 
 function StopComfortDog()
     stopScript("ComfortDog")
-    startSayActor("store_clerk", "There now, be still.")
     playPropAnimation("german_shepard", "goto_sleep")
     delay(600)
+    startSayActor("store_clerk", "There now, be still.")
+    delay(1500)
     walkActorTo("store_clerk", 3*215, 3*291)
     faceActor("store_clerk", "right")
 end
@@ -217,7 +219,7 @@ function Scene_use_actor_store_clerk()
         return Adv.hiddenOptions({
             buy_supplies = flag("asked_store_buy"),
             about_town = flag("asked_store_town"),
-            inn = flag("asked_store_inn"),
+            inn = flag("asked_store_inn") or (not flag("asked_clerk_room")),
             friend = flag("asked_store_friend"),
             hotel_deliveries = (not flag("saw_store_ledger")) or flag("asked_store_hotel_deliveries")
         })
@@ -321,3 +323,35 @@ function Scene_use_dog()
     return true
 end
 
+-- Effect scripts -------------------------
+
+function LampGlowLoop()
+    local baseA = 0.50
+    local baseB = 0.35
+
+    local targetA = baseA
+    local targetB = baseB
+
+    while true do
+        if math.random(1, 100) <= 18 then
+            targetA = math.random(75, 95) / 100
+            targetB = math.random(20, 55) / 100
+        end
+
+        -- drift slowly toward target values
+        baseA = baseA + (targetA - baseA) * 0.18
+        baseB = baseB + (targetB - baseB) * 0.18
+
+        -- fast flame flicker layered on top
+        local flickerA = (math.random(-8, 8)) / 100
+        local flickerB = (math.random(-12, 12)) / 800
+
+        local a = math.max(0, math.min(1, baseA + flickerA))
+        local b = math.max(0, math.min(1, baseB + flickerB))
+
+        setEffectRegionOpacity("lamp_glow1", a)
+        setEffectRegionOpacity("lamp_glow2", b)
+
+        delay(math.random(40, 120))
+    end
+end

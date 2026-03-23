@@ -76,6 +76,9 @@ static std::vector<std::string> WrapTextLines(
 
 static void DrawBottomCenteredHoverName(const GameState& state)
 {
+    if(!state.adventure.controlsEnabled) {
+        return;
+    }
     const ActorInventoryData* inv = GetControlledActorInventory(state);
     const ItemDefinitionData* heldItemDef = nullptr;
 
@@ -104,8 +107,8 @@ static void DrawBottomCenteredHoverName(const GameState& state)
         return;
     }
 
-    Font font = GetFontDefault();
-    const float fontSize = 48.0f;
+    Font font = state.hoverLabelFont;
+    const float fontSize = 58.0f;
     const float spacing = 2.0f;
     const int shadowOffset = 2;
 
@@ -113,7 +116,10 @@ static void DrawBottomCenteredHoverName(const GameState& state)
 
     Vector2 pos{};
     pos.x = (static_cast<float>(INTERNAL_WIDTH) - size.x) * 0.5f;
-    pos.y = static_cast<float>(INTERNAL_HEIGHT) - 90.0f;
+    pos.y = static_cast<float>(INTERNAL_HEIGHT) - 120.0f;
+
+    pos.x = std::round(pos.x);
+    pos.y = std::round(pos.y);
 
     DrawShadowedTextLine(font, text, pos, fontSize, spacing, WHITE, shadowOffset);
 }
@@ -238,6 +244,7 @@ static void DrawSingleSpeechUi(
         const SpeechUiState& speechUi,
         std::vector<SpeechLayoutBox>& placedBoxes,
         float fontSize,
+        Font font,
         float maxWidth,
         float lineHeight)
 {
@@ -250,7 +257,6 @@ static void DrawSingleSpeechUi(
         return;
     }
 
-    Font font = GetFontDefault();
     const float spacing = 2.0f;
     const int shadowOffset = 2;
 
@@ -366,6 +372,8 @@ static void DrawSingleSpeechUi(
                 speechRect.x,
                 speechRect.y + lineHeight * static_cast<float>(i)
         };
+        pos.x = std::round(pos.x);
+        pos.y = std::round(pos.y);
         DrawShadowedTextLine(font, lines[i], pos, fontSize, spacing, speechColor, shadowOffset);
     }
 
@@ -385,9 +393,10 @@ static void DrawSpeechUi(const GameState& state)
                 state,
                 speech,
                 placedBoxes,
-                34.0f,   // smaller than primary
+                44.0f,   // smaller than primary
+                state.ambientSpeechFont,
                 700.0f,
-                36.0f);
+                44.0f);
     }
 
     // Primary speech stays larger and is placed last, so it gets priority.
@@ -395,9 +404,10 @@ static void DrawSpeechUi(const GameState& state)
             state,
             state.adventure.speechUi,
             placedBoxes,
-            42.0f,
+            50.0f,
+            state.speechFont,
             900.0f,
-            44.0f);
+            50.0f);
 }
 
 static bool CanInventoryPageBackwardUi(const ActorInventoryData& inv)
