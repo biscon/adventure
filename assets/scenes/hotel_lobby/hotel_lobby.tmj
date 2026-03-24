@@ -649,7 +649,7 @@
                  "visible":true,
                  "width":0,
                  "x":221,
-                 "y":272
+                 "y":273
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -810,7 +810,1405 @@
          "draworder":"topdown",
          "id":16,
          "name":"effect_regions",
-         "objects":[],
+         "objects":[
+                {
+                 "height":31.25,
+                 "id":35,
+                 "name":"wall_lamp_glow1",
+                 "opacity":0.5,
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/light_bulb.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"poly_clip"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.08
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":27,
+                 "x":279.333166667,
+                 "y":80.041666667
+                },
+            
+                {
+                 "height":182,
+                 "id":36,
+                 "name":"wall_lamp_glow2",
+                 "opacity":0.5,
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/light_bulb_halo.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"poly_clip"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":0.8
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":0.9
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1.2
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":190.917,
+                 "x":199.5415,
+                 "y":5.33333333333333
+                },
+            
+                {
+                 "height":283.833,
+                 "id":38,
+                 "name":"wall_lamp_grade",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.03
+                        },
+                    
+                        {
+                         "name":"contrast",
+                         "type":"float",
+                         "value":1.03
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"front"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"saturation",
+                         "type":"float",
+                         "value":1.1
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"region_grade"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.28
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":100
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":0.92
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1.03
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1.1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":342.5,
+                 "x":128.75,
+                 "y":-40.2498333333334
+                },
+            
+                {
+                 "height":31.25,
+                 "id":40,
+                 "name":"ceiling_lamp_glow1",
+                 "opacity":0.5,
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/light_bulb.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"poly_clip"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.08
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":28.667,
+                 "x":420.999833333333,
+                 "y":47.0416666666667
+                },
+            
+                {
+                 "height":224,
+                 "id":41,
+                 "name":"ceiling_lamp_glow2",
+                 "opacity":0.5,
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/light_bulb_halo.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"poly_clip"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":0.8
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":0.9
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1.2
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":232.583666666667,
+                 "x":316.208166666667,
+                 "y":-27
+                },
+            
+                {
+                 "height":310.833,
+                 "id":44,
+                 "name":"ceiling_lamp_grade",
+                 "opacity":1,
+                 "properties":[
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.03
+                        },
+                    
+                        {
+                         "name":"contrast",
+                         "type":"float",
+                         "value":1.08
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"front"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"saturation",
+                         "type":"float",
+                         "value":0.85
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"region_grade"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.28
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":100
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":0.92
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1.02
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1.05
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":336.166666666667,
+                 "x":259.75,
+                 "y":-68.2498333333334
+                },
+            
+                {
+                 "height":0,
+                 "id":45,
+                 "name":"door_light_grade",
+                 "opacity":1,
+                 "polygon":[
+                        {
+                         "x":19.3163262562963,
+                         "y":-7.63664347821771
+                        },
+                    
+                        {
+                         "x":-126.744518384214,
+                         "y":189.62196056145
+                        },
+                    
+                        {
+                         "x":-133.633480054117,
+                         "y":199.105447662108
+                        },
+                    
+                        {
+                         "x":-133.839472967833,
+                         "y":220.084502610499
+                        },
+                    
+                        {
+                         "x":-117.430977960652,
+                         "y":230.051396154502
+                        },
+                    
+                        {
+                         "x":-92.1744257319789,
+                         "y":237.458697501035
+                        },
+                    
+                        {
+                         "x":-6.08981599231538,
+                         "y":246.823506897783
+                        },
+                    
+                        {
+                         "x":94.2427259399077,
+                         "y":226.997730441902
+                        },
+                    
+                        {
+                         "x":94.2741270321673,
+                         "y":-20.8732745580977
+                        }],
+                 "properties":[
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.09
+                        },
+                    
+                        {
+                         "name":"contrast",
+                         "type":"float",
+                         "value":1.05
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"saturation",
+                         "type":"float",
+                         "value":0.75
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"region_grade"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.075
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":0.9
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":0.98
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1.08
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":520.422439634499,
+                 "y":56.9911362247644
+                },
+            
+                {
+                 "height":57.8286,
+                 "id":46,
+                 "name":"window_fog1",
+                 "opacity":0.4,
+                 "polygon":[
+                        {
+                         "x":27.5642333333333,
+                         "y":203.321666666667
+                        },
+                    
+                        {
+                         "x":59.4858666666667,
+                         "y":202.614333333333
+                        },
+                    
+                        {
+                         "x":58.9841,
+                         "y":278.114
+                        },
+                    
+                        {
+                         "x":26.6221333333334,
+                         "y":270.754
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Perlin\/Perlin 3 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":1.7
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.01
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":2
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":0.25
+                        },
+                    
+                        {
+                         "name":"uvScaley",
+                         "type":"float",
+                         "value":0.25
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":20.7712,
+                 "x":530,
+                 "y":-103
+                },
+            
+                {
+                 "height":57.8286,
+                 "id":47,
+                 "name":"window_fog2",
+                 "opacity":0.4,
+                 "polygon":[
+                        {
+                         "x":17.2308666666667,
+                         "y":160.655333333333
+                        },
+                    
+                        {
+                         "x":66.6109,
+                         "y":154.197333333333
+                        },
+                    
+                        {
+                         "x":66.3174333333333,
+                         "y":175.114
+                        },
+                    
+                        {
+                         "x":49.5110427783305,
+                         "y":177.62616449153
+                        },
+                    
+                        {
+                         "x":30.0690381732146,
+                         "y":179.659252011349
+                        },
+                    
+                        {
+                         "x":17.2054333333334,
+                         "y":180.462333333333
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Perlin\/Perlin 3 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":1.7
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":0.03
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":2
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":0.5
+                        },
+                    
+                        {
+                         "name":"uvScaley",
+                         "type":"float",
+                         "value":0.125
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":20.7712,
+                 "x":532.6144,
+                 "y":-100.247633333333
+                },
+            
+                {
+                 "height":124.5,
+                 "id":48,
+                 "name":"light_shaft_dust",
+                 "opacity":0.25,
+                 "polygon":[
+                        {
+                         "x":192.416666666667,
+                         "y":-35.5
+                        },
+                    
+                        {
+                         "x":245.750333333333,
+                         "y":-41.25
+                        },
+                    
+                        {
+                         "x":241.111,
+                         "y":178.953333333333
+                        },
+                    
+                        {
+                         "x":153.88,
+                         "y":197.571333333333
+                        },
+                    
+                        {
+                         "x":75.4905666666666,
+                         "y":189.917333333333
+                        },
+                    
+                        {
+                         "x":50.6649733333333,
+                         "y":181.952666666667
+                        },
+                    
+                        {
+                         "x":44.4693,
+                         "y":165.112666666667
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Grainy 6 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.04
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":-0.015
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.2
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":2
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.22
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":1.2
+                        },
+                    
+                        {
+                         "name":"uvScaley",
+                         "type":"float",
+                         "value":1.2
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":85.667,
+                 "x":356.499833333333,
+                 "y":94.0833333333333
+                },
+            
+                {
+                 "height":124.5,
+                 "id":49,
+                 "name":"light_shaft_dust2",
+                 "opacity":0.25,
+                 "polygon":[
+                        {
+                         "x":192.417,
+                         "y":-35.5
+                        },
+                    
+                        {
+                         "x":245.75,
+                         "y":-41.25
+                        },
+                    
+                        {
+                         "x":241.111,
+                         "y":178.953
+                        },
+                    
+                        {
+                         "x":153.88,
+                         "y":197.571
+                        },
+                    
+                        {
+                         "x":75.4906,
+                         "y":189.917
+                        },
+                    
+                        {
+                         "x":50.665,
+                         "y":181.953
+                        },
+                    
+                        {
+                         "x":44.4693,
+                         "y":165.113
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Alpha\/Grainy 6 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"add"
+                        },
+                    
+                        {
+                         "name":"brightness",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back"
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":-0.03
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":0.01
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0.2
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":2
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1.22
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":1.2
+                        },
+                    
+                        {
+                         "name":"uvScaley",
+                         "type":"float",
+                         "value":1.2
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":85.667,
+                 "x":355.1665,
+                 "y":94.75
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
+         "draworder":"topdown",
+         "id":23,
+         "name":"sound_emitters",
+         "objects":[
+                {
+                 "height":0,
+                 "id":50,
+                 "name":"hotel_room_tone",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"room_tone_02"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":0.6
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":336.5,
+                 "y":250.5
+                },
+            
+                {
+                 "height":0,
+                 "id":51,
+                 "name":"floor_creak_left",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"wood_creak2"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":17.5,
+                 "y":309
+                },
+            
+                {
+                 "height":0,
+                 "id":52,
+                 "name":"floor_creak_upstairs",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"wood_creak2"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":333,
+                 "y":25
+                },
+            
+                {
+                 "height":0,
+                 "id":53,
+                 "name":"upstairs_movement",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"sounds_upstairs"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":94.5,
+                 "y":99
+                },
+            
+                {
+                 "height":0,
+                 "id":54,
+                 "name":"three_knocks",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"three_knocks"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":148,
+                 "y":46.5
+                },
+            
+                {
+                 "height":0,
+                 "id":55,
+                 "name":"metal_pipe",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"metal_pipe2"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":658.5,
+                 "y":73
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -1030,7 +2428,19 @@
     
         {
          "id":13,
-         "layers":[],
+         "layers":[
+                {
+                 "id":22,
+                 "image":"scene_shadow.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "name":"shadow",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":true,
+                 "x":0,
+                 "y":0
+                }],
          "name":"effects_front",
          "opacity":1,
          "type":"group",
@@ -1049,8 +2459,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":22,
- "nextobjectid":35,
+ "nextlayerid":24,
+ "nextobjectid":56,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

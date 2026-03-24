@@ -37,6 +37,82 @@
             "volume": 0.8
         },
         {
+            "id": "metal_pipe",
+            "file": "sfx/metal_pipe.wav",
+            "type": "sound",
+            "volume": 0.7
+        },
+        {
+            "id": "metal_pipe2",
+            "file": "sfx/metal_pipe2.mp3",
+            "type": "sound",
+            "volume": 0.7
+        },
+        {
+            "id": "seagull1",
+            "file": "sfx/seagull_01.wav",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "seagull2",
+            "file": "sfx/seagull_02.wav",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "wood_creak1",
+            "file": "sfx/wood_creak_01.wav",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "wood_creak2",
+            "file": "sfx/wood_creak_02.wav",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "three_knocks",
+            "file": "sfx/three_knocks.wav",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "sounds_upstairs",
+            "file": "sfx/upstairs.wav",
+            "type": "sound",
+            "volume": 0.8
+        },
+        {
+            "id": "wind_ambience",
+            "file": "ambience/wind.ogg",
+            "type": "sound",
+            "volume": 0.6,
+            "loop": true
+        },
+        {
+            "id": "room_tone_01",
+            "file": "ambience/room_tone_01.wav",
+            "type": "sound",
+            "volume": 1.0,
+            "loop": true
+        },
+        {
+            "id": "room_tone_02",
+            "file": "ambience/room_tone_02.wav",
+            "type": "sound",
+            "volume": 1.0,
+            "loop": true
+        },
+        {
+            "id": "dark_ambience_01",
+            "file": "ambience/dark_ambience_01.wav",
+            "type": "sound",
+            "volume": 0.3,
+            "loop": true
+        },
+        {
             "id": "basement_music",
             "file": "music/basement.mp3",
             "type": "music",

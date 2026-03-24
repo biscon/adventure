@@ -401,10 +401,33 @@ void UpdateAudio(GameState& state, float dt)
     }
 
     for (auto it = state.audio.activeSounds.begin(); it != state.audio.activeSounds.end(); ) {
-        if (!it->active || !IsSoundPlaying(it->sound)) {
-            if (it->active) {
-                UnloadSoundAlias(it->sound);
+        if (!it->active) {
+            it = state.audio.activeSounds.erase(it);
+            continue;
+        }
+
+        if (!IsSoundPlaying(it->sound)) {
+            if (it->loop) {
+                AudioDefinitionData* playingDef = nullptr;
+                for (AudioDefinitionData& def : state.audio.definitions) {
+                    if (def.type == AudioType::Sound && def.soundHandle == it->baseSoundHandle) {
+                        playingDef = &def;
+                        break;
+                    }
+                }
+
+                float volume = state.settings.soundVolume;
+                if (playingDef != nullptr) {
+                    volume *= playingDef->volume;
+                }
+
+                SetSoundVolume(it->sound, volume);
+                PlaySound(it->sound);
+                ++it;
+                continue;
             }
+
+            UnloadSoundAlias(it->sound);
             it = state.audio.activeSounds.erase(it);
         } else {
             ++it;
@@ -446,10 +469,41 @@ bool PlaySoundById(GameState& state, const std::string& id)
     ActiveSoundInstance inst;
     inst.sound = alias;
     inst.baseSoundHandle = def->soundHandle;
+    inst.scope = def->scope;
+    inst.loop = def->loop;
     inst.active = true;
     state.audio.activeSounds.push_back(inst);
 
     return true;
+}
+
+bool StopSoundById(GameState& state, const std::string& id)
+{
+    AudioDefinitionData* def = FindAudioDef(state, id);
+    if (def == nullptr) {
+        WarnMissingAudioIdOnce(state, id);
+        return false;
+    }
+
+    if (def->type != AudioType::Sound) {
+        TraceLog(LOG_WARNING, "Audio id '%s' is not a sound", id.c_str());
+        return false;
+    }
+
+    bool stoppedAny = false;
+
+    for (auto it = state.audio.activeSounds.begin(); it != state.audio.activeSounds.end(); ) {
+        if (it->active && it->baseSoundHandle == def->soundHandle) {
+            StopSound(it->sound);
+            UnloadSoundAlias(it->sound);
+            it = state.audio.activeSounds.erase(it);
+            stoppedAny = true;
+        } else {
+            ++it;
+        }
+    }
+
+    return stoppedAny;
 }
 
 bool PlayMusicById(GameState& state, const std::string& id, float fadeMs)
@@ -597,6 +651,8 @@ bool PlaySoundEmitterById(GameState& state, const std::string& emitterId)
     ActiveSoundInstance inst;
     inst.sound = alias;
     inst.baseSoundHandle = def->soundHandle;
+    inst.scope = def->scope;
+    inst.loop = false;
     inst.active = true;
     state.audio.activeSounds.push_back(inst);
 
@@ -749,6 +805,17 @@ void ClearSceneAudio(GameState& state)
     }
 
     state.audio.sceneEmitters.clear();
+    for (auto it = state.audio.activeSounds.begin(); it != state.audio.activeSounds.end(); ) {
+        if (it->scope == ResourceScope::Scene) {
+            if (it->active) {
+                StopSound(it->sound);
+                UnloadSoundAlias(it->sound);
+            }
+            it = state.audio.activeSounds.erase(it);
+        } else {
+            ++it;
+        }
+    }
 
     auto StopSceneScopedMusicIfNeeded = [&](MusicPlaybackState& slot)
     {

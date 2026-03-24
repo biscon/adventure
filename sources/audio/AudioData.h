@@ -48,6 +48,8 @@ struct AudioDefinitionData {
 struct ActiveSoundInstance {
     Sound sound{};        // alias instance
     int baseSoundHandle = -1;
+    ResourceScope scope = ResourceScope::Global;
+    bool loop = false;
     bool active = false;
 };
 

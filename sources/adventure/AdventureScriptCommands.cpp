@@ -942,6 +942,14 @@ bool AdventureScriptPlaySound(GameState& state, const std::string& audioId)
     return PlaySoundById(state, audioId);
 }
 
+bool AdventureScriptStopSound(GameState& state, const std::string& audioId)
+{
+    if (audioId.empty()) {
+        return false;
+    }
+    return StopSoundById(state, audioId);
+}
+
 bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId, float fadeMs)
 {
     if (audioId.empty()) {

@@ -87,6 +87,7 @@ bool AdventureScriptSetEffectTint(GameState& state,
                                   Color tint);
 
 bool AdventureScriptPlaySound(GameState& state, const std::string& audioId);
+bool AdventureScriptStopSound(GameState& state, const std::string& audioId);
 bool AdventureScriptPlayMusic(GameState& state, const std::string& audioId, float fadeMs = 0.0f);
 bool AdventureScriptStopMusic(GameState& state, float fadeMs = 0.0f);
 

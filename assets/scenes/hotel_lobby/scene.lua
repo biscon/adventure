@@ -5,6 +5,14 @@ function Scene_onEnter()
         -- e.g. intro dialogue, item placement, whatever
     end
     -- start running scene scripts (animation, interactivity etc)
+    startScript("LampGlowLoop")
+    startScript("ElectricLampGlowLoop")
+    startScript("HotelAmbienceLoop")
+end
+
+function Scene_onExit()
+    stopScript("HotelAmbienceLoop")
+    setSoundEmitterEnabled("hotel_room_tone", false)
 end
 
 function Scene_look_to_town_square()
@@ -244,4 +252,107 @@ function Scene_use_actor_hotel_clerk()
     end)
 
     return true
+end
+
+-- Effect scripts -------------------------
+
+function LampGlowLoop()
+    local baseA = 0.50
+    local baseB = 0.35
+
+    local targetA = baseA
+    local targetB = baseB
+
+    while true do
+        if math.random(1, 100) <= 18 then
+            targetA = math.random(75, 95) / 100
+            targetB = math.random(20, 55) / 100
+        end
+
+        -- drift slowly toward target values
+        baseA = baseA + (targetA - baseA) * 0.18
+        baseB = baseB + (targetB - baseB) * 0.18
+
+        -- fast flame flicker layered on top
+        local flickerA = (math.random(-8, 8)) / 100
+        local flickerB = (math.random(-12, 12)) / 800
+
+        local a = math.max(0, math.min(1, baseA + flickerA))
+        local b = math.max(0, math.min(1, baseB + flickerB))
+
+        setEffectRegionOpacity("wall_lamp_glow1", a)
+        setEffectRegionOpacity("wall_lamp_glow2", b)
+
+        delay(math.random(40, 120))
+    end
+end
+
+function ElectricLampGlowLoop()
+    local baseA = 0.65
+    local baseB = 0.45
+
+    local targetA = baseA
+    local targetB = baseB
+
+    while true do
+        -- VERY rare small target drift (power fluctuation)
+        if math.random(1, 100) <= 5 then
+            targetA = math.random(62, 68) / 100
+            targetB = math.random(42, 48) / 100
+        end
+
+        -- very slow drift toward target (stable feel)
+        baseA = baseA + (targetA - baseA) * 0.03
+        baseB = baseB + (targetB - baseB) * 0.03
+
+        -- tiny shimmer (filament noise, barely visible)
+        local shimmerA = (math.random(-2, 2)) / 200   -- ±0.01
+        local shimmerB = (math.random(-2, 2)) / 300   -- even subtler
+
+        local a = math.max(0, math.min(1, baseA + shimmerA))
+        local b = math.max(0, math.min(1, baseB + shimmerB))
+
+        setEffectRegionOpacity("ceiling_lamp_glow1", a)
+        setEffectRegionOpacity("ceiling_lamp_glow2", b)
+
+        delay(math.random(80, 160)) -- slower updates = calmer light
+    end
+end
+
+-- Audio ----------------------------------------------
+
+function HotelAmbienceLoop()
+    -- base bed
+    setSoundEmitterEnabled("hotel_room_tone", true)
+
+    while true do
+        delay(math.random(8000, 20000)) -- 8–20 sec gaps
+
+        local roll = math.random(1, 100)
+
+        if roll <= 40 then
+            -- structure creaks
+            local creaks = {
+                "floor_creak_left",
+                "floor_creak_upstairs",
+                "wall_creak_right"
+            }
+            playEmitter(creaks[math.random(#creaks)])
+
+        elseif roll <= 70 then
+            -- subtle object sounds
+            local objects = {
+                "three_knocks",
+                "metal_pipe"
+            }
+            playEmitter(objects[math.random(#objects)])
+
+        else
+            -- the important one: upstairs presence
+            playEmitter("upstairs_movement")
+
+            -- give it space to breathe
+            delay(math.random(5000, 10000))
+        end
+    end
 end

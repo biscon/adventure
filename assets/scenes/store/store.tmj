@@ -798,19 +798,19 @@
                         {
                          "name":"brightness",
                          "type":"float",
-                         "value":0.08
+                         "value":0.07
                         },
                     
                         {
                          "name":"contrast",
                          "type":"float",
-                         "value":1.02
+                         "value":1.04
                         },
                     
                         {
                          "name":"depthMode",
                          "type":"string",
-                         "value":"front"
+                         "value":"back"
                         },
                     
                         {
@@ -822,7 +822,7 @@
                         {
                          "name":"saturation",
                          "type":"float",
-                         "value":0.92
+                         "value":0.75
                         },
                     
                         {
@@ -834,31 +834,31 @@
                         {
                          "name":"softness",
                          "type":"float",
-                         "value":0.05
+                         "value":0.075
                         },
                     
                         {
                          "name":"sortOrder",
                          "type":"int",
-                         "value":6
+                         "value":100
                         },
                     
                         {
                          "name":"tintB",
                          "type":"float",
-                         "value":1
+                         "value":0.9
                         },
                     
                         {
                          "name":"tintG",
                          "type":"float",
-                         "value":0.95
+                         "value":0.98
                         },
                     
                         {
                          "name":"tintR",
                          "type":"float",
-                         "value":0.85
+                         "value":1.08
                         }],
                  "rotation":0,
                  "type":"",
@@ -866,97 +866,6 @@
                  "width":85.667,
                  "x":496.4165,
                  "y":119.75
-                },
-            
-                {
-                 "height":231.5,
-                 "id":36,
-                 "name":"light_shaft",
-                 "opacity":0.35,
-                 "properties":[
-                        {
-                         "name":"asset",
-                         "type":"file",
-                         "value":"light_shaft.png"
-                        },
-                    
-                        {
-                         "name":"blendMode",
-                         "type":"string",
-                         "value":"add"
-                        },
-                    
-                        {
-                         "name":"brightness",
-                         "type":"float",
-                         "value":0.04
-                        },
-                    
-                        {
-                         "name":"contrast",
-                         "type":"float",
-                         "value":1.03
-                        },
-                    
-                        {
-                         "name":"depthMode",
-                         "type":"string",
-                         "value":"front"
-                        },
-                    
-                        {
-                         "name":"overlay",
-                         "type":"bool",
-                         "value":false
-                        },
-                    
-                        {
-                         "name":"saturation",
-                         "type":"float",
-                         "value":1
-                        },
-                    
-                        {
-                         "name":"shaderId",
-                         "type":"string",
-                         "value":"poly_clip"
-                        },
-                    
-                        {
-                         "name":"softness",
-                         "type":"float",
-                         "value":0.2
-                        },
-                    
-                        {
-                         "name":"sortOrder",
-                         "type":"int",
-                         "value":1
-                        },
-                    
-                        {
-                         "name":"tintB",
-                         "type":"float",
-                         "value":1.2
-                        },
-                    
-                        {
-                         "name":"tintG",
-                         "type":"float",
-                         "value":1.4
-                        },
-                    
-                        {
-                         "name":"tintR",
-                         "type":"float",
-                         "value":1.8
-                        }],
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":137.667,
-                 "x":465.9165,
-                 "y":116.25
                 },
             
                 {
@@ -1021,7 +930,7 @@
                         {
                          "name":"depthMode",
                          "type":"string",
-                         "value":"front"
+                         "value":"back"
                         },
                     
                         {
@@ -1165,7 +1074,7 @@
                         {
                          "name":"depthMode",
                          "type":"string",
-                         "value":"front"
+                         "value":"back"
                         },
                     
                         {
@@ -1849,6 +1758,129 @@
                  "width":85.667,
                  "x":211.1665,
                  "y":35.0287
+                },
+            
+                {
+                 "height":57.8286,
+                 "id":46,
+                 "name":"window_fog1",
+                 "opacity":0.4,
+                 "polygon":[
+                        {
+                         "x":16.6892,
+                         "y":182.697
+                        },
+                    
+                        {
+                         "x":63.8609,
+                         "y":182.614
+                        },
+                    
+                        {
+                         "x":63.8591,
+                         "y":240.614
+                        },
+                    
+                        {
+                         "x":16.6221,
+                         "y":241.129
+                        }],
+                 "properties":[
+                        {
+                         "name":"asset",
+                         "type":"file",
+                         "value":"..\/..\/effects\/noise\/Perlin\/Perlin 3 - 256x256.png"
+                        },
+                    
+                        {
+                         "name":"blendMode",
+                         "type":"string",
+                         "value":"normal"
+                        },
+                    
+                        {
+                         "name":"depthMode",
+                         "type":"string",
+                         "value":"back      "
+                        },
+                    
+                        {
+                         "name":"overlay",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"phaseOffset",
+                         "type":"float",
+                         "value":1.7
+                        },
+                    
+                        {
+                         "name":"scrollSpeedX",
+                         "type":"float",
+                         "value":0.01
+                        },
+                    
+                        {
+                         "name":"scrollSpeedY",
+                         "type":"float",
+                         "value":0.02
+                        },
+                    
+                        {
+                         "name":"shaderId",
+                         "type":"string",
+                         "value":"uv_scroll"
+                        },
+                    
+                        {
+                         "name":"softness",
+                         "type":"float",
+                         "value":0
+                        },
+                    
+                        {
+                         "name":"sortOrder",
+                         "type":"int",
+                         "value":2
+                        },
+                    
+                        {
+                         "name":"tintB",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintG",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"tintR",
+                         "type":"float",
+                         "value":1
+                        },
+                    
+                        {
+                         "name":"uvScaleX",
+                         "type":"float",
+                         "value":0.25
+                        },
+                    
+                        {
+                         "name":"uvScaley",
+                         "type":"float",
+                         "value":0.25
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":20.7712,
+                 "x":498.281066666667,
+                 "y":-61.9143
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -2107,7 +2139,7 @@
          "y":0
         }],
  "nextlayerid":23,
- "nextobjectid":46,
+ "nextobjectid":47,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

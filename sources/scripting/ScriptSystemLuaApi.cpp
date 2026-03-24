@@ -1391,6 +1391,20 @@ static int Lua_playSound(lua_State* L)
     return 1;
 }
 
+static int Lua_stopSound(lua_State* L)
+{
+    const char* audioId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || audioId == nullptr) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+
+    const bool ok = AdventureScriptStopSound(*gameState, std::string(audioId));
+    lua_pushboolean(L, ok ? 1 : 0);
+    return 1;
+}
+
 static int Lua_playMusic(lua_State* L)
 {
     const char* id = luaL_checkstring(L, 1);
@@ -2057,6 +2071,7 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "effectRegionOpacity", Lua_effectRegionOpacity);
 
     lua_register(L, "playSound", Lua_playSound);
+    lua_register(L, "stopSound", Lua_stopSound);
     lua_register(L, "playMusic", Lua_playMusic);
     lua_register(L, "stopMusic", Lua_stopMusic);
 

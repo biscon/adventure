@@ -6,6 +6,12 @@ function Scene_onEnter()
     end
     -- start running scene scripts (animation, interactivity etc)
     startScript("FogPulseLoop")
+    startScript("TownSquareAudioLoop")
+end
+
+function Scene_onExit()
+    stopScript("TownSquareAudioLoop")
+    stopSound("wind_ambience")
 end
 
 function Scene_look_hotel_sign()
@@ -166,5 +172,37 @@ function FogPulseLoop()
         setEffectRegionOpacity("alley_fog_detail", b)
 
         delay(math.random(120, 220))
+    end
+end
+
+-- Audio -----------------------------------------------------------------
+function TownSquareAudioLoop()
+    -- start base ambience
+    playSound("wind_ambience")
+
+    while true do
+        -- random delay between events (important!)
+        delay(math.random(6000, 18000)) -- 6–18 seconds
+
+        local roll = math.random(1, 100)
+
+        if roll <= 30 then
+            -- seagulls (rare, long sounds)
+            playSound((math.random(1, 2) == 1) and "seagull1" or "seagull2")
+
+            -- extra long cooldown after gulls so they don’t overlap
+            delay(math.random(15000, 30000)) -- 15–30 sec
+
+        elseif roll <= 65 then
+            -- wood creaks (mid frequency)
+            playSound((math.random(1, 2) == 1) and "wood_creak1" or "wood_creak2")
+
+        else
+            -- metal pipe (rare, eerie punctuation)
+            playSound("metal_pipe")
+
+            -- slight pause after metallic sound so it "lands"
+            delay(math.random(4000, 8000))
+        end
     end
 end
