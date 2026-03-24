@@ -179,7 +179,7 @@
                         {
                          "name":"facing",
                          "type":"string",
-                         "value":"left"
+                         "value":"back"
                         },
                     
                         {
@@ -191,13 +191,13 @@
                         {
                          "name":"walkToX",
                          "type":"float",
-                         "value":414
+                         "value":310
                         },
                     
                         {
                          "name":"walkToY",
                          "type":"float",
-                         "value":271
+                         "value":291
                         }],
                  "rotation":0,
                  "type":"",
@@ -2509,7 +2509,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":24,
+ "nextlayerid":25,
  "nextobjectid":57,
  "orientation":"orthogonal",
  "renderorder":"right-down",

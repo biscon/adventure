@@ -82,6 +82,7 @@ bool AdventureScriptSetControlsEnabled(GameState& state, bool enabled);
 bool AdventureScriptSetEffectVisible(GameState& state, const std::string& effectId, bool visible);
 bool AdventureScriptIsEffectVisible(const GameState& state, const std::string& effectId, bool& outVisible);
 bool AdventureScriptSetEffectOpacity(GameState& state, const std::string& effectId, float opacity);
+bool AdventureScriptGetEffectOpacity(const GameState& state, const std::string& effectId, float& outOpacity);
 bool AdventureScriptSetEffectTint(GameState& state,
                                   const std::string& effectId,
                                   Color tint);

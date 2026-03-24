@@ -822,6 +822,10 @@ void ScriptSystemUpdate(GameState& state, float dt)
         return;
     }
 
+    // Expose current frame delta to Lua in seconds.
+    lua_pushnumber(script.vm, static_cast<lua_Number>(dt));
+    lua_setglobal(script.vm, "FrameDelta");
+
     if (!script.pendingStarts.empty()) {
         std::vector<ScriptCoroutineStartRequest> starts;
         starts.swap(script.pendingStarts);

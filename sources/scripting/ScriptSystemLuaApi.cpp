@@ -1349,6 +1349,30 @@ static int Lua_setEffectOpacity(lua_State* L)
     return 1;
 }
 
+static int Lua_effectOpacity(lua_State* L)
+{
+    const char* effectId = luaL_checkstring(L, 1);
+
+    if (gameState == nullptr || effectId == nullptr) {
+        lua_pushnumber(L, 0.0);
+        return 1;
+    }
+
+    float opacity = 0.0f;
+    const bool ok = AdventureScriptGetEffectOpacity(
+            *gameState,
+            std::string(effectId),
+            opacity);
+
+    if (!ok) {
+        lua_pushnumber(L, 0.0);
+        return 1;
+    }
+
+    lua_pushnumber(L, static_cast<lua_Number>(opacity));
+    return 1;
+}
+
 static int Lua_setEffectTint(lua_State* L)
 {
     const char* effectId = luaL_checkstring(L, 1);
@@ -2063,6 +2087,7 @@ void RegisterLuaAPI(lua_State* L)
     lua_register(L, "setEffectVisible", Lua_setEffectVisible);
     lua_register(L, "effectVisible", Lua_effectVisible);
     lua_register(L, "setEffectOpacity", Lua_setEffectOpacity);
+    lua_register(L, "effectOpacity", Lua_effectOpacity);
     lua_register(L, "setEffectTint", Lua_setEffectTint);
 
     lua_register(L, "setEffectRegionVisible", Lua_setEffectRegionVisible);

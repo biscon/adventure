@@ -1006,7 +1006,7 @@
                         {
                          "name":"softness",
                          "type":"float",
-                         "value":0.01
+                         "value":0
                         },
                     
                         {
@@ -1869,7 +1869,7 @@
                  "height":360,
                  "id":43,
                  "name":"scene_air_haze",
-                 "opacity":0.1,
+                 "opacity":0.08,
                  "properties":[
                         {
                          "name":"asset",
@@ -1892,7 +1892,7 @@
                         {
                          "name":"overlay",
                          "type":"bool",
-                         "value":true
+                         "value":false
                         },
                     
                         {
@@ -2957,6 +2957,19 @@
                  "visible":true,
                  "x":0,
                  "y":0
+                },
+            
+                {
+                 "id":21,
+                 "image":"..\/..\/effects\/black_screen_quad.png",
+                 "imageheight":360,
+                 "imagewidth":640,
+                 "name":"black_screen_quad",
+                 "opacity":1,
+                 "type":"imagelayer",
+                 "visible":false,
+                 "x":0,
+                 "y":0
                 }],
          "name":"effects_overlay",
          "opacity":1,
@@ -2965,7 +2978,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":21,
+ "nextlayerid":22,
  "nextobjectid":48,
  "orientation":"orthogonal",
  "renderorder":"right-down",

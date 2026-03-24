@@ -1,4 +1,11 @@
 local bell = require("audio.desk_bell")
+local Glow = require("effects.glow")
+
+local ClerkWaypoints = {
+    { x = 3*157, y = 3*251, face = "left"  },
+    { x = 3*202, y = 3*249, face = "front" },
+    { x = 3*256, y = 3*250, face = "right" }
+}
 
 function Scene_onEnter()
     if not flag("hotel_lobby_init") then
@@ -7,9 +14,10 @@ function Scene_onEnter()
         -- e.g. intro dialogue, item placement, whatever
     end
     -- start running scene scripts (animation, interactivity etc)
-    startScript("LampGlowLoop")
-    startScript("ElectricLampGlowLoop")
+    startScript("WallLampGlowLoop")
+    startScript("CeilingLampGlowLoop")
     startScript("HotelAmbienceLoop")
+    startScript("HotelClerkPacingLoop")
 end
 
 function Scene_onExit()
@@ -62,7 +70,26 @@ end
 
 function Scene_use_stairs()
     if not flag("hotel_room_unlocked") then
-        say("I should speak to whoever runs this place first.")
+
+
+        disableControls()
+        stopScript("HotelClerkPacingLoop")
+        walkActorTo("hotel_clerk", ClerkWaypoints[3].x, ClerkWaypoints[3].y)
+        faceActor("hotel_clerk", "right")
+        if flag("hotel_room_denied") then
+            sayActor("hotel_clerk", "I told you, sir. We are closed for business.")
+            walkTo(3*461, 3*247)
+            face("front")
+            say("Strange... a good deal of noise for a place that is supposed to be empty.")
+        else
+            sayActor("hotel_clerk", "I would not go up there, sir.")
+            walkTo(3*408, 3*260)
+            face("left")
+            say("I was only looking.")
+            sayActor("hotel_clerk", "Then you have seen enough.")
+        end
+        startScript("HotelClerkPacingLoop")
+        enableControls()
         return true
     end
 
@@ -106,11 +133,19 @@ function Scene_use_bell()
     if times == 0 then
         bell.RingDeskBell(1)
         setInt("hotel_bell_rang_count", 1)
+        stopScript("HotelClerkPacingLoop")
+        walkActorTo("hotel_clerk", ClerkWaypoints[3].x, ClerkWaypoints[3].y)
+        faceActor("hotel_clerk", "front")
         sayActor("hotel_clerk", "Do not do that, sir. I am standing right here.")
+        startScript("HotelClerkPacingLoop")
     elseif times == 1 then
         bell.RingDeskBell(2)
         setInt("hotel_bell_rang_count", 2)
+        stopScript("HotelClerkPacingLoop")
+        walkActorTo("hotel_clerk", ClerkWaypoints[3].x, ClerkWaypoints[3].y)
+        faceActor("hotel_clerk", "front")
         sayActor("hotel_clerk", "I should prefer not to be summoned like a servant.")
+        startScript("HotelClerkPacingLoop")
     else
         say("I had better not be overly rude.")
     end
@@ -126,6 +161,7 @@ end
 
 function Scene_use_actor_hotel_clerk()
     disableControls()
+
     if flag("hotel_room_unlocked") then
         walkToHotspot("desk")
         face("left")
@@ -136,8 +172,11 @@ function Scene_use_actor_hotel_clerk()
     end
 
     walkToHotspot("desk")
-    face("left")
+    face("back")
 
+    stopScript("HotelClerkPacingLoop")
+    walkActorTo("hotel_clerk", ClerkWaypoints[3].x, ClerkWaypoints[3].y)
+    faceActor("hotel_clerk", "front")
     sayActor("hotel_clerk", "Yes?")
 
     enableControls()
@@ -149,7 +188,7 @@ function Scene_use_actor_hotel_clerk()
                 setFlag("hotel_room_denied", true)
 
                 say("I need a room for the night.")
-                sayActor("hotel_clerk", "No rooms.")
+                sayActor("hotel_clerk", "No rooms. We are closed for business, sir.")
 
                 if not flag("saw_store_ledger") then
                     say("Your key rack says otherwise.")
@@ -158,7 +197,7 @@ function Scene_use_actor_hotel_clerk()
                 end
             else
                 say("I need a room for the night.")
-                sayActor("hotel_clerk", "I told you, we're closed.")
+                sayActor("hotel_clerk", "I told you, sir. We are closed.")
                 sayActor("hotel_clerk", "There are no rooms.")
 
                 if not flag("saw_store_ledger") then
@@ -178,7 +217,7 @@ function Scene_use_actor_hotel_clerk()
                 say("Food, lamp oil, soap.")
                 say("Enough supplies for a good many guests.")
                 sayActor("hotel_clerk", "The storekeeper keeps his accounts. That is his affair.")
-                say("And this is yours.")
+                say("And the inn is your affair.")
                 say("You told me you had no rooms.")
                 sayActor("hotel_clerk", "I told you what seemed advisable.")
                 say("Advisable for whom?")
@@ -227,72 +266,51 @@ function Scene_use_actor_hotel_clerk()
         })
     end)
 
+    startScript("HotelClerkPacingLoop")
     return true
 end
 
--- Effect scripts -------------------------
-
-function LampGlowLoop()
-    local baseA = 0.50
-    local baseB = 0.35
-
-    local targetA = baseA
-    local targetB = baseB
-
+-- Ambience scripts ----------------------------
+function HotelClerkPacingLoop()
+    local lastIndex = -1
     while true do
-        if math.random(1, 100) <= 18 then
-            targetA = math.random(75, 95) / 100
-            targetB = math.random(20, 55) / 100
+        -- pick a new point (not same as last)
+        local index = math.random(1, #ClerkWaypoints)
+        if index == lastIndex then
+            index = (index % #ClerkWaypoints) + 1
+        end
+        lastIndex = index
+
+        local p = ClerkWaypoints[index]
+
+        walkActorTo("hotel_clerk", p.x, p.y)
+        faceActor("hotel_clerk", p.face)
+        if index == 3 then
+            if math.random(0,100) > 50 then
+                playActorAnimation("hotel_clerk", "pickup_right")
+            end
         end
 
-        -- drift slowly toward target values
-        baseA = baseA + (targetA - baseA) * 0.18
-        baseB = baseB + (targetB - baseB) * 0.18
-
-        -- fast flame flicker layered on top
-        local flickerA = (math.random(-8, 8)) / 100
-        local flickerB = (math.random(-12, 12)) / 800
-
-        local a = math.max(0, math.min(1, baseA + flickerA))
-        local b = math.max(0, math.min(1, baseB + flickerB))
-
-        setEffectRegionOpacity("wall_lamp_glow1", a)
-        setEffectRegionOpacity("wall_lamp_glow2", b)
-
-        delay(math.random(40, 120))
+        -- linger time (feels natural / slightly uneasy)
+        delay(math.random(4000, 9000))
     end
 end
 
-function ElectricLampGlowLoop()
-    local baseA = 0.65
-    local baseB = 0.45
+-- Effect scripts -------------------------
+function WallLampGlowLoop()
+    Glow.runFire(
+        { "wall_lamp_glow1", "wall_lamp_glow2" },
+        0.50,
+        0.35
+    )
+end
 
-    local targetA = baseA
-    local targetB = baseB
-
-    while true do
-        -- VERY rare small target drift (power fluctuation)
-        if math.random(1, 100) <= 5 then
-            targetA = math.random(62, 68) / 100
-            targetB = math.random(42, 48) / 100
-        end
-
-        -- very slow drift toward target (stable feel)
-        baseA = baseA + (targetA - baseA) * 0.03
-        baseB = baseB + (targetB - baseB) * 0.03
-
-        -- tiny shimmer (filament noise, barely visible)
-        local shimmerA = (math.random(-2, 2)) / 200   -- ±0.01
-        local shimmerB = (math.random(-2, 2)) / 300   -- even subtler
-
-        local a = math.max(0, math.min(1, baseA + shimmerA))
-        local b = math.max(0, math.min(1, baseB + shimmerB))
-
-        setEffectRegionOpacity("ceiling_lamp_glow1", a)
-        setEffectRegionOpacity("ceiling_lamp_glow2", b)
-
-        delay(math.random(80, 160)) -- slower updates = calmer light
-    end
+function CeilingLampGlowLoop()
+    Glow.runElectric(
+        { "ceiling_lamp_glow1", "ceiling_lamp_glow2" },
+        0.65,
+        0.45
+    )
 end
 
 -- Audio ----------------------------------------------

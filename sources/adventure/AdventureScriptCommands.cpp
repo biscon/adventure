@@ -1481,6 +1481,22 @@ bool AdventureScriptGetEffectRegionOpacity(const GameState& state, const std::st
     return true;
 }
 
+bool AdventureScriptGetEffectOpacity(const GameState& state, const std::string& effectId, float& outOpacity)
+{
+    if (!state.adventure.currentScene.loaded) {
+        return false;
+    }
+
+    const int effectIndex = FindEffectSpriteIndexById(state, effectId);
+    if (effectIndex < 0 ||
+        effectIndex >= static_cast<int>(state.adventure.effectSprites.size())) {
+        return false;
+    }
+
+    outOpacity = state.adventure.effectSprites[effectIndex].opacity;
+    return true;
+}
+
 bool AdventureScriptSetActorPosition(GameState& state, const std::string& actorId, Vector2 worldPos)
 {
     const int actorIndex = FindActorInstanceIndexById(state, actorId);

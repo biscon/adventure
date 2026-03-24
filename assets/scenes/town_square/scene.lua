@@ -1,6 +1,10 @@
+local Fade = require("effects.fade")
+
 function Scene_onEnter()
     if not flag("town_square_init") then
         setFlag("town_square_init", true)
+        -- setEffectVisible("black_screen_quad", true)
+        --setEffectRegionVisible("scene_air_haze", false)
         startScript("PlayIntroCutscene")
         -- first time only stuff
         -- e.g. intro dialogue, item placement, whatever
@@ -11,8 +15,8 @@ function Scene_onEnter()
 end
 
 function StopIntroMusic()
-    delay(25000)
-    stopMusic(25000)
+    delay(5000)
+    stopMusic(10000)
 end
 
 function Scene_onExit()
@@ -77,17 +81,22 @@ function Scene_look_to_hotel_lobby()
 end
 
 -- Cut scenes ------------------------------------------
+function FadeDownAsync()
+    Fade.fadeEffectDown("black_screen_quad", 3000)
+end
+
 function PlayIntroCutscene()
     disableControls()
-    playMusic("minimal_piano", 3000)
-    startScript("StopIntroMusic")
-    startSayAt(3*50, 3*340, "Day 1 - An uneasy feeling.", WHITE, 5000)
+
+    startSayAt(3*50, 3*340, "Day 1 - A Sense of Unease", WHITE, 5000)
     delay(2000)
     walkTo(3*340,3*306)
     face("back")
     delay(1000)
     say("Strange place for him to end up... this town feels wrong somehow.")
+    stopMusic(5000)
     say("Best find a room for the night before it gets any later.")
+    --startScript("StopIntroMusic")
     enableControls()
 end
 -- Effect scripts -------------------------

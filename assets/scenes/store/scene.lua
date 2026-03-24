@@ -1,4 +1,5 @@
 local bell = require("audio.desk_bell")
+local Glow = require("effects.glow")
 
 function Scene_onEnter()
     if not flag("store_init") then
@@ -22,12 +23,25 @@ function Scene_onExit()
 end
 
 function Scene_look_ledger()
-    say("A business ledger.")
-    say("The entries are neat enough, though I make little sense of them at a glance.")
+    if flag("saw_store_ledger") then
+        say("I've no need to examine it further.")
+        return true
+    end
+    if not flag("hotel_room_denied") then
+        say("A business ledger.")
+    else
+        say("A business ledger.")
+        say("Names, dates, and deliveries carefully entered.")
+        say("The sort of thing one might consult to learn who deals with whom in a place like this.")
+    end
     return true
 end
 
 function Scene_use_ledger()
+    if not flag("hotel_room_denied") then
+        return Scene_look_ledger()
+    end
+
     if flag("saw_store_ledger") then
         say("I've already gotten what I needed from that.")
         return true
@@ -45,7 +59,6 @@ function Scene_use_ledger()
         say("Food, lamp oil, soap... enough to serve more guests than the clerk admits to having.")
         setFlag("saw_store_ledger", true)
         StopComfortDog()
-        setFlag("distracted_by_dog", false)
         sayActor("store_clerk", "Can I help you, sir?")
     end
 
@@ -62,6 +75,7 @@ function StopComfortDog()
     setSoundEmitterEnabled("dog_snoring", true)
     walkActorTo("store_clerk", 3*215, 3*291)
     faceActor("store_clerk", "right")
+    setFlag("distracted_by_dog", false)
 end
 
 -- Saved by the bell ------------------------------------------------------
@@ -72,8 +86,14 @@ function Scene_look_bell()
 end
 
 function Scene_use_bell()
-    disableControls()
-
+    if flag("distracted_by_dog") then
+        bell.RingDeskBell(1)
+        sayActor("store_clerk", "One moment, sir. I'll be with you directly.")
+        StopComfortDog()
+        faceActor("store_clerk", "front")
+        sayActor("store_clerk", "How can I help you?.")
+        return true
+    end
     local times = getInt("store_bell_rang_count")
     if times < 0 then
         times = 0
@@ -92,8 +112,6 @@ function Scene_use_bell()
     else
         say("I had better not be overly rude.")
     end
-    enableControls()
-
     return true
 end
 
@@ -148,6 +166,9 @@ end
 function Scene_use_actor_store_clerk()
     if flag("distracted_by_dog") then
         sayActor("store_clerk", "One moment, sir. I'll be with you directly.")
+        StopComfortDog()
+        faceActor("store_clerk", "front")
+        sayActor("store_clerk", "How can I help you?.")
         return true
     end
 
@@ -218,7 +239,7 @@ function Scene_use_actor_store_clerk()
         return Adv.hiddenOptions({
             buy_supplies = flag("asked_store_buy"),
             about_town = flag("asked_store_town"),
-            inn = flag("asked_store_inn") or (not flag("asked_clerk_room")),
+            inn = flag("asked_store_inn") or (not flag("hotel_room_denied")) or flag("saw_store_ledger"),
             friend = flag("asked_store_friend"),
             hotel_deliveries = (not flag("saw_store_ledger")) or flag("asked_store_hotel_deliveries")
         })
@@ -279,6 +300,14 @@ function ComfortDog()
     end
 end
 
+function Scene_click_dog()
+    if not flag("distracted_by_dog") then
+        return false
+    end
+    say("I don't want to disturb them.")
+    return true
+end
+
 function Scene_use_dog()
     if flag("saw_store_ledger") then
         say("I better not disturb it again.")
@@ -325,36 +354,12 @@ function Scene_use_dog()
 end
 
 -- Effect scripts -------------------------
-
 function LampGlowLoop()
-    local baseA = 0.50
-    local baseB = 0.35
-
-    local targetA = baseA
-    local targetB = baseB
-
-    while true do
-        if math.random(1, 100) <= 18 then
-            targetA = math.random(75, 95) / 100
-            targetB = math.random(20, 55) / 100
-        end
-
-        -- drift slowly toward target values
-        baseA = baseA + (targetA - baseA) * 0.18
-        baseB = baseB + (targetB - baseB) * 0.18
-
-        -- fast flame flicker layered on top
-        local flickerA = (math.random(-8, 8)) / 100
-        local flickerB = (math.random(-12, 12)) / 800
-
-        local a = math.max(0, math.min(1, baseA + flickerA))
-        local b = math.max(0, math.min(1, baseB + flickerB))
-
-        setEffectRegionOpacity("lamp_glow1", a)
-        setEffectRegionOpacity("lamp_glow2", b)
-
-        delay(math.random(40, 120))
-    end
+    Glow.runFire(
+        { "lamp_glow1", "lamp_glow2" },
+        0.50,
+        0.35
+    )
 end
 
 -- Audio ----------------------------------------------

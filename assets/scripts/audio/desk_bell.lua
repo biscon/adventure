@@ -9,7 +9,7 @@ function M.RingDeskBell(attempt)
     }
     delay(250)
     playSound(dings[attempt])
-    delay(2000)
+    delay(1500)
 end
 
 return M
