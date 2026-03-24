@@ -120,18 +120,11 @@
             "loop": true
         },
         {
-            "id": "crystal_skies_music",
-            "file": "music/crystal_skies.mp3",
+            "id": "minimal_piano",
+            "file": "music/minimal_piano.mp3",
             "type": "music",
-            "volume": 0.5,
-            "loop": true
-        },
-        {
-            "id": "sleeping_giant_music",
-            "file": "music/sleeping_giant.mp3",
-            "type": "music",
-            "volume": 0.5,
-            "loop": true
+            "volume": 0.8,
+            "loop": false
         }
     ]
 }

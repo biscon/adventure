@@ -1,6 +1,11 @@
 function Scene_onEnter()
     if not flag("town_square_init") then
         setFlag("town_square_init", true)
+        playMusic("minimal_piano", 3000)
+        startScript("StopIntroMusic")
+        delay(2000)
+        say("Strange place for him to end up... this town feels wrong somehow.")
+        say("Best find a room for the night before it gets any later.")
         -- first time only stuff
         -- e.g. intro dialogue, item placement, whatever
     end
@@ -9,9 +14,15 @@ function Scene_onEnter()
     startScript("TownSquareAudioLoop")
 end
 
+function StopIntroMusic()
+    delay(25000)
+    stopMusic(5000)
+end
+
 function Scene_onExit()
     stopScript("TownSquareAudioLoop")
     stopSound("wind_ambience")
+    stopMusic(3000)
 end
 
 function Scene_look_hotel_sign()

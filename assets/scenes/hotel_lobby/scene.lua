@@ -118,8 +118,8 @@ end
 
 function Scene_use_bell()
     disableControls()
-    walkToHotspot("bell")
-    face("back")
+    --walkToHotspot("bell")
+    --face("back")
 
     local times = getInt("hotel_bell_rang_count")
     if times < 0 then
@@ -349,6 +349,7 @@ function HotelAmbienceLoop()
 
         else
             -- the important one: upstairs presence
+            shakeScreen(2000, 6, 25, true)
             playEmitter("upstairs_movement")
 
             -- give it space to breathe
