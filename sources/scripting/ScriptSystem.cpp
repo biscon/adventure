@@ -594,6 +594,30 @@ end
     return true;
 }
 
+static void ConfigureLuaRequire(GameState& state) {
+    lua_State* L = state.script.vm;
+
+// Add your asset script paths
+    lua_getglobal(L, "package");
+    lua_getfield(L, -1, "path");
+
+    std::string currentPath = lua_tostring(L, -1);
+    lua_pop(L, 1);
+
+    // Add paths
+    std::string newPath =
+            currentPath +
+            ";" + ASSETS_PATH + "scripts/?.lua" +
+            ";" + ASSETS_PATH + "scripts/?/init.lua" +
+            ";" + ASSETS_PATH + "scenes/?.lua" +
+            ";" + ASSETS_PATH + "scenes/?/?.lua";
+
+    lua_pushstring(L, newPath.c_str());
+    lua_setfield(L, -2, "path");
+
+    lua_pop(L, 1); // pop package
+}
+
 void ScriptSystemInit(GameState& state)
 {
     gameState = &state;
@@ -613,6 +637,8 @@ void ScriptSystemInit(GameState& state)
     state.script.pendingStarts.clear();
 
     luaL_openlibs(state.script.vm);
+    ConfigureLuaRequire(state);
+
     RegisterLuaAPI(state.script.vm);
     RegisterLuaTalkColorGlobals(state.script.vm);
     if (!RegisterLuaHelpers(state.script.vm)) {

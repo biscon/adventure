@@ -40,7 +40,7 @@
             "id": "metal_pipe",
             "file": "sfx/metal_pipe.wav",
             "type": "sound",
-            "volume": 0.7
+            "volume": 0.4
         },
         {
             "id": "metal_pipe2",
@@ -85,8 +85,45 @@
             "volume": 0.8
         },
         {
+            "id": "desk_bell1",
+            "file": "sfx/desk_bell_01.wav",
+            "type": "sound",
+            "volume": 1.0
+        },
+        {
+            "id": "desk_bell2",
+            "file": "sfx/desk_bell_02.wav",
+            "type": "sound",
+            "volume": 1.0
+        },
+        {
+            "id": "dog_bark1",
+            "file": "sfx/dog_bark_01.wav",
+            "type": "sound",
+            "volume": 1.0
+        },
+        {
+            "id": "dog_bark2",
+            "file": "sfx/dog_bark_02.wav",
+            "type": "sound",
+            "volume": 1.0
+        },
+        {
+            "id": "dog_bark3",
+            "file": "sfx/dog_bark_03.wav",
+            "type": "sound",
+            "volume": 1.0
+        },
+        {
             "id": "wind_ambience",
             "file": "ambience/wind.ogg",
+            "type": "sound",
+            "volume": 0.45,
+            "loop": true
+        },
+        {
+            "id": "wind_ambience_inside",
+            "file": "ambience/wind_inside.ogg",
             "type": "sound",
             "volume": 0.6,
             "loop": true
@@ -109,8 +146,8 @@
             "id": "dark_ambience_01",
             "file": "ambience/dark_ambience_01.wav",
             "type": "sound",
-            "volume": 0.3,
-            "loop": true
+            "volume": 1.0,
+            "loop": false
         },
         {
             "id": "basement_music",

@@ -1,11 +1,7 @@
 function Scene_onEnter()
     if not flag("town_square_init") then
         setFlag("town_square_init", true)
-        playMusic("minimal_piano", 3000)
-        startScript("StopIntroMusic")
-        delay(2000)
-        say("Strange place for him to end up... this town feels wrong somehow.")
-        say("Best find a room for the night before it gets any later.")
+        startScript("PlayIntroCutscene")
         -- first time only stuff
         -- e.g. intro dialogue, item placement, whatever
     end
@@ -16,18 +12,18 @@ end
 
 function StopIntroMusic()
     delay(25000)
-    stopMusic(5000)
+    stopMusic(25000)
 end
 
 function Scene_onExit()
     stopScript("TownSquareAudioLoop")
     stopSound("wind_ambience")
+    stopSound("seagull1")
+    stopSound("seagull2")
     stopMusic(3000)
 end
 
 function Scene_look_hotel_sign()
-    walkToHotspot("hotel_sign")
-    face("back")
     say("\"The Adrift Inn.\"")
     say("The letters look newer than the wood they're nailed to.")
     return true
@@ -39,8 +35,6 @@ function Scene_use_hotel_sign()
 end
 
 function Scene_look_store_sign()
-    walkToHotspot("store_sign")
-    face("back")
     say("\"O'Malley's Goods & Supplies.\"")
     say("The paint is fading, but someone keeps it from disappearing completely.")
     return true
@@ -51,8 +45,6 @@ function Scene_use_store_sign()
 end
 
 function Scene_look_alley()
-    walkToHotspot("alley")
-    face("back")
     say("A narrow alley disappearing into shadow.")
     say("Something about it makes me not want to linger.")
     return true
@@ -63,8 +55,6 @@ function Scene_use_alley()
 end
 
 function Scene_look_anchors()
-    walkToHotspot("anchors")
-    face("back")
     say("Rust has eaten most of the metal away.")
     say("Like they haven't seen a proper ship in years.")
     return true
@@ -75,74 +65,32 @@ function Scene_use_anchors()
 end
 
 function Scene_look_to_store()
-    walkToExit("to_store")
-    face("back")
     say("A plain little storefront.")
     say("Still, it feels more honest than most things here.")
     return true
 end
 
 function Scene_look_to_hotel_lobby()
-    walkToExit("to_hotel_lobby")
     say("A shabby hotel entrance.")
     say("The sort of place where you sleep in your clothes and keep one eye open.")
     return true
 end
 
+-- Cut scenes ------------------------------------------
+function PlayIntroCutscene()
+    disableControls()
+    playMusic("minimal_piano", 3000)
+    startScript("StopIntroMusic")
+    startSayAt(3*50, 3*340, "Day 1 - An uneasy feeling.", WHITE, 5000)
+    delay(2000)
+    walkTo(3*340,3*306)
+    face("back")
+    delay(1000)
+    say("Strange place for him to end up... this town feels wrong somehow.")
+    say("Best find a room for the night before it gets any later.")
+    enableControls()
+end
 -- Effect scripts -------------------------
-
-function FogPulseLoopOLD()
-    local baseA = 0.25
-    local baseB = 0.18
-
-    local targetA = baseA
-    local targetB = baseB
-
-    while true do
-        if math.random(1, 100) <= 18 then
-            targetA = math.random(75, 95) / 100
-            targetB = math.random(20, 55) / 100
-        end
-
-        -- drift slowly toward target values
-        baseA = baseA + (targetA - baseA) * 0.08
-        baseB = baseB + (targetB - baseB) * 0.08
-
-        local a = math.max(0, math.min(1, baseA))
-        local b = math.max(0, math.min(1, baseB))
-
-        setEffectRegionOpacity("square_ground_fog", a)
-        setEffectRegionOpacity("square_ground_fog_detail", b)
-
-        delay(math.random(40, 120))
-    end
-end
-
-function FogPulseLoopLame()
-    local baseA = 0.45
-    local baseB = 0.38
-
-    local targetA = baseA
-    local targetB = baseB
-
-    while true do
-        if math.random(1, 100) <= 10 then
-            targetA = math.random(12, 18) / 100
-            targetB = math.random(6, 11) / 100
-        end
-
-        baseA = baseA + (targetA - baseA) * 0.025
-        baseB = baseB + (targetB - baseB) * 0.02
-
-        local a = math.max(0, math.min(1, baseA))
-        local b = math.max(0, math.min(1, baseB))
-
-        setEffectRegionOpacity("square_ground_fog", a)
-        setEffectRegionOpacity("square_ground_fog_detail", b)
-
-        delay(math.random(120, 240))
-    end
-end
 
 function FogPulseLoop()
     local baseA = 0.34

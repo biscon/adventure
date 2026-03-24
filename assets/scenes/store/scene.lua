@@ -1,3 +1,5 @@
+local bell = require("audio.desk_bell")
+
 function Scene_onEnter()
     if not flag("store_init") then
         setFlag("store_init", true)
@@ -6,27 +8,32 @@ function Scene_onEnter()
 
     if flag("distracted_by_dog") then
         RestoreDistractedByDog()
+    else
+        setSoundEmitterEnabled("dog_snoring", true)
     end
+
     startScript("LampGlowLoop")
+    startScript("StoreAmbienceLoop")
+end
+
+function Scene_onExit()
+    stopScript("HotelAmbienceLoop")
+    --setSoundEmitterEnabled("store_room_tone", false)
 end
 
 function Scene_look_ledger()
-    walkToHotspot("ledger")
-    face("left")
     say("A business ledger.")
     say("The entries are neat enough, though I make little sense of them at a glance.")
     return true
 end
 
 function Scene_use_ledger()
-    disableControls()
-    walkToHotspot("ledger")
-    face("left")
     if flag("saw_store_ledger") then
         say("I've already gotten what I needed from that.")
-        enableControls()
         return true
     end
+
+    disableControls()
 
     playAnimation("reach_left")
     delay(600)
@@ -52,14 +59,13 @@ function StopComfortDog()
     delay(600)
     startSayActor("store_clerk", "There now, be still.")
     delay(1500)
+    setSoundEmitterEnabled("dog_snoring", true)
     walkActorTo("store_clerk", 3*215, 3*291)
     faceActor("store_clerk", "right")
 end
 
 -- Saved by the bell ------------------------------------------------------
 function Scene_look_bell()
-    walkToHotspot("bell")
-    face("left")
     say("A small counter bell.")
     say("It looks as though it gets more use than the clerk would like.")
     return true
@@ -67,8 +73,6 @@ end
 
 function Scene_use_bell()
     disableControls()
-    walkToHotspot("bell")
-    face("back")
 
     local times = getInt("store_bell_rang_count")
     if times < 0 then
@@ -76,24 +80,25 @@ function Scene_use_bell()
     end
 
     if times == 0 then
-        playSound("bell")
+        bell.RingDeskBell(1)
         setInt("store_bell_rang_count", 1)
+        faceActor("store_clerk", "front")
         sayActor("store_clerk", "No need for that, sir. I'm right here.")
     elseif times == 1 then
-        playSound("bell")
+        bell.RingDeskBell(2)
         setInt("store_bell_rang_count", 2)
+        faceActor("store_clerk", "front")
         sayActor("store_clerk", "Please, sir. There's no call for that.")
     else
         say("I had better not be overly rude.")
     end
     enableControls()
+
     return true
 end
 
 -- Flavor hotspots --------------------------------------------------------
 function Scene_look_notice_board()
-    walkToHotspot("notice_board")
-    face("back")
     say("Notices, schedules, and scraps of paper.")
     say("Some are so old the ink has nearly vanished.")
     return true
@@ -104,8 +109,6 @@ function Scene_use_notice_board()
 end
 
 function Scene_look_shelves()
-    walkToHotspot("shelves")
-    face("back")
     say("Tinned goods, jars, and things I can't quite identify.")
     say("All of it looks like it's been here a long time.")
     return true
@@ -116,17 +119,12 @@ function Scene_use_shelves()
 end
 
 function Scene_look_file_cabinet()
-    walkToHotspot("file_cabinet")
-    face("back")
     say("Drawers for records.")
     say("Organized, but not inviting.")
     return true
 end
 
 function Scene_use_file_cabinet()
-    walkToHotspot("file_cabinet")
-    face("back")
-
     if not flag("distracted_by_dog") then
         sayActor("store_clerk", "Kindly keep your hands off my files, sir.")
         face("left")
@@ -156,6 +154,7 @@ function Scene_use_actor_store_clerk()
     disableControls()
     walkToHotspot("ledger")
     face("left")
+    faceActor("store_clerk", "right")
     sayActor("store_clerk", "Yes, sir?")
     enableControls()
 
@@ -263,13 +262,16 @@ function ComfortDog()
                 playPropAnimation("german_shepard", "bark")
                 delay(350)
                 setPropAnimation("german_shepard", "idle")
+                PlayDogBark()
                 startSayAt(3*100, 3*300, barks[math.random(#barks)], YELLOW)
                 delay(1900)
             end
 
             playActorAnimation("store_clerk", "pickup_left")
+            delay(300)
+            playEmitter("dog_whine")
             startSayActor("store_clerk", sootheLines[math.random(#sootheLines)])
-            delay(math.random(3000, 4000))
+            delay(math.random(5000, 6000))
         end
 
         local remainingDelay = math.random(12000, 22000)
@@ -287,11 +289,9 @@ function Scene_use_dog()
         return true
     end
     disableControls()
-    walkToHotspot("dog")
-    face("left")
     playAnimation("pickup_left")
     delay(300)
-
+    setSoundEmitterEnabled("dog_snoring", false)
     playPropAnimation("german_shepard", "wake_up")
     delay(1000)
 
@@ -304,6 +304,7 @@ function Scene_use_dog()
         playPropAnimation("german_shepard", "bark")
         delay(500)
         setPropAnimation("german_shepard", "idle")
+        PlayDogBark()
         startSayAt(3*100, 3*300, ({ "Woof!", "Arf!", "Rrrf!" })[math.random(3)], ORANGE)
         delay(1900)
     end
@@ -354,4 +355,58 @@ function LampGlowLoop()
 
         delay(math.random(40, 120))
     end
+end
+
+-- Audio ----------------------------------------------
+
+function StoreAmbienceLoop()
+    -- base bed
+    --setSoundEmitterEnabled("store_room_tone", true)
+
+    while true do
+        delay(math.random(8000, 20000)) -- 8–20 sec gaps
+
+        local roll = math.random(1, 100)
+
+        if roll <= 40 then
+            -- structure creaks
+            local creaks = {
+                "floor_creak_left",
+                "floor_creak_upstairs",
+                "wall_creak_right"
+            }
+            playEmitter(creaks[math.random(#creaks)])
+
+        elseif roll <= 70 then
+            -- subtle object sounds
+            local objects = {
+                "three_knocks",
+                "metal_pipe"
+            }
+            -- playEmitter(objects[math.random(#objects)])
+
+        else
+            -- the important one: upstairs presence
+
+            -- give it space to breathe
+            delay(math.random(5000, 10000))
+        end
+    end
+end
+
+local _dogBarkIndex = 0
+
+function PlayDogBark()
+    local emitters = {
+        "dog_bark1",
+        "dog_bark2",
+        "dog_bark3"
+    }
+
+    _dogBarkIndex = _dogBarkIndex + 1
+    if _dogBarkIndex > #emitters then
+        _dogBarkIndex = 1
+    end
+
+    playEmitter(emitters[_dogBarkIndex])
 end

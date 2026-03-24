@@ -76,7 +76,7 @@
                         {
                          "name":"facing",
                          "type":"string",
-                         "value":"right"
+                         "value":"back"
                         },
                     
                         {
@@ -798,7 +798,7 @@
                         {
                          "name":"brightness",
                          "type":"float",
-                         "value":0.07
+                         "value":0.05
                         },
                     
                         {
@@ -1890,6 +1890,517 @@
         },
     
         {
+         "draworder":"topdown",
+         "id":23,
+         "name":"sound_emitters",
+         "objects":[
+                {
+                 "height":0,
+                 "id":47,
+                 "name":"store_room_tone",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"room_tone_02"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":0.5
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":220,
+                 "y":276.666666666667
+                },
+            
+                {
+                 "height":0,
+                 "id":48,
+                 "name":"floor_creak_upstairs",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"wood_creak2"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":429.333333333333,
+                 "y":76.6666666666667
+                },
+            
+                {
+                 "height":0,
+                 "id":49,
+                 "name":"floor_creak_left",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"wood_creak2"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":58,
+                 "y":152
+                },
+            
+                {
+                 "height":0,
+                 "id":50,
+                 "name":"wall_creak_right",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"wood_creak2"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":624,
+                 "y":227.333333333333
+                },
+            
+                {
+                 "height":0,
+                 "id":51,
+                 "name":"dog_bark1",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"dog_bark1"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":76,
+                 "y":328
+                },
+            
+                {
+                 "height":0,
+                 "id":52,
+                 "name":"dog_bark2",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"dog_bark2"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":70,
+                 "y":290.666666666667
+                },
+            
+                {
+                 "height":0,
+                 "id":53,
+                 "name":"dog_bark3",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":2000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"dog_bark3"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":74.6666666666667,
+                 "y":296
+                },
+            
+                {
+                 "height":0,
+                 "id":54,
+                 "name":"wind_inside_ambience",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":600
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"wind_ambience_inside"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":0.5
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":536,
+                 "y":278
+                },
+            
+                {
+                 "height":0,
+                 "id":55,
+                 "name":"dog_snoring",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":1000
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"dog_snoring"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":1
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":80.6666666666667,
+                 "y":333.333333333333
+                },
+            
+                {
+                 "height":0,
+                 "id":56,
+                 "name":"dog_whine",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":false
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":1800
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"dog_whine"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":0.4
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":85.3333333333333,
+                 "y":338.666666666667
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        },
+    
+        {
          "id":2,
          "layers":[
                 {
@@ -2138,8 +2649,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":23,
- "nextobjectid":47,
+ "nextlayerid":24,
+ "nextobjectid":57,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

@@ -1920,7 +1920,7 @@
                         {
                          "name":"enabled",
                          "type":"bool",
-                         "value":false
+                         "value":true
                         },
                     
                         {
@@ -1950,7 +1950,7 @@
                         {
                          "name":"volume",
                          "type":"float",
-                         "value":0.6
+                         "value":0.4
                         }],
                  "rotation":0,
                  "type":"",
@@ -2208,6 +2208,56 @@
                  "width":0,
                  "x":658.5,
                  "y":73
+                },
+            
+                {
+                 "height":0,
+                 "id":56,
+                 "name":"wind_inside_ambience",
+                 "opacity":1,
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"enabled",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"loop",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"pan",
+                         "type":"bool",
+                         "value":true
+                        },
+                    
+                        {
+                         "name":"radius",
+                         "type":"float",
+                         "value":600
+                        },
+                    
+                        {
+                         "name":"sound",
+                         "type":"string",
+                         "value":"wind_ambience_inside"
+                        },
+                    
+                        {
+                         "name":"volume",
+                         "type":"float",
+                         "value":0.5
+                        }],
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":568,
+                 "y":259
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -2460,7 +2510,7 @@
          "y":0
         }],
  "nextlayerid":24,
- "nextobjectid":56,
+ "nextobjectid":57,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",

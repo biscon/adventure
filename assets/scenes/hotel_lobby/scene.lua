@@ -1,3 +1,5 @@
+local bell = require("audio.desk_bell")
+
 function Scene_onEnter()
     if not flag("hotel_lobby_init") then
         setFlag("hotel_lobby_init", true)
@@ -12,20 +14,16 @@ end
 
 function Scene_onExit()
     stopScript("HotelAmbienceLoop")
-    setSoundEmitterEnabled("hotel_room_tone", false)
+    --setSoundEmitterEnabled("hotel_room_tone", false)
 end
 
 function Scene_look_to_town_square()
-    walkToExit("to_town_square")
-    face("right")
     say("Back out to the square.")
     say("Fresh air… if you can call it that.")
     return true
 end
 
 function Scene_look_desk()
-    walkToHotspot("desk")
-    face("left")
     say("A well-worn reception desk.")
     say("Someone keeps it tidy, at least on the surface.")
     return true
@@ -36,8 +34,6 @@ function Scene_use_desk()
 end
 
 function Scene_look_key_rack()
-    walkToHotspot("key_rack")
-    face("back")
     say("Room keys, neatly arranged.")
     say("More than I expected for a place like this.")
     return true
@@ -48,32 +44,23 @@ function Scene_use_key_rack()
 end
 
 function Scene_look_chair()
-    walkToHotspot("chair")
-    face("left")
     say("An old chair with a deep seat.")
     say("Looks like it has seen more waiting than resting.")
     return true
 end
 
 function Scene_use_chair()
-    walkToHotspot("chair")
-    face("left")
     say("I'd rather not sit just yet.")
     return true
 end
 
 function Scene_look_stairs()
-    walkToHotspot("stairs")
-    face("left")
     say("The stairs lead up to the rooms.")
     say("The wood creaks even when I'm not on it.")
     return true
 end
 
 function Scene_use_stairs()
-    walkToHotspot("stairs")
-    face("left")
-
     if not flag("hotel_room_unlocked") then
         say("I should speak to whoever runs this place first.")
         return true
@@ -85,8 +72,6 @@ function Scene_use_stairs()
 end
 
 function Scene_look_coat_rack()
-    walkToHotspot("coat_rack")
-    face("right")
     say("A few coats hang here.")
     say("None of them look recently worn.")
     return true
@@ -97,8 +82,6 @@ function Scene_use_coat_rack()
 end
 
 function Scene_look_display_case()
-    walkToHotspot("display_case")
-    face("right")
     say("A model ship in a glass display case.")
     say("Someone has taken better care of it than anything else in the lobby.")
     return true
@@ -109,35 +92,28 @@ function Scene_use_display_case()
 end
 
 function Scene_look_bell()
-    walkToHotspot("bell")
-    face("left")
     say("A small brass desk bell.")
     say("Polished more often than the rest of the lobby.")
     return true
 end
 
 function Scene_use_bell()
-    disableControls()
-    --walkToHotspot("bell")
-    --face("back")
-
     local times = getInt("hotel_bell_rang_count")
     if times < 0 then
         times = 0
     end
 
     if times == 0 then
-        --playSound("bell")
+        bell.RingDeskBell(1)
         setInt("hotel_bell_rang_count", 1)
         sayActor("hotel_clerk", "Do not do that, sir. I am standing right here.")
     elseif times == 1 then
-        --playSound("bell")
+        bell.RingDeskBell(2)
         setInt("hotel_bell_rang_count", 2)
         sayActor("hotel_clerk", "I should prefer not to be summoned like a servant.")
     else
         say("I had better not be overly rude.")
     end
-    enableControls()
     return true
 end
 
@@ -323,7 +299,7 @@ end
 
 function HotelAmbienceLoop()
     -- base bed
-    setSoundEmitterEnabled("hotel_room_tone", true)
+    --setSoundEmitterEnabled("hotel_room_tone", true)
 
     while true do
         delay(math.random(8000, 20000)) -- 8–20 sec gaps
@@ -349,7 +325,7 @@ function HotelAmbienceLoop()
 
         else
             -- the important one: upstairs presence
-            shakeScreen(2000, 6, 25, true)
+            shakeScreen(2500, 4, 25, true)
             playEmitter("upstairs_movement")
 
             -- give it space to breathe
